@@ -25,6 +25,10 @@ from core.views import (
     customers_list, reports_view, price_management_view
 )
 from core.views_api import get_system_settings
+from core.views_car_api import (
+    get_makes, get_models, get_years, decode_vin_view,
+    get_standard_parts, get_part_categories, get_parts_by_category
+)
 
 urlpatterns = [
     path('', dashboard, name='dashboard'),
@@ -47,6 +51,15 @@ urlpatterns = [
     
     # System Settings API
     path('api/settings/', get_system_settings, name='system_settings'),
+    
+    # Car API Endpoints
+    path('api/cars-data/makes/', get_makes, name='api_car_makes'),
+    path('api/cars-data/models/<str:make_name>/', get_models, name='api_car_models'),
+    path('api/cars-data/years/<str:make>/<str:model>/', get_years, name='api_car_years'),
+    path('api/cars-data/decode-vin/<str:vin>/', decode_vin_view, name='api_decode_vin'),
+    path('api/cars-data/standard-parts/', get_standard_parts, name='api_standard_parts'),
+    path('api/cars-data/part-categories/', get_part_categories, name='api_part_categories'),
+    path('api/cars-data/parts-by-category/<str:category>/', get_parts_by_category, name='api_parts_by_category'),
     
     # API endpoints
     path('api/auth/', include('authentication.urls')),
