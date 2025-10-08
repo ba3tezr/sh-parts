@@ -1,0 +1,246 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}لوحة التحكم - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="dashboard">لوحة التحكم</span>{% endblock %}
+
+{% block content %}
+<!-- إحصائيات سريعة - Quick Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-md-6 col-lg-3">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1" data-translate="total_sales">إجمالي المبيعات</p>
+                    <h3 class="mb-0" id="total-sales">0</h3>
+                    <small class="text-muted" id="currency-label">{{ currency_symbol }}</small>
+                </div>
+                <div class="icon">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-md-6 col-lg-3">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1" data-translate="total_inventory">إجمالي المخزون</p>
+                    <h3 class="mb-0" id="total-inventory">0</h3>
+                    <small class="text-muted">قطعة</small>
+                </div>
+                <div class="icon">
+                    <i class="bi bi-box-seam"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-md-6 col-lg-3">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1" data-translate="total_customers">إجمالي العملاء</p>
+                    <h3 class="mb-0" id="total-customers">0</h3>
+                    <small class="text-muted">عميل</small>
+                </div>
+                <div class="icon">
+                    <i class="bi bi-people"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-md-6 col-lg-3">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1" data-translate="pending_orders">الطلبات المعلقة</p>
+                    <h3 class="mb-0" id="pending-orders">0</h3>
+                    <small class="text-muted">طلب</small>
+                </div>
+                <div class="icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- آخر المبيعات - Recent Sales -->
+    <div class="col-12 col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-cart-check me-2"></i>
+                    <span data-translate="recent_sales">آخر المبيعات</span>
+                </h5>
+                <a href="#" class="btn btn-sm btn-primary">عرض الكل</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th data-translate="invoice_number">رقم الفاتورة</th>
+                                <th data-translate="customer_name">اسم العميل</th>
+                                <th data-translate="total">الإجمالي</th>
+                                <th data-translate="status">الحالة</th>
+                                <th data-translate="date">التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-sales-tbody">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted" data-translate="loading">جاري التحميل...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- منخفض المخزون - Low Stock Alert -->
+    <div class="col-12 col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <span data-translate="low_stock">منخفض المخزون</span>
+                </h5>
+                <span class="badge bg-danger" id="low-stock-count">0</span>
+            </div>
+            <div class="card-body">
+                <div id="low-stock-list" style="max-height: 400px; overflow-y: auto;">
+                    <div class="text-center text-muted" data-translate="loading">جاري التحميل...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- رسم بياني - Chart (سيتم إضافته لاحقاً) -->
+<div class="row g-4 mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-bar-chart-line me-2"></i>
+                    <span data-translate="sales_chart">مخطط المبيعات</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// تحميل بيانات لوحة التحكم - Load Dashboard Data
+async function loadDashboardData() {
+    try {
+        // تحميل الإحصائيات
+        await Promise.all([
+            loadStats(),
+            loadRecentSales(),
+            loadLowStock(),
+            loadSalesChart()
+        ]);
+    } catch (error) {
+        console.error('Error loading dashboard data:', error);
+    }
+}
+
+// تحميل الإحصائيات - Load Stats
+async function loadStats() {
+    // محاكاة البيانات - هنا ستستدعي الـ API الفعلي
+    const totalSales = 125000;
+    document.getElementById('total-sales').textContent = app.formatCurrency(totalSales);
+    document.getElementById('total-inventory').textContent = app.formatNumber(35);
+    document.getElementById('total-customers').textContent = app.formatNumber(0);
+    document.getElementById('pending-orders').textContent = '0';
+    
+    // تحديث نص العملة
+    const settings = app.getSettings();
+    if (settings) {
+        document.getElementById('currency-label').textContent = settings.currency_symbol;
+    }
+}
+
+// تحميل آخر المبيعات - Load Recent Sales
+async function loadRecentSales() {
+    const tbody = document.getElementById('recent-sales-tbody');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">لا توجد مبيعات بعد</td></tr>';
+}
+
+// تحميل منخفض المخزون - Load Low Stock
+async function loadLowStock() {
+    const container = document.getElementById('low-stock-list');
+    container.innerHTML = '<div class="text-center text-muted">لا توجد قطع منخفضة المخزون</div>';
+    document.getElementById('low-stock-count').textContent = '0';
+}
+
+// تحميل رسم المبيعات - Load Sales Chart
+async function loadSalesChart() {
+    const ctx = document.getElementById('salesChart');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+            datasets: [{
+                label: 'المبيعات',
+                data: [12000, 19000, 15000, 25000, 22000, 30000],
+                borderColor: 'rgb(42, 82, 152)',
+                backgroundColor: 'rgba(42, 82, 152, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: getComputedStyle(document.documentElement)
+                            .getPropertyValue('--text-color')
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: getComputedStyle(document.documentElement)
+                            .getPropertyValue('--text-secondary')
+                    },
+                    grid: {
+                        color: getComputedStyle(document.documentElement)
+                            .getPropertyValue('--border-color')
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: getComputedStyle(document.documentElement)
+                            .getPropertyValue('--text-secondary')
+                    },
+                    grid: {
+                        color: getComputedStyle(document.documentElement)
+                            .getPropertyValue('--border-color')
+                    }
+                }
+            }
+        }
+    });
+}
+
+// تحميل البيانات عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    loadDashboardData();
+});
+</script>
+{% endblock %}

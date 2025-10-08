@@ -1,0 +1,287 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}السيارات - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="vehicles">السيارات</span>{% endblock %}
+
+{% block content %}
+<!-- أزرار الإجراءات السريعة -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    <span data-translate="add_vehicle">إضافة سيارة</span>
+                </button>
+            </div>
+            <div class="d-flex gap-2">
+                <input type="text" class="form-control" id="searchInput" placeholder="بحث..." style="width: 250px;">
+                <select class="form-select" id="filterStatus" style="width: 150px;">
+                    <option value="">الكل</option>
+                    <option value="false" data-translate="not_dismantled">غير مفككة</option>
+                    <option value="true" data-translate="dismantled">مفككة</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- جدول السيارات -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-car-front me-2"></i>
+                    <span data-translate="vehicle_list">قائمة السيارات</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="vehiclesTable">
+                        <thead>
+                            <tr>
+                                <th data-translate="vin">رقم الشاصي</th>
+                                <th data-translate="make">الماركة</th>
+                                <th data-translate="model">الموديل</th>
+                                <th data-translate="year">السنة</th>
+                                <th data-translate="color">اللون</th>
+                                <th data-translate="condition">الحالة</th>
+                                <th data-translate="status">الحالة</th>
+                                <th data-translate="intake_date">تاريخ الاستقبال</th>
+                                <th data-translate="actions">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if vehicles %}
+                                {% for vehicle in vehicles %}
+                                <tr>
+                                    <td><strong>{{ vehicle.vin }}</strong></td>
+                                    <td>{{ vehicle.make.name_ar }}</td>
+                                    <td>{{ vehicle.model.name_ar }}</td>
+                                    <td>{{ vehicle.year }}</td>
+                                    <td>{{ vehicle.color }}</td>
+                                    <td>
+                                        {% if vehicle.condition == 'EXCELLENT' %}
+                                            <span class="badge bg-success">ممتاز</span>
+                                        {% elif vehicle.condition == 'GOOD' %}
+                                            <span class="badge bg-info">جيد</span>
+                                        {% elif vehicle.condition == 'FAIR' %}
+                                            <span class="badge bg-warning">مقبول</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">سيئ</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if vehicle.is_dismantled %}
+                                            <span class="badge bg-secondary" data-translate="dismantled">مفككة</span>
+                                        {% else %}
+                                            <span class="badge bg-primary" data-translate="not_dismantled">غير مفككة</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ vehicle.intake_date|date:"Y-m-d" }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button class="btn btn-info" onclick="viewVehicle({{ vehicle.id }})" title="عرض">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            {% if not vehicle.is_dismantled %}
+                                            <button class="btn btn-warning" onclick="dismantleVehicle({{ vehicle.id }})" title="تفكيك">
+                                                <i class="bi bi-tools"></i>
+                                            </button>
+                                            {% endif %}
+                                            <button class="btn btn-primary" onclick="editVehicle({{ vehicle.id }})" title="تعديل">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted" data-translate="no_data">لا توجد سيارات بعد</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إضافة سيارة -->
+<div class="modal fade" id="addVehicleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-translate="add_vehicle">إضافة سيارة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addVehicleForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="vin" class="form-label" data-translate="vin">رقم الشاصي</label>
+                            <input type="text" class="form-control" id="vin" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="make" class="form-label" data-translate="make">الماركة</label>
+                            <select class="form-select" id="make" required>
+                                <option value="">اختر الماركة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="model" class="form-label" data-translate="model">الموديل</label>
+                            <select class="form-select" id="model" required>
+                                <option value="">اختر الموديل</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="year" class="form-label" data-translate="year">السنة</label>
+                            <input type="number" class="form-control" id="year" required min="1990" max="2025">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="color" class="form-label" data-translate="color">اللون</label>
+                            <input type="text" class="form-control" id="color" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="mileage" class="form-label" data-translate="mileage">المسافة المقطوعة</label>
+                            <input type="number" class="form-control" id="mileage">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="condition" class="form-label" data-translate="condition">الحالة</label>
+                            <select class="form-select" id="condition" required>
+                                <option value="EXCELLENT">ممتاز</option>
+                                <option value="GOOD" selected>جيد</option>
+                                <option value="FAIR">مقبول</option>
+                                <option value="POOR">سيئ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="purchase_price" class="form-label" data-translate="purchase_price">سعر الشراء</label>
+                            <input type="number" class="form-control" id="purchase_price" step="0.01">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label for="notes" class="form-label" data-translate="notes">ملاحظات</label>
+                            <textarea class="form-control" id="notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="cancel">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveVehicle()" data-translate="save">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تحميل الماركات
+async function loadMakes() {
+    const data = await app.apiRequest('/api/cars/makes/');
+    if (data && data.results) {
+        const makeSelect = document.getElementById('make');
+        data.results.forEach(make => {
+            const option = document.createElement('option');
+            option.value = make.id;
+            option.textContent = make.name_ar;
+            makeSelect.appendChild(option);
+        });
+    }
+}
+
+// تحميل الموديلات حسب الماركة
+document.getElementById('make')?.addEventListener('change', async function() {
+    const makeId = this.value;
+    const modelSelect = document.getElementById('model');
+    modelSelect.innerHTML = '<option value="">اختر الموديل</option>';
+    
+    if (makeId) {
+        const data = await app.apiRequest(`/api/cars/makes/${makeId}/models/`);
+        if (data) {
+            data.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.id;
+                option.textContent = model.name_ar;
+                modelSelect.appendChild(option);
+            });
+        }
+    }
+});
+
+// حفظ سيارة جديدة
+async function saveVehicle() {
+    const formData = {
+        vin: document.getElementById('vin').value,
+        make: document.getElementById('make').value,
+        model: document.getElementById('model').value,
+        year: document.getElementById('year').value,
+        color: document.getElementById('color').value,
+        mileage: document.getElementById('mileage').value || 0,
+        condition: document.getElementById('condition').value,
+        purchase_price: document.getElementById('purchase_price').value || 0,
+        notes: document.getElementById('notes').value,
+        received_by: 1 // سيتم تحديثه لاحقاً
+    };
+    
+    const result = await app.apiRequest('/api/cars/vehicles/', {
+        method: 'POST',
+        body: JSON.stringify(formData)
+    });
+    
+    if (result) {
+        app.showNotification('تم إضافة السيارة بنجاح', 'success');
+        bootstrap.Modal.getInstance(document.getElementById('addVehicleModal')).hide();
+        location.reload();
+    }
+}
+
+// عرض تفاصيل سيارة
+async function viewVehicle(id) {
+    const data = await app.apiRequest(`/api/cars/vehicles/${id}/`);
+    if (data) {
+        alert(`تفاصيل السيارة: ${JSON.stringify(data, null, 2)}`);
+    }
+}
+
+// تفكيك سيارة
+async function dismantleVehicle(id) {
+    if (confirm('هل تريد تفكيك هذه السيارة؟')) {
+        const result = await app.apiRequest(`/api/cars/vehicles/${id}/dismantle/`, {
+            method: 'POST'
+        });
+        
+        if (result) {
+            app.showNotification('تم تفكيك السيارة بنجاح', 'success');
+            location.reload();
+        }
+    }
+}
+
+// تعديل سيارة
+function editVehicle(id) {
+    alert(`تعديل السيارة رقم: ${id}`);
+}
+
+// البحث في الجدول
+document.getElementById('searchInput')?.addEventListener('input', function() {
+    const searchValue = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#vehiclesTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchValue) ? '' : 'none';
+    });
+});
+
+// التحميل عند فتح الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    loadMakes();
+});
+</script>
+{% endblock %}

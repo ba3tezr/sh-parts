@@ -1,0 +1,364 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}العملاء - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="customers">العملاء</span>{% endblock %}
+
+{% block content %}
+<!-- إحصائيات سريعة -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-people fs-1 text-primary me-3"></i>
+                    <div>
+                        <p class="mb-0 text-muted" data-translate="total_customers">إجمالي العملاء</p>
+                        <h4 class="mb-0">{{ customers.count }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-person-check fs-1 text-success me-3"></i>
+                    <div>
+                        <p class="mb-0 text-muted">عملاء نشطون</p>
+                        <h4 class="mb-0" id="activeCustomers">-</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-currency-dollar fs-1 text-warning me-3"></i>
+                    <div>
+                        <p class="mb-0 text-muted">إجمالي الديون</p>
+                        <h4 class="mb-0" id="totalDebts">0 {{ currency_symbol }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-person-plus fs-1 text-info me-3"></i>
+                    <div>
+                        <p class="mb-0 text-muted">عملاء جدد هذا الشهر</p>
+                        <h4 class="mb-0" id="newCustomers">-</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- أدوات البحث -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                    <i class="bi bi-person-plus me-2"></i>
+                    <span data-translate="add_customer">إضافة عميل</span>
+                </button>
+            </div>
+            <div class="d-flex gap-2">
+                <input type="text" class="form-control" id="searchInput" placeholder="بحث..." style="width: 250px;">
+                <select class="form-select" id="filterType" style="width: 150px;">
+                    <option value="">كل الأنواع</option>
+                    <option value="INDIVIDUAL">أفراد</option>
+                    <option value="BUSINESS">شركات</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- جدول العملاء -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>
+                    <span data-translate="customer_list">قائمة العملاء</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="customersTable">
+                        <thead>
+                            <tr>
+                                <th data-translate="customer_code">رقم العميل</th>
+                                <th data-translate="customer_name">الاسم</th>
+                                <th>النوع</th>
+                                <th data-translate="phone">الهاتف</th>
+                                <th data-translate="email">البريد</th>
+                                <th data-translate="city">المدينة</th>
+                                <th data-translate="purchases">المشتريات</th>
+                                <th data-translate="outstanding_balance">الرصيد المستحق</th>
+                                <th data-translate="actions">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if customers %}
+                                {% for customer in customers %}
+                                <tr>
+                                    <td><strong>{{ customer.customer_code }}</strong></td>
+                                    <td>
+                                        {% if customer.customer_type == 'INDIVIDUAL' %}
+                                            {{ customer.first_name }} {{ customer.last_name }}
+                                        {% else %}
+                                            {{ customer.business_name }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if customer.customer_type == 'INDIVIDUAL' %}
+                                            <span class="badge bg-primary" data-translate="individual">فرد</span>
+                                        {% else %}
+                                            <span class="badge bg-info" data-translate="business">شركة</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ customer.phone }}</td>
+                                    <td>{{ customer.email|default:"-" }}</td>
+                                    <td>{{ customer.city|default:"-" }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">0</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">0 {{ currency_symbol }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-info" onclick="viewCustomerDetails({{ customer.id }}, '{{ customer.get_full_name }}', '{{ customer.customer_code }}')" title="عرض التفاصيل">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-primary" onclick="editCustomer({{ customer.id }})" title="تعديل">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-success" onclick="viewPurchases({{ customer.id }}, '{{ customer.get_full_name }}')" title="سجل المشتريات">
+                                                <i class="bi bi-cart"></i>
+                                            </button>
+                                            <button class="btn btn-warning" onclick="addCustomerNote({{ customer.id }}, '{{ customer.get_full_name }}')" title="إضافة ملاحظة">
+                                                <i class="bi bi-sticky"></i>
+                                            </button>
+                                            <button class="btn btn-danger" onclick="deleteCustomer({{ customer.id }}, '{{ customer.get_full_name }}')" title="حذف">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted" data-translate="no_data">لا يوجد عملاء بعد</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إضافة عميل -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-translate="add_customer">إضافة عميل</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCustomerForm">
+                    <!-- نوع العميل -->
+                    <div class="mb-3">
+                        <label for="customer_type" class="form-label">نوع العميل</label>
+                        <select class="form-select" id="customer_type" required>
+                            <option value="INDIVIDUAL">فرد</option>
+                            <option value="BUSINESS">شركة</option>
+                        </select>
+                    </div>
+                    
+                    <!-- معلومات الفرد -->
+                    <div id="individualFields">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">الاسم الأول</label>
+                                <input type="text" class="form-control" id="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">الاسم الأخير</label>
+                                <input type="text" class="form-control" id="last_name" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- معلومات الشركة -->
+                    <div id="businessFields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="business_name" class="form-label">اسم الشركة</label>
+                            <input type="text" class="form-control" id="business_name">
+                        </div>
+                        <div class="mb-3">
+                            <label for="tax_number" class="form-label">الرقم الضريبي</label>
+                            <input type="text" class="form-control" id="tax_number">
+                        </div>
+                    </div>
+                    
+                    <!-- معلومات الاتصال -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label" data-translate="phone">الهاتف</label>
+                            <input type="tel" class="form-control" id="phone" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label" data-translate="email">البريد الإلكتروني</label>
+                            <input type="email" class="form-control" id="email">
+                        </div>
+                    </div>
+                    
+                    <!-- العنوان -->
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="address" class="form-label" data-translate="address">العنوان</label>
+                            <textarea class="form-control" id="address" rows="2"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="city" class="form-label" data-translate="city">المدينة</label>
+                            <input type="text" class="form-control" id="city">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="country" class="form-label">الدولة</label>
+                            <input type="text" class="form-control" id="country" value="مصر">
+                        </div>
+                    </div>
+                    
+                    <!-- حد الائتمان -->
+                    <div class="mb-3">
+                        <label for="credit_limit" class="form-label" data-translate="credit_limit">حد الائتمان</label>
+                        <input type="number" class="form-control" id="credit_limit" step="0.01" value="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="cancel">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveCustomer()" data-translate="save">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// التبديل بين نوع العميل
+document.getElementById('customer_type')?.addEventListener('change', function() {
+    const individualFields = document.getElementById('individualFields');
+    const businessFields = document.getElementById('businessFields');
+    
+    if (this.value === 'INDIVIDUAL') {
+        individualFields.style.display = 'block';
+        businessFields.style.display = 'none';
+        document.getElementById('first_name').required = true;
+        document.getElementById('last_name').required = true;
+        document.getElementById('business_name').required = false;
+    } else {
+        individualFields.style.display = 'none';
+        businessFields.style.display = 'block';
+        document.getElementById('first_name').required = false;
+        document.getElementById('last_name').required = false;
+        document.getElementById('business_name').required = true;
+    }
+});
+
+// حفظ عميل جديد
+async function saveCustomer() {
+    const customerType = document.getElementById('customer_type').value;
+    const formData = {
+        customer_type: customerType,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value || '',
+        address: document.getElementById('address').value || '',
+        city: document.getElementById('city').value || '',
+        country: document.getElementById('country').value || 'مصر',
+        credit_limit: document.getElementById('credit_limit').value || 0,
+        created_by: 1
+    };
+    
+    if (customerType === 'INDIVIDUAL') {
+        formData.first_name = document.getElementById('first_name').value;
+        formData.last_name = document.getElementById('last_name').value;
+    } else {
+        formData.business_name = document.getElementById('business_name').value;
+        formData.tax_number = document.getElementById('tax_number').value || '';
+    }
+    
+    try {
+        app.showLoading();
+        const result = await app.apiRequest('/api/customers/', {
+            method: 'POST',
+            body: JSON.stringify(formData)
+        });
+        
+        app.hideLoading();
+        
+        if (result) {
+            // إخفاء النموذج
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addCustomerModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // إظهار إشعار بالنجاح
+            app.showNotification('✅ تم إضافة العميل بنجاح', 'success');
+            
+            // الانتظار قليلاً ثم إعادة تحميل الصفحة
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        }
+    } catch (error) {
+        app.hideLoading();
+        console.error('Error saving customer:', error);
+        app.showNotification('❌ حدث خطأ في إضافة العميل', 'danger');
+    }
+}
+
+// عرض تفاصيل عميل
+function viewCustomer(id) {
+    alert(`عرض تفاصيل العميل رقم: ${id}`);
+}
+
+// تعديل عميل
+function editCustomer(id) {
+    alert(`تعديل العميل رقم: ${id}`);
+}
+
+// عرض مشتريات عميل
+function viewPurchases(id) {
+    alert(`عرض مشتريات العميل رقم: ${id}`);
+}
+
+// البحث
+document.getElementById('searchInput')?.addEventListener('input', function() {
+    const searchValue = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#customersTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchValue) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

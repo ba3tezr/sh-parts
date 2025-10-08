@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=sh_parts_db
+      - POSTGRES_USER=sh_parts_user
+      - POSTGRES_PASSWORD=sh_parts_password
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sh_parts_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    command: gunicorn --bind 0.0.0.0:8000 --workers 3 sh_parts.wsgi:application
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=sh_parts_db
+      - DB_USER=sh_parts_user
+      - DB_PASSWORD=sh_parts_password
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery:
+    build: .
+    command: celery -A sh_parts worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=sh_parts_db
+      - DB_USER=sh_parts_user
+      - DB_PASSWORD=sh_parts_password
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+  celery-beat:
+    build: .
+    command: celery -A sh_parts beat -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=sh_parts_db
+      - DB_USER=sh_parts_user
+      - DB_PASSWORD=sh_parts_password
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:

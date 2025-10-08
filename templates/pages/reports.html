@@ -1,0 +1,419 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}التقارير - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="reports">التقارير</span>{% endblock %}
+
+{% block content %}
+<!-- خيارات التقارير -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-box-seam fs-1 text-primary mb-3 d-block"></i>
+                <h5 data-translate="inventory_report">تقرير المخزون</h5>
+                <p class="text-muted">عرض جميع قطع المخزون وقيمتها</p>
+                <button class="btn btn-primary" onclick="generateReport('inventory')">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    <span data-translate="generate_report">إنشاء التقرير</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-cart-check fs-1 text-success mb-3 d-block"></i>
+                <h5 data-translate="sales_report">تقرير المبيعات</h5>
+                <p class="text-muted">تحليل المبيعات خلال فترة محددة</p>
+                <button class="btn btn-success" onclick="generateReport('sales')">
+                    <i class="bi bi-file-earmark-bar-graph me-2"></i>
+                    <span data-translate="generate_report">إنشاء التقرير</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-cash-stack fs-1 text-warning mb-3 d-block"></i>
+                <h5 data-translate="profit_report">تقرير الأرباح</h5>
+                <p class="text-muted">حساب الأرباح والمصروفات</p>
+                <button class="btn btn-warning" onclick="generateReport('profit')">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+                    <span data-translate="generate_report">إنشاء التقرير</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-people fs-1 text-info mb-3 d-block"></i>
+                <h5>تقرير العملاء</h5>
+                <p class="text-muted">معلومات العملاء والديون</p>
+                <button class="btn btn-info" onclick="generateReport('customers')">
+                    <i class="bi bi-file-earmark-person me-2"></i>
+                    <span data-translate="generate_report">إنشاء التقرير</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-car-front fs-1 text-danger mb-3 d-block"></i>
+                <h5>تقرير السيارات</h5>
+                <p class="text-muted">السيارات المفككة وغير المفككة</p>
+                <button class="btn btn-danger" onclick="generateReport('vehicles')">
+                    <i class="bi bi-file-earmark-code me-2"></i>
+                    <span data-translate="generate_report">إنشاء التقرير</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-graph-up fs-1 text-secondary mb-3 d-block"></i>
+                <h5>تقرير مخصص</h5>
+                <p class="text-muted">إنشاء تقرير حسب الحاجة</p>
+                <button class="btn btn-secondary" onclick="createCustomReport()">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    تقرير مخصص
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- عرض التقرير -->
+<div class="row" id="reportSection" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    <span id="reportTitle">التقرير</span>
+                </h5>
+                <div>
+                    <button class="btn btn-sm btn-success" onclick="exportReport('excel')">
+                        <i class="bi bi-file-earmark-excel me-1"></i>
+                        تصدير Excel
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="exportReport('pdf')">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>
+                        تصدير PDF
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i>
+                        <span data-translate="print">طباعة</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="reportContent">
+                    <!-- سيتم إدراج محتوى التقرير هنا -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إعدادات التقرير -->
+<div class="modal fade" id="reportSettingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إعدادات التقرير</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="reportSettingsForm">
+                    <div class="mb-3">
+                        <label for="date_from" class="form-label" data-translate="date_from">من تاريخ</label>
+                        <input type="date" class="form-control" id="date_from">
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_to" class="form-label" data-translate="date_to">إلى تاريخ</label>
+                        <input type="date" class="form-control" id="date_to">
+                    </div>
+                    <div class="mb-3">
+                        <label for="groupBy" class="form-label">تجميع حسب</label>
+                        <select class="form-select" id="groupBy">
+                            <option value="day">اليوم</option>
+                            <option value="week">الأسبوع</option>
+                            <option value="month" selected>الشهر</option>
+                            <option value="year">السنة</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="cancel">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="applyReportSettings()" data-translate="submit">تطبيق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات سريعة -->
+<div class="row g-4 mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    إحصائيات سريعة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-cash fs-1 text-success mb-2 d-block"></i>
+                            <h4 class="mb-0">0 {{ currency_symbol }}</h4>
+                            <small class="text-muted">إجمالي المبيعات</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-box fs-1 text-primary mb-2 d-block"></i>
+                            <h4 class="mb-0">0</h4>
+                            <small class="text-muted">قطع المخزون</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-people fs-1 text-info mb-2 d-block"></i>
+                            <h4 class="mb-0">0</h4>
+                            <small class="text-muted">إجمالي العملاء</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3 text-center">
+                            <i class="bi bi-car-front fs-1 text-warning mb-2 d-block"></i>
+                            <h4 class="mb-0">0</h4>
+                            <small class="text-muted">السيارات المستقبلة</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- رسم بياني للمبيعات -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>
+                    مخطط المبيعات الشهرية
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-pie-chart me-2"></i>
+                    توزيع المخزون
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="inventoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let currentReportType = null;
+
+// إنشاء تقرير
+function generateReport(type) {
+    currentReportType = type;
+    
+    const reportTitles = {
+        'inventory': 'تقرير المخزون',
+        'sales': 'تقرير المبيعات',
+        'profit': 'تقرير الأرباح',
+        'customers': 'تقرير العملاء',
+        'vehicles': 'تقرير السيارات'
+    };
+    
+    document.getElementById('reportTitle').textContent = reportTitles[type] || 'التقرير';
+    
+    // إظهار إعدادات التقرير
+    const modal = new bootstrap.Modal(document.getElementById('reportSettingsModal'));
+    modal.show();
+}
+
+// تطبيق إعدادات التقرير
+async function applyReportSettings() {
+    const dateFrom = document.getElementById('date_from').value;
+    const dateTo = document.getElementById('date_to').value;
+    const groupBy = document.getElementById('groupBy').value;
+    
+    app.showLoading();
+    
+    // إخفاء Modal
+    bootstrap.Modal.getInstance(document.getElementById('reportSettingsModal')).hide();
+    
+    // محاكاة تحميل التقرير
+    setTimeout(() => {
+        const reportContent = document.getElementById('reportContent');
+        reportContent.innerHTML = `
+            <div class="alert alert-info">
+                <strong>${document.getElementById('reportTitle').textContent}</strong>
+                <p class="mb-0">من: ${dateFrom || 'البداية'} - إلى: ${dateTo || 'الآن'}</p>
+                <p class="mb-0">التجميع: ${groupBy}</p>
+            </div>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>البند</th>
+                        <th>القيمة</th>
+                        <th>النسبة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>مثال 1</td>
+                        <td>1000 ${app.getSettings().currency_symbol}</td>
+                        <td>25%</td>
+                    </tr>
+                    <tr>
+                        <td>مثال 2</td>
+                        <td>3000 ${app.getSettings().currency_symbol}</td>
+                        <td>75%</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="table-primary">
+                        <th>الإجمالي</th>
+                        <th>4000 ${app.getSettings().currency_symbol}</th>
+                        <th>100%</th>
+                    </tr>
+                </tfoot>
+            </table>
+        `;
+        
+        document.getElementById('reportSection').style.display = 'block';
+        app.hideLoading();
+        
+        // التمرير للتقرير
+        document.getElementById('reportSection').scrollIntoView({ behavior: 'smooth' });
+    }, 1000);
+}
+
+// تصدير التقرير
+function exportReport(format) {
+    app.showNotification(`جاري تصدير التقرير بصيغة ${format.toUpperCase()}...`, 'info');
+}
+
+// إنشاء تقرير مخصص
+function createCustomReport() {
+    app.showNotification('ميزة التقرير المخصص قريباً...', 'info');
+}
+
+// رسم المخططات
+document.addEventListener('DOMContentLoaded', () => {
+    // مخطط المبيعات
+    const salesCtx = document.getElementById('salesChart');
+    if (salesCtx) {
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                datasets: [{
+                    label: 'المبيعات',
+                    data: [12000, 19000, 15000, 25000, 22000, 30000],
+                    borderColor: 'rgb(42, 82, 152)',
+                    backgroundColor: 'rgba(42, 82, 152, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--text-color')
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--text-secondary')
+                        },
+                        grid: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--border-color')
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--text-secondary')
+                        },
+                        grid: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--border-color')
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // مخطط المخزون
+    const inventoryCtx = document.getElementById('inventoryChart');
+    if (inventoryCtx) {
+        new Chart(inventoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['متوفر', 'محجوز', 'مباع'],
+                datasets: [{
+                    data: [65, 20, 15],
+                    backgroundColor: [
+                        'rgb(40, 167, 69)',
+                        'rgb(255, 193, 7)',
+                        'rgb(108, 117, 125)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--text-color')
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

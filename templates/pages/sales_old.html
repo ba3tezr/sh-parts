@@ -1,0 +1,385 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}المبيعات - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="sales">المبيعات</span>{% endblock %}
+
+{% block content %}
+<!-- إحصائيات سريعة -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-cash-stack fs-1 text-success me-3"></i>
+                    <div>
+                        <p class="mb-0 text-muted">إجمالي المبيعات اليوم</p>
+                        <h4 class="mb-0" id="todaySales">0 {{ currency_symbol }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-calendar-week fs-1 text-primary me-3"></i>
+                    <div>
+                        <p class="mb-0 text-muted">مبيعات هذا الشهر</p>
+                        <h4 class="mb-0" id="monthSales">0 {{ currency_symbol }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-clock-history fs-1 text-warning me-3"></i>
+                    <div>
+                        <p class="mb-0 text-muted" data-translate="pending_orders">الطلبات المعلقة</p>
+                        <h4 class="mb-0" id="pendingSales">{{ sales.count }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-circle fs-1 text-danger me-3"></i>
+                    <div>
+                        <p class="mb-0 text-muted">المدفوعات المعلقة</p>
+                        <h4 class="mb-0" id="pendingPayments">-</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- أزرار الإجراءات -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newSaleModal">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    <span data-translate="new_sale_btn">مبيعة جديدة</span>
+                </button>
+            </div>
+            <div class="d-flex gap-2">
+                <input type="text" class="form-control" id="searchInput" placeholder="بحث..." style="width: 250px;">
+                <select class="form-select" id="filterStatus" style="width: 150px;">
+                    <option value="">كل الحالات</option>
+                    <option value="DRAFT">مسودة</option>
+                    <option value="CONFIRMED">مؤكدة</option>
+                    <option value="COMPLETED">مكتملة</option>
+                    <option value="CANCELLED">ملغاة</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- جدول المبيعات -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-cart-check me-2"></i>
+                    <span data-translate="sales_list">قائمة المبيعات</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="salesTable">
+                        <thead>
+                            <tr>
+                                <th data-translate="invoice">الفاتورة</th>
+                                <th data-translate="customer_name">العميل</th>
+                                <th data-translate="date">التاريخ</th>
+                                <th data-translate="total">الإجمالي</th>
+                                <th data-translate="amount_paid">المدفوع</th>
+                                <th data-translate="balance">الرصيد</th>
+                                <th data-translate="status">الحالة</th>
+                                <th>حالة الدفع</th>
+                                <th data-translate="actions">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if sales %}
+                                {% for sale in sales %}
+                                <tr>
+                                    <td><strong>{{ sale.invoice_number }}</strong></td>
+                                    <td>
+                                        {% if sale.customer %}
+                                            {{ sale.customer.first_name }} {{ sale.customer.last_name }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ sale.created_at|date:"Y-m-d H:i"|default:"-" }}</td>
+                                    <td><strong>{{ sale.total_amount }} {{ currency_symbol }}</strong></td>
+                                    <td>{{ sale.paid_amount }} {{ currency_symbol }}</td>
+                                    <td>{{ sale.balance_due }} {{ currency_symbol }}</td>
+                                    <td>
+                                        {% if sale.status == 'DRAFT' %}
+                                            <span class="badge bg-secondary">مسودة</span>
+                                        {% elif sale.status == 'CONFIRMED' %}
+                                            <span class="badge bg-warning">مؤكدة</span>
+                                        {% elif sale.status == 'COMPLETED' %}
+                                            <span class="badge bg-success">مكتملة</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">ملغاة</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if sale.payment_status == 'PAID' %}
+                                            <span class="badge bg-success">مدفوعة</span>
+                                        {% elif sale.payment_status == 'PARTIAL' %}
+                                            <span class="badge bg-warning">مدفوعة جزئياً</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">غير مدفوعة</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-info" onclick="viewSale({{ sale.id }})" title="عرض">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-success" onclick="printInvoice({{ sale.id }})" title="طباعة">
+                                                <i class="bi bi-printer"></i>
+                                            </button>
+                                            {% if sale.payment_status != 'PAID' %}
+                                            <button class="btn btn-primary" onclick="addPayment({{ sale.id }})" title="إضافة دفعة">
+                                                <i class="bi bi-cash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted" data-translate="no_data">لا توجد مبيعات بعد</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal مبيعة جديدة -->
+<div class="modal fade" id="newSaleModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" data-translate="new_sale_btn">مبيعة جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newSaleForm">
+                    <!-- معلومات العميل -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <label for="customer" class="form-label" data-translate="customer_name">العميل</label>
+                            <select class="form-select" id="customer">
+                                <option value="">اختر العميل (اختياري)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-success w-100" onclick="addNewCustomer()">
+                                <i class="bi bi-person-plus me-2"></i>
+                                عميل جديد
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- الأصناف -->
+                    <div class="mb-3">
+                        <h6>الأصناف</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm" id="itemsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40%;">القطعة</th>
+                                        <th style="width: 15%;">الكمية</th>
+                                        <th style="width: 15%;">السعر</th>
+                                        <th style="width: 15%;">الخصم</th>
+                                        <th style="width: 10%;">الإجمالي</th>
+                                        <th style="width: 5%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="saleItems">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">لا توجد أصناف</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="addItem()">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            إضافة صنف
+                        </button>
+                    </div>
+                    
+                    <!-- الإجمالي -->
+                    <div class="row">
+                        <div class="col-md-8"></div>
+                        <div class="col-md-4">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td data-translate="subtotal">المجموع الفرعي:</td>
+                                    <td class="text-end"><strong id="subtotal">0 {{ currency_symbol }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td data-translate="discount">الخصم:</td>
+                                    <td class="text-end"><span id="totalDiscount">0 {{ currency_symbol }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td data-translate="tax">الضريبة ({{ system_settings.tax_rate }}%):</td>
+                                    <td class="text-end"><span id="tax">0 {{ currency_symbol }}</span></td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td><strong data-translate="total">الإجمالي:</strong></td>
+                                    <td class="text-end"><strong id="total">0 {{ currency_symbol }}</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="cancel">إلغاء</button>
+                <button type="button" class="btn btn-warning" onclick="saveSaleDraft()">حفظ كمسودة</button>
+                <button type="button" class="btn btn-primary" onclick="saveSale()" data-translate="save">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let saleItemsCounter = 0;
+
+// تحميل العملاء
+async function loadCustomers() {
+    const data = await app.apiRequest('/api/customers/');
+    if (data && data.results) {
+        const customerSelect = document.getElementById('customer');
+        data.results.forEach(customer => {
+            const option = document.createElement('option');
+            option.value = customer.id;
+            option.textContent = `${customer.first_name} ${customer.last_name} - ${customer.phone}`;
+            customerSelect.appendChild(option);
+        });
+    }
+}
+
+// إضافة صنف
+function addItem() {
+    const tbody = document.getElementById('saleItems');
+    if (tbody.children[0]?.colSpan) {
+        tbody.innerHTML = '';
+    }
+    
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>
+            <select class="form-select form-select-sm item-select">
+                <option value="">اختر القطعة</option>
+            </select>
+        </td>
+        <td><input type="number" class="form-control form-control-sm" value="1" min="1"></td>
+        <td><input type="number" class="form-control form-control-sm" step="0.01" placeholder="السعر"></td>
+        <td><input type="number" class="form-control form-control-sm" value="0" step="0.01" placeholder="الخصم"></td>
+        <td class="text-end"><strong>0</strong></td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('tr').remove(); calculateTotal();">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(row);
+    
+    // تحميل القطع للصنف الجديد
+    loadInventoryItems(row.querySelector('.item-select'));
+}
+
+// تحميل قطع المخزون
+async function loadInventoryItems(selectElement) {
+    const data = await app.apiRequest('/api/inventory/items/?status=AVAILABLE');
+    if (data && data.results) {
+        data.results.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = `${item.part.name_ar} - ${item.sku} (${item.selling_price} ${app.getSettings().currency_symbol})`;
+            option.dataset.price = item.selling_price;
+            selectElement.appendChild(option);
+        });
+    }
+}
+
+// حساب الإجمالي
+function calculateTotal() {
+    // سيتم تطبيقه لاحقاً
+    app.showNotification('جاري حساب الإجمالي...', 'info');
+}
+
+// حفظ مبيعة
+function saveSale() {
+    app.showNotification('جاري حفظ المبيعة...', 'info');
+}
+
+// حفظ كمسودة
+function saveSaleDraft() {
+    app.showNotification('جاري حفظ المبيعة كمسودة...', 'info');
+}
+
+// عرض تفاصيل مبيعة
+function viewSale(id) {
+    alert(`عرض تفاصيل المبيعة رقم: ${id}`);
+}
+
+// طباعة فاتورة
+function printInvoice(id) {
+    app.showNotification('جاري تحضير الفاتورة للطباعة...', 'info');
+}
+
+// إضافة دفعة
+function addPayment(id) {
+    alert(`إضافة دفعة للمبيعة رقم: ${id}`);
+}
+
+// إضافة عميل جديد
+function addNewCustomer() {
+    alert('إضافة عميل جديد');
+}
+
+// البحث
+document.getElementById('searchInput')?.addEventListener('input', function() {
+    const searchValue = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#salesTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchValue) ? '' : 'none';
+    });
+});
+
+// التحميل عند فتح الصفحة
+document.addEventListener('DOMContentLoaded', () => {
+    loadCustomers();
+});
+</script>
+{% endblock %}
