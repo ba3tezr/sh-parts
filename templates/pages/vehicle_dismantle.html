@@ -1,0 +1,597 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}تفكيك سيارة - {{ vehicle.make.name }} {{ vehicle.model.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dismantle-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 2rem;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .vehicle-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .info-item {
+        background: rgba(255,255,255,0.15);
+        padding: 1rem;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .info-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+    
+    .categories-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+    
+    .category-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .category-card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+    }
+    
+    .category-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .category-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin: 0;
+    }
+    
+    .category-count {
+        background: var(--primary-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .parts-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .part-item {
+        background: var(--bg-secondary);
+        border: 2px solid transparent;
+        padding: 1rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    
+    .part-item:hover {
+        border-color: var(--primary-color);
+        transform: translateX(-3px);
+    }
+    
+    .part-item.selected {
+        border-color: var(--success-color);
+        background: rgba(40, 167, 69, 0.1);
+    }
+    
+    .part-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .part-checkbox input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+    
+    .part-name {
+        font-weight: 500;
+        flex: 1;
+    }
+    
+    .part-details {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(0,0,0,0.1);
+        display: none;
+    }
+    
+    .part-item.selected .part-details {
+        display: block;
+    }
+    
+    .detail-row {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .detail-row label {
+        flex: 0 0 80px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    
+    .detail-row select,
+    .detail-row input {
+        flex: 1;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-color);
+        color: var(--text-color);
+    }
+    
+    .summary-panel {
+        position: sticky;
+        top: 20px;
+        background: var(--card-bg);
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .summary-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+    }
+    
+    .summary-stats {
+        margin-bottom: 1.5rem;
+    }
+    
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .stat-label {
+        color: var(--text-secondary);
+    }
+    
+    .stat-value {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .stat-value.total {
+        color: var(--success-color);
+        font-size: 1.5rem;
+    }
+    
+    .btn-save-dismantle {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--success-color), #28a745);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-save-dismantle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+    
+    .btn-save-dismantle:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        display: none;
+    }
+    
+    .loading-overlay.active {
+        display: flex;
+    }
+    
+    .loading-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+    
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid var(--primary-color);
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .select-all-btn {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+    
+    .select-all-btn:hover {
+        opacity: 0.9;
+        transform: scale(1.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="dismantle-header">
+        <h2>
+            <i class="bi bi-tools"></i>
+            تفكيك سيارة
+        </h2>
+        
+        <div class="vehicle-info">
+            <div class="info-item">
+                <div class="info-label">الماركة</div>
+                <div class="info-value">{{ vehicle.make.name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">الموديل</div>
+                <div class="info-value">{{ vehicle.model.name }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">السنة</div>
+                <div class="info-value">{{ vehicle.year }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">اللون</div>
+                <div class="info-value">{{ vehicle.color|default:"غير محدد" }}</div>
+            </div>
+            {% if vehicle.vin %}
+            <div class="info-item">
+                <div class="info-label">VIN</div>
+                <div class="info-value">{{ vehicle.vin }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Parts Checklist -->
+        <div class="col-lg-8">
+            <div id="categoriesContainer" class="categories-grid">
+                <!-- سيتم ملؤها ديناميكياً -->
+            </div>
+        </div>
+        
+        <!-- Summary Panel -->
+        <div class="col-lg-4">
+            <div class="summary-panel">
+                <div class="summary-title">
+                    <i class="bi bi-clipboard-check"></i>
+                    ملخص التفكيك
+                </div>
+                
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">عدد القطع المحددة</span>
+                        <span class="stat-value" id="selectedCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">إجمالي القيمة</span>
+                        <span class="stat-value total" id="totalValue">0 EGP</span>
+                    </div>
+                </div>
+                
+                <button class="btn-save-dismantle" id="saveDismantleBtn" disabled>
+                    <i class="bi bi-check-circle"></i>
+                    حفظ وتدريج في المخزون
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h4>جاري التفكيك والتدريج...</h4>
+        <p>الرجاء الانتظار</p>
+    </div>
+</div>
+
+<script>
+class DismantleManager {
+    constructor() {
+        this.vehicleId = {{ vehicle.id }};
+        this.selectedParts = new Map();
+        this.standardParts = [];
+        this.categories = [];
+        
+        this.init();
+    }
+    
+    async init() {
+        await this.loadStandardParts();
+        await this.loadCategories();
+        this.renderCategories();
+        this.setupEventListeners();
+    }
+    
+    async loadStandardParts() {
+        try {
+            const response = await app.apiRequest('/api/cars-data/standard-parts/');
+            this.standardParts = response.results;
+        } catch (error) {
+            console.error('Error loading parts:', error);
+            app.showAlert('فشل تحميل القطع القياسية', 'error');
+        }
+    }
+    
+    async loadCategories() {
+        try {
+            const response = await app.apiRequest('/api/cars-data/part-categories/');
+            this.categories = response.results;
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    }
+    
+    renderCategories() {
+        const container = document.getElementById('categoriesContainer');
+        container.innerHTML = '';
+        
+        this.categories.forEach(category => {
+            const categoryParts = this.standardParts.filter(p => p.category === category.id);
+            
+            const categoryCard = document.createElement('div');
+            categoryCard.className = 'category-card';
+            categoryCard.innerHTML = `
+                <div class="category-header">
+                    <h3 class="category-title">${category.name}</h3>
+                    <div>
+                        <span class="category-count">${categoryParts.length} قطعة</span>
+                        <button class="select-all-btn" onclick="dismantleManager.selectAllInCategory('${category.id}')">
+                            تحديد الكل
+                        </button>
+                    </div>
+                </div>
+                <div class="parts-list" id="parts-${category.id}">
+                    ${categoryParts.map(part => this.renderPartItem(part)).join('')}
+                </div>
+            `;
+            
+            container.appendChild(categoryCard);
+        });
+    }
+    
+    renderPartItem(part) {
+        const id = `part-${part.category}-${part.name_en.replace(/\s+/g, '-')}`;
+        return `
+            <div class="part-item" id="${id}-container">
+                <div class="part-checkbox">
+                    <input type="checkbox" id="${id}" data-part='${JSON.stringify(part)}'>
+                    <label for="${id}" class="part-name">${part.name_ar}</label>
+                </div>
+                <div class="part-details">
+                    <div class="detail-row">
+                        <label>الحالة:</label>
+                        <select id="${id}-condition">
+                            <option value="NEW">جديد</option>
+                            <option value="USED_EXCELLENT">مستعمل - ممتاز</option>
+                            <option value="USED_GOOD" selected>مستعمل - جيد</option>
+                            <option value="USED_FAIR">مستعمل - مقبول</option>
+                            <option value="DAMAGED">تالف</option>
+                        </select>
+                    </div>
+                    <div class="detail-row">
+                        <label>السعر:</label>
+                        <input type="number" id="${id}-price" placeholder="0" min="0" step="1">
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    selectAllInCategory(categoryId) {
+        const categoryParts = this.standardParts.filter(p => p.category === categoryId);
+        categoryParts.forEach(part => {
+            const id = `part-${part.category}-${part.name_en.replace(/\s+/g, '-')}`;
+            const checkbox = document.getElementById(id);
+            if (checkbox && !checkbox.checked) {
+                checkbox.checked = true;
+                this.handlePartSelection(checkbox);
+            }
+        });
+    }
+    
+    setupEventListeners() {
+        // استماع لتغييرات الـ checkboxes
+        document.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox' && e.target.id.startsWith('part-')) {
+                this.handlePartSelection(e.target);
+            }
+            
+            if (e.target.id.endsWith('-condition') || e.target.id.endsWith('-price')) {
+                this.updateSummary();
+            }
+        });
+        
+        // زر الحفظ
+        document.getElementById('saveDismantleBtn').addEventListener('click', () => {
+            this.saveDismantling();
+        });
+    }
+    
+    handlePartSelection(checkbox) {
+        const container = document.getElementById(checkbox.id + '-container');
+        
+        if (checkbox.checked) {
+            container.classList.add('selected');
+            const partData = JSON.parse(checkbox.dataset.part);
+            this.selectedParts.set(checkbox.id, partData);
+        } else {
+            container.classList.remove('selected');
+            this.selectedParts.delete(checkbox.id);
+        }
+        
+        this.updateSummary();
+    }
+    
+    updateSummary() {
+        const count = this.selectedParts.size;
+        let total = 0;
+        
+        this.selectedParts.forEach((part, id) => {
+            const priceInput = document.getElementById(id + '-price');
+            if (priceInput) {
+                total += parseFloat(priceInput.value) || 0;
+            }
+        });
+        
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('totalValue').textContent = total.toLocaleString('ar-EG') + ' EGP';
+        
+        // تفعيل زر الحفظ
+        const saveBtn = document.getElementById('saveDismantleBtn');
+        saveBtn.disabled = count === 0;
+    }
+    
+    async saveDismantling() {
+        if (this.selectedParts.size === 0) {
+            app.showAlert('الرجاء تحديد قطعة واحدة على الأقل', 'warning');
+            return;
+        }
+        
+        const parts = [];
+        this.selectedParts.forEach((part, id) => {
+            const condition = document.getElementById(id + '-condition').value;
+            const price = document.getElementById(id + '-price').value;
+            
+            if (!price || parseFloat(price) <= 0) {
+                throw new Error(`الرجاء إدخال سعر صحيح لـ ${part.name_ar}`);
+            }
+            
+            parts.push({
+                name_ar: part.name_ar,
+                name_en: part.name_en,
+                category: part.category,
+                condition: condition,
+                price: parseFloat(price)
+            });
+        });
+        
+        try {
+            document.getElementById('loadingOverlay').classList.add('active');
+            
+            const response = await fetch('/api/save-dismantling/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': app.getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    vehicle_id: this.vehicleId,
+                    parts: parts
+                })
+            });
+            
+            const data = await response.json();
+            
+            document.getElementById('loadingOverlay').classList.remove('active');
+            
+            if (data.success) {
+                showInfoModal(
+                    'نجاح التفكيك',
+                    `<div style="text-align: center;">
+                        <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #28a745;"></i>
+                        <h3>${data.message}</h3>
+                        <p>تم إضافة ${data.items.length} قطعة إلى المخزون</p>
+                    </div>`,
+                    'success'
+                );
+                
+                // الانتقال إلى صفحة المخزون بعد 2 ثانية
+                setTimeout(() => {
+                    window.location.href = '/inventory/';
+                }, 2000);
+            } else {
+                app.showAlert(data.message, 'error');
+            }
+            
+        } catch (error) {
+            document.getElementById('loadingOverlay').classList.remove('active');
+            console.error('Error:', error);
+            app.showAlert(error.message || 'حدث خطأ أثناء الحفظ', 'error');
+        }
+    }
+}
+
+// تهيئة عند تحميل الصفحة
+let dismantleManager;
+document.addEventListener('DOMContentLoaded', () => {
+    dismantleManager = new DismantleManager();
+});
+</script>
+{% endblock %}

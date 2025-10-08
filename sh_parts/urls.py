@@ -22,7 +22,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.views import (
     dashboard, login_view, logout_view,
     vehicles_list, inventory_list, sales_list,
-    customers_list, reports_view, price_management_view
+    customers_list, reports_view, price_management_view,
+    vehicle_dismantle_view, save_dismantling
 )
 from core.views_api import get_system_settings
 from core.views_car_api import (
@@ -37,6 +38,7 @@ urlpatterns = [
     
     # صفحات النظام
     path('vehicles/', vehicles_list, name='vehicles'),
+    path('vehicles/dismantle/<int:vehicle_id>/', vehicle_dismantle_view, name='vehicle_dismantle'),
     path('inventory/', inventory_list, name='inventory'),
     path('sales/', sales_list, name='sales'),
     path('customers/', customers_list, name='customers'),
@@ -51,6 +53,9 @@ urlpatterns = [
     
     # System Settings API
     path('api/settings/', get_system_settings, name='system_settings'),
+    
+    # Dismantling API
+    path('api/save-dismantling/', save_dismantling, name='save_dismantling'),
     
     # Car API Endpoints
     path('api/cars-data/makes/', get_makes, name='api_car_makes'),

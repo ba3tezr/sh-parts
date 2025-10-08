@@ -1,8 +1,13 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from django.db.models import Sum, Count
+from django.db import transaction
+import json
+from decimal import Decimal
 from sales.models import Sale
 from inventory.models import InventoryItem
 from customers.models import Customer
@@ -101,3 +106,99 @@ def price_management_view(request):
         return redirect('dashboard')
     
     return render(request, 'pages/price_management.html')
+
+
+@login_required
+def vehicle_dismantle_view(request, vehicle_id):
+    """صفحة تفكيك السيارة مع Checklist"""
+    vehicle = get_object_or_404(Vehicle, id=vehicle_id)
+    
+    return render(request, 'pages/vehicle_dismantle.html', {
+        'vehicle': vehicle
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def save_dismantling(request):
+    """حفظ عملية التفكيك وتدريج القطع في المخزون"""
+    try:
+        data = json.loads(request.body)
+        vehicle_id = data.get('vehicle_id')
+        parts = data.get('parts', [])
+        
+        from inventory.models import Part, StockMovement, Location
+        
+        vehicle = get_object_or_404(Vehicle, id=vehicle_id)
+        
+        # التأكد من عدم التفكيك المسبق
+        if vehicle.is_dismantled:
+            return JsonResponse({
+                'success': False,
+                'message': 'هذه السيارة تم تفكيكها بالفعل'
+            }, status=400)
+        
+        created_items = []
+        
+        with transaction.atomic():
+            # الحصول على الموقع الافتراضي أو إنشاؤه
+            default_location, _ = Location.objects.get_or_create(
+                name='مخزن التفكيك',
+                defaults={'location_type': 'WAREHOUSE'}
+            )
+            
+            # معالجة كل قطعة
+            for part_data in parts:
+                # إنشاء أو الحصول على القطعة
+                part, created = Part.objects.get_or_create(
+                    name_ar=part_data['name_ar'],
+                    defaults={
+                        'name_en': part_data.get('name_en', ''),
+                        'category': part_data.get('category', 'MISC'),
+                        'description': f"قطعة من {vehicle.make.name} {vehicle.model.name} {vehicle.year}"
+                    }
+                )
+                
+                # إنشاء عنصر في المخزون
+                inventory_item = InventoryItem.objects.create(
+                    part=part,
+                    vehicle_source=vehicle,
+                    condition=part_data.get('condition', 'USED_GOOD'),
+                    quantity=1,
+                    selling_price=Decimal(str(part_data.get('price', 0))),
+                    location=default_location,
+                    status='AVAILABLE'
+                )
+                
+                # إنشاء حركة مخزون
+                StockMovement.objects.create(
+                    inventory_item=inventory_item,
+                    movement_type='IN',
+                    quantity=1,
+                    reference_number=f'DISMANTLE-{vehicle.id}',
+                    notes=f'تفكيك سيارة: {vehicle.make.name} {vehicle.model.name} {vehicle.year}',
+                    performed_by=request.user
+                )
+                
+                created_items.append({
+                    'id': inventory_item.id,
+                    'sku': inventory_item.sku,
+                    'part': part.name_ar,
+                    'price': str(inventory_item.selling_price)
+                })
+            
+            # تحديث حالة السيارة
+            vehicle.is_dismantled = True
+            vehicle.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'تم تفكيك السيارة بنجاح وإضافة {len(created_items)} قطعة إلى المخزون',
+            'items': created_items
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'حدث خطأ: {str(e)}'
+        }, status=500)
