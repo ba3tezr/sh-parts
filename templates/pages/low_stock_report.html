@@ -1,0 +1,404 @@
+{% extends 'base/base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "تقرير القطع منخفضة المخزون" %} - SH Parts{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.report-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-card);
+}
+
+.report-card h5 {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent-color) 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-card h3 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.priority-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.priority-badge.critical {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.priority-badge.high {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    color: white;
+}
+
+.priority-badge.medium {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <h2><i class="bi bi-exclamation-triangle me-2"></i>{% trans "تقرير القطع منخفضة المخزون" %}</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "الرئيسية" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'inventory' %}">{% trans "المخزون" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "القطع منخفضة المخزون" %}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel me-2"></i>{% trans "تصدير Excel" %}
+            </button>
+            <button class="btn btn-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>{% trans "طباعة" %}
+            </button>
+            <a href="{% url 'inventory' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right me-2"></i>{% trans "رجوع" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="bi bi-exclamation-circle fs-1"></i>
+                <h3 id="outOfStock">0</h3>
+                <p class="mb-0">{% trans "نفذت الكمية" %}</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="bi bi-exclamation-triangle fs-1"></i>
+                <h3 id="lowStock">0</h3>
+                <p class="mb-0">{% trans "منخفضة المخزون" %}</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="bi bi-list-check fs-1"></i>
+                <h3 id="totalItems">0</h3>
+                <p class="mb-0">{% trans "إجمالي القطع" %}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Out of Stock Items -->
+    <div class="report-card" id="outOfStockSection" style="display: none;">
+        <h5><i class="bi bi-x-circle me-2 text-danger"></i>{% trans "القطع التي نفذت" %}</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>{% trans "القطعة" %}</th>
+                        <th>{% trans "الفئة" %}</th>
+                        <th>{% trans "الموقع" %}</th>
+                        <th>{% trans "آخر تحديث" %}</th>
+                        <th class="no-print">{% trans "إجراءات" %}</th>
+                    </tr>
+                </thead>
+                <tbody id="outOfStockTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Low Stock Items -->
+    <div class="report-card">
+        <h5><i class="bi bi-exclamation-triangle me-2 text-warning"></i>{% trans "القطع منخفضة المخزون" %}</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>{% trans "القطعة" %}</th>
+                        <th>{% trans "الكمية الحالية" %}</th>
+                        <th>{% trans "الحد الأدنى" %}</th>
+                        <th>{% trans "الأولوية" %}</th>
+                        <th>{% trans "الموقع" %}</th>
+                        <th class="no-print">{% trans "إجراءات" %}</th>
+                    </tr>
+                </thead>
+                <tbody id="lowStockTable">
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2">{% trans "جاري التحميل..." %}</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let outOfStockItems = [];
+let lowStockItems = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadData();
+});
+
+async function loadData() {
+    try {
+        showLoading();
+        
+        // تحميل جميع القطع
+        const allItems = await app.apiRequest('/api/inventory/items/?status=AVAILABLE');
+        
+        // فصل القطع حسب الحالة
+        outOfStockItems = allItems.filter(item => item.quantity === 0);
+        lowStockItems = allItems.filter(item => item.quantity > 0 && item.quantity <= item.min_quantity);
+        
+        // ترتيب حسب الأولوية
+        lowStockItems.sort((a, b) => {
+            const priorityA = getPriority(a.quantity, a.min_quantity);
+            const priorityB = getPriority(b.quantity, b.min_quantity);
+            return priorityB - priorityA;
+        });
+        
+        displayStatistics();
+        displayOutOfStock();
+        displayLowStock();
+        
+    } catch (error) {
+        console.error('Error loading data:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل تحميل البيانات: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+function displayStatistics() {
+    document.getElementById('outOfStock').textContent = outOfStockItems.length;
+    document.getElementById('lowStock').textContent = lowStockItems.length;
+    document.getElementById('totalItems').textContent = outOfStockItems.length + lowStockItems.length;
+}
+
+function displayOutOfStock() {
+    const section = document.getElementById('outOfStockSection');
+    const tbody = document.getElementById('outOfStockTable');
+    
+    if (outOfStockItems.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+    
+    section.style.display = 'block';
+    
+    let html = '';
+    outOfStockItems.forEach(item => {
+        html += `
+            <tr>
+                <td><code>${item.sku}</code></td>
+                <td>${item.part_details?.name_ar || item.part_details?.name || '-'}</td>
+                <td>${item.part_details?.category_name_ar || '-'}</td>
+                <td>${item.location_details?.full_location || '-'}</td>
+                <td>${new Date(item.updated_at).toLocaleDateString('ar-EG')}</td>
+                <td class="no-print">
+                    <button class="btn btn-sm btn-primary" onclick="restock(${item.id})">
+                        <i class="bi bi-plus-circle"></i> إعادة تخزين
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function displayLowStock() {
+    const tbody = document.getElementById('lowStockTable');
+    
+    if (lowStockItems.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <i class="bi bi-check-circle fs-1 text-success"></i>
+                    <p class="mt-3 text-success">جميع القطع في مستوى آمن</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    lowStockItems.forEach(item => {
+        const priority = getPriority(item.quantity, item.min_quantity);
+        const priorityBadge = getPriorityBadge(priority);
+        
+        html += `
+            <tr>
+                <td><code>${item.sku}</code></td>
+                <td>${item.part_details?.name_ar || item.part_details?.name || '-'}</td>
+                <td><span class="badge bg-warning">${item.quantity}</span></td>
+                <td><span class="badge bg-secondary">${item.min_quantity}</span></td>
+                <td>${priorityBadge}</td>
+                <td>${item.location_details?.full_location || '-'}</td>
+                <td class="no-print">
+                    <button class="btn btn-sm btn-primary" onclick="restock(${item.id})">
+                        <i class="bi bi-plus-circle"></i> إعادة تخزين
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="adjustMinQty(${item.id}, ${item.min_quantity})">
+                        <i class="bi bi-pencil"></i> تعديل الحد
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+}
+
+function getPriority(quantity, minQuantity) {
+    if (quantity === 0) return 3; // Critical
+    const ratio = quantity / minQuantity;
+    if (ratio <= 0.5) return 2; // High
+    return 1; // Medium
+}
+
+function getPriorityBadge(priority) {
+    if (priority === 3) return '<span class="priority-badge critical">حرجة</span>';
+    if (priority === 2) return '<span class="priority-badge high">عالية</span>';
+    return '<span class="priority-badge medium">متوسطة</span>';
+}
+
+async function restock(itemId) {
+    const quantity = prompt('أدخل الكمية المراد إضافتها:');
+    if (!quantity || isNaN(quantity) || quantity <= 0) return;
+    
+    try {
+        showLoading();
+        
+        const item = await app.apiRequest(`/api/inventory/items/${itemId}/`);
+        const newQuantity = parseInt(item.quantity) + parseInt(quantity);
+        
+        await app.apiRequest(`/api/inventory/items/${itemId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ quantity: newQuantity })
+        });
+        
+        actionModals.showInfoModal({
+            title: 'نجح',
+            message: 'تم إضافة الكمية بنجاح',
+            type: 'success'
+        });
+        
+        await loadData();
+        
+    } catch (error) {
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل إضافة الكمية: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+async function adjustMinQty(itemId, currentMin) {
+    const newMin = prompt(`الحد الأدنى الحالي: ${currentMin}\nأدخل الحد الأدنى الجديد:`);
+    if (!newMin || isNaN(newMin) || newMin < 0) return;
+    
+    try {
+        showLoading();
+        
+        await app.apiRequest(`/api/inventory/items/${itemId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ min_quantity: parseInt(newMin) })
+        });
+        
+        actionModals.showInfoModal({
+            title: 'نجح',
+            message: 'تم تعديل الحد الأدنى بنجاح',
+            type: 'success'
+        });
+        
+        await loadData();
+        
+    } catch (error) {
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل تعديل الحد الأدنى: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+function exportToExcel() {
+    const data = [...outOfStockItems, ...lowStockItems].map(item => ({
+        'SKU': item.sku,
+        'القطعة': item.part_details?.name_ar || item.part_details?.name || '-',
+        'الفئة': item.part_details?.category_name_ar || '-',
+        'الكمية الحالية': item.quantity,
+        'الحد الأدنى': item.min_quantity,
+        'الحالة': item.quantity === 0 ? 'نفذت' : 'منخفضة',
+        'الموقع': item.location_details?.full_location || '-',
+        'آخر تحديث': new Date(item.updated_at).toLocaleDateString('ar-EG')
+    }));
+    
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'القطع منخفضة المخزون');
+    
+    const fileName = `low_stock_items_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+</script>
+{% endblock %}
+

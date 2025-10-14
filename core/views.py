@@ -82,6 +82,16 @@ def stock_movements(request):
     """تقرير حركات المخزون - Stock Movements Report"""
     return render(request, 'pages/stock_movements.html')
 
+@login_required
+def slow_moving_report(request):
+    """تقرير القطع بطيئة الحركة - Slow Moving Items Report"""
+    return render(request, 'pages/slow_moving_report.html')
+
+@login_required
+def low_stock_report(request):
+    """تقرير القطع منخفضة المخزون - Low Stock Report"""
+    return render(request, 'pages/low_stock_report.html')
+
 
 @login_required
 def sales_list(request):
