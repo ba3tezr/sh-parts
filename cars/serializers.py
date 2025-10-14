@@ -1,5 +1,8 @@
 from rest_framework import serializers
+from django.contrib.auth import get_user_model
 from .models import CarMake, CarModel, PartCategory, Part, Vehicle, VehiclePhoto
+
+User = get_user_model()
 
 
 class CarMakeSerializer(serializers.ModelSerializer):
@@ -96,7 +99,28 @@ class VehicleSerializer(serializers.ModelSerializer):
 
 
 class VehicleCreateSerializer(serializers.ModelSerializer):
+    vin = serializers.CharField(required=False, allow_blank=True)
+    received_by = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
     class Meta:
         model = Vehicle
         fields = ['vin', 'make', 'model', 'year', 'color', 'mileage', 'condition',
                  'intake_notes', 'purchase_price', 'received_by']
+
+    def create(self, validated_data):
+        # Generate VIN if not provided
+        if not validated_data.get('vin'):
+            import uuid
+            validated_data['vin'] = f"AUTO-{uuid.uuid4().hex[:13].upper()}"
+
+        # Set received_by to current user if not provided
+        if not validated_data.get('received_by'):
+            request = self.context.get('request')
+            if request and request.user.is_authenticated:
+                validated_data['received_by'] = request.user
+
+        return super().create(validated_data)

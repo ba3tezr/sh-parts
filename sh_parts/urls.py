@@ -23,7 +23,8 @@ from core.views import (
     dashboard, login_view, logout_view,
     vehicles_list, inventory_list, inventory_enhanced, inventory_item_details,
     profitability_report, inventory_count, inventory_dashboard, stock_movements,
-    slow_moving_report, low_stock_report,
+    slow_moving_report, low_stock_report, location_transfer, barcode_system,
+    warehouse_management, category_management, smart_alerts,
     sales_list, customers_list, reports_view, price_management_view,
     vehicle_dismantle_view, save_dismantling
 )
@@ -51,6 +52,11 @@ urlpatterns = [
     path('inventory/movements/', stock_movements, name='stock_movements'),
     path('inventory/slow-moving/', slow_moving_report, name='slow_moving_report'),
     path('inventory/low-stock/', low_stock_report, name='low_stock_report'),
+    path('inventory/transfer/', location_transfer, name='location_transfer'),
+    path('inventory/barcode/', barcode_system, name='barcode_system'),
+    path('inventory/warehouses/', warehouse_management, name='warehouse_management'),
+    path('inventory/categories/', category_management, name='category_management'),
+    path('inventory/alerts/', smart_alerts, name='smart_alerts'),
     path('sales/', sales_list, name='sales'),
     path('customers/', customers_list, name='customers'),
     path('reports/', reports_view, name='reports'),

@@ -1,0 +1,666 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}نقل بين المواقع - SH Parts{% endblock %}
+
+{% block extra_head %}
+<!-- SheetJS for Excel Export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-arrow-left-right me-2"></i>نقل بين المواقع
+            </h2>
+            <p class="text-muted mb-0">نقل القطع بين مواقع المخزن المختلفة</p>
+        </div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="openNewTransferModal()">
+                <i class="bi bi-plus-circle me-2"></i>نقل جديد
+            </button>
+            <button type="button" class="btn btn-success" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel me-2"></i>تصدير Excel
+            </button>
+            <a href="{% url 'inventory' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-right me-2"></i>رجوع
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">إجمالي النقل</h6>
+                            <h3 class="mb-0" id="totalTransfers">0</h3>
+                        </div>
+                        <i class="bi bi-arrow-left-right fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">قيد الانتظار</h6>
+                            <h3 class="mb-0" id="pendingTransfers">0</h3>
+                        </div>
+                        <i class="bi bi-hourglass-split fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">مكتمل</h6>
+                            <h3 class="mb-0" id="completedTransfers">0</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">ملغي</h6>
+                            <h3 class="mb-0" id="cancelledTransfers">0</h3>
+                        </div>
+                        <i class="bi bi-x-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">الحالة</label>
+                    <select class="form-select" id="statusFilter" onchange="loadTransfers()">
+                        <option value="">الكل</option>
+                        <option value="PENDING">قيد الانتظار</option>
+                        <option value="APPROVED">موافق عليه</option>
+                        <option value="COMPLETED">مكتمل</option>
+                        <option value="CANCELLED">ملغي</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" class="form-control" id="fromDate" onchange="loadTransfers()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" class="form-control" id="toDate" onchange="loadTransfers()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">بحث</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="بحث..." onkeyup="loadTransfers()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfers Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>القطعة</th>
+                            <th>الكمية</th>
+                            <th>من موقع</th>
+                            <th>إلى موقع</th>
+                            <th>الحالة</th>
+                            <th>طلب بواسطة</th>
+                            <th>التاريخ</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transfersTableBody">
+                        <tr>
+                            <td colspan="9" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">جاري التحميل...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Transfer Modal -->
+<div class="modal fade" id="newTransferModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-arrow-left-right me-2"></i>نقل جديد
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="transferForm">
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label">القطعة *</label>
+                            <select class="form-select" id="itemSelect" required onchange="updateItemInfo()">
+                                <option value="">اختر القطعة...</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Item Info -->
+                        <div class="col-md-12" id="itemInfoCard" style="display: none;">
+                            <div class="alert alert-info mb-0">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>الموقع الحالي:</strong> <span id="currentLocation">-</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>الكمية المتوفرة:</strong> <span id="availableQuantity">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">من موقع *</label>
+                            <select class="form-select" id="fromLocation" required disabled>
+                                <option value="">سيتم التحديد تلقائياً</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">إلى موقع *</label>
+                            <select class="form-select" id="toLocation" required>
+                                <option value="">اختر الموقع...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">الكمية *</label>
+                            <input type="number" class="form-control" id="quantity" min="1" required>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">السبب</label>
+                            <textarea class="form-control" id="reason" rows="3" placeholder="سبب النقل..."></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="submitTransfer()">
+                    <i class="bi bi-check-circle me-2"></i>إنشاء طلب نقل
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Details Modal -->
+<div class="modal fade" id="transferDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle me-2"></i>تفاصيل النقل
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="transferDetailsBody">
+                <!-- Will be populated dynamically -->
+            </div>
+            <div class="modal-footer" id="transferDetailsFooter">
+                <!-- Will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allTransfers = [];
+let allItems = [];
+let allLocations = [];
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    await Promise.all([
+        loadItems(),
+        loadLocations(),
+        loadTransfers()
+    ]);
+});
+
+// Load items
+async function loadItems() {
+    try {
+        const response = await fetch('/api/inventory/items/');
+        const data = await response.json();
+        allItems = Array.isArray(data) ? data : (data.results || []);
+
+        const select = document.getElementById('itemSelect');
+        select.innerHTML = '<option value="">اختر القطعة...</option>';
+
+        allItems.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = `${item.sku} - ${item.part_details?.name_ar || item.part_name_ar || 'غير محدد'}`;
+            option.dataset.location = item.location || '';
+            option.dataset.locationName = item.location_name || 'غير محدد';
+            option.dataset.quantity = item.quantity || 0;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading items:', error);
+    }
+}
+
+// Load locations
+async function loadLocations() {
+    try {
+        const response = await fetch('/api/inventory/locations/');
+        const data = await response.json();
+        allLocations = Array.isArray(data) ? data : (data.results || []);
+
+        const toLocationSelect = document.getElementById('toLocation');
+        toLocationSelect.innerHTML = '<option value="">اختر الموقع...</option>';
+
+        allLocations.forEach(location => {
+            const option = document.createElement('option');
+            option.value = location.id;
+            option.textContent = location.full_location || location.warehouse || 'موقع';
+            toLocationSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading locations:', error);
+    }
+}
+
+// Update item info when item is selected
+function updateItemInfo() {
+    const select = document.getElementById('itemSelect');
+    const selectedOption = select.options[select.selectedIndex];
+
+    if (selectedOption.value) {
+        const itemId = selectedOption.value;
+        const item = allItems.find(i => i.id == itemId);
+
+        if (item) {
+            const locationId = item.location || '';
+            const locationName = item.location_name || 'غير محدد';
+            const quantity = item.quantity || 0;
+
+            document.getElementById('currentLocation').textContent = locationName;
+            document.getElementById('availableQuantity').textContent = quantity;
+            document.getElementById('itemInfoCard').style.display = 'block';
+
+            // Set from location
+            const fromLocationSelect = document.getElementById('fromLocation');
+            if (locationId) {
+                fromLocationSelect.innerHTML = `<option value="${locationId}">${locationName}</option>`;
+                fromLocationSelect.value = locationId;
+            } else {
+                fromLocationSelect.innerHTML = `<option value="">غير محدد</option>`;
+            }
+
+            // Set max quantity
+            document.getElementById('quantity').max = quantity;
+        }
+    } else {
+        document.getElementById('itemInfoCard').style.display = 'none';
+    }
+}
+
+// Load transfers
+async function loadTransfers() {
+    try {
+        const response = await fetch('/api/inventory/location-transfers/');
+        const data = await response.json();
+        allTransfers = Array.isArray(data) ? data : (data.results || []);
+
+        // Apply filters
+        let filtered = allTransfers;
+        
+        const statusFilter = document.getElementById('statusFilter').value;
+        if (statusFilter) {
+            filtered = filtered.filter(t => t.status === statusFilter);
+        }
+        
+        const fromDate = document.getElementById('fromDate').value;
+        if (fromDate) {
+            filtered = filtered.filter(t => new Date(t.created_at) >= new Date(fromDate));
+        }
+        
+        const toDate = document.getElementById('toDate').value;
+        if (toDate) {
+            filtered = filtered.filter(t => new Date(t.created_at) <= new Date(toDate));
+        }
+        
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        if (searchTerm) {
+            filtered = filtered.filter(t => 
+                t.item_details?.sku?.toLowerCase().includes(searchTerm) ||
+                t.item_details?.part_name?.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        displayTransfers(filtered);
+        updateStatistics();
+    } catch (error) {
+        console.error('Error loading transfers:', error);
+        document.getElementById('transfersTableBody').innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center text-danger py-4">
+                    <i class="bi bi-exclamation-triangle fs-3"></i>
+                    <p class="mb-0 mt-2">فشل تحميل البيانات</p>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Display transfers
+function displayTransfers(transfers) {
+    const tbody = document.getElementById('transfersTableBody');
+
+    if (!transfers || transfers.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-3"></i>
+                    <p class="mb-0 mt-2">لا توجد عمليات نقل</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = transfers.map((transfer, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td>
+                <div class="fw-bold">${transfer.item_details?.sku || '-'}</div>
+                <small class="text-muted">${transfer.item_details?.part_name_ar || transfer.item_details?.part_name || '-'}</small>
+            </td>
+            <td><span class="badge bg-primary">${transfer.quantity}</span></td>
+            <td>${transfer.from_location_name || '-'}</td>
+            <td>${transfer.to_location_name || '-'}</td>
+            <td>${getStatusBadge(transfer.status)}</td>
+            <td>${transfer.requested_by_name || '-'}</td>
+            <td>${new Date(transfer.created_at).toLocaleDateString('ar-EG')}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="viewTransferDetails(${transfer.id})">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Get status badge
+function getStatusBadge(status) {
+    const badges = {
+        'PENDING': '<span class="badge bg-warning">قيد الانتظار</span>',
+        'APPROVED': '<span class="badge bg-info">موافق عليه</span>',
+        'COMPLETED': '<span class="badge bg-success">مكتمل</span>',
+        'CANCELLED': '<span class="badge bg-danger">ملغي</span>'
+    };
+    return badges[status] || '<span class="badge bg-secondary">غير محدد</span>';
+}
+
+// Update statistics
+function updateStatistics() {
+    document.getElementById('totalTransfers').textContent = allTransfers.length;
+    document.getElementById('pendingTransfers').textContent = allTransfers.filter(t => t.status === 'PENDING').length;
+    document.getElementById('completedTransfers').textContent = allTransfers.filter(t => t.status === 'COMPLETED').length;
+    document.getElementById('cancelledTransfers').textContent = allTransfers.filter(t => t.status === 'CANCELLED').length;
+}
+
+// Open new transfer modal
+function openNewTransferModal() {
+    document.getElementById('transferForm').reset();
+    document.getElementById('itemInfoCard').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('newTransferModal')).show();
+}
+
+// Submit transfer
+async function submitTransfer() {
+    const form = document.getElementById('transferForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const data = {
+        item: document.getElementById('itemSelect').value,
+        from_location: document.getElementById('fromLocation').value,
+        to_location: document.getElementById('toLocation').value,
+        quantity: parseInt(document.getElementById('quantity').value),
+        reason: document.getElementById('reason').value
+    };
+    
+    try {
+        const response = await fetch('/api/inventory/location-transfers/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('newTransferModal')).hide();
+            await loadTransfers();
+            showToast('success', 'تم إنشاء طلب النقل بنجاح');
+        } else {
+            const error = await response.json();
+            showToast('error', error.detail || 'فشل إنشاء طلب النقل');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('error', 'حدث خطأ أثناء إنشاء طلب النقل');
+    }
+}
+
+// View transfer details
+async function viewTransferDetails(transferId) {
+    const transfer = allTransfers.find(t => t.id === transferId);
+    if (!transfer) return;
+
+    const detailsBody = document.getElementById('transferDetailsBody');
+    detailsBody.innerHTML = `
+        <div class="row g-3">
+            <div class="col-md-6">
+                <strong>القطعة:</strong> ${transfer.item_details?.sku || '-'}
+            </div>
+            <div class="col-md-6">
+                <strong>الكمية:</strong> ${transfer.quantity}
+            </div>
+            <div class="col-md-6">
+                <strong>من موقع:</strong> ${transfer.from_location_name || '-'}
+            </div>
+            <div class="col-md-6">
+                <strong>إلى موقع:</strong> ${transfer.to_location_name || '-'}
+            </div>
+            <div class="col-md-6">
+                <strong>الحالة:</strong> ${getStatusBadge(transfer.status)}
+            </div>
+            <div class="col-md-6">
+                <strong>طلب بواسطة:</strong> ${transfer.requested_by_name || '-'}
+            </div>
+            <div class="col-md-12">
+                <strong>السبب:</strong> ${transfer.reason || '-'}
+            </div>
+        </div>
+    `;
+
+    const footer = document.getElementById('transferDetailsFooter');
+    footer.innerHTML = '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>';
+
+    if (transfer.status === 'PENDING') {
+        footer.innerHTML += `
+            <button type="button" class="btn btn-success" onclick="approveTransfer(${transferId})">
+                <i class="bi bi-check-circle me-2"></i>موافقة
+            </button>
+            <button type="button" class="btn btn-danger" onclick="cancelTransfer(${transferId})">
+                <i class="bi bi-x-circle me-2"></i>إلغاء
+            </button>
+        `;
+    } else if (transfer.status === 'APPROVED') {
+        footer.innerHTML += `
+            <button type="button" class="btn btn-primary" onclick="completeTransfer(${transferId})">
+                <i class="bi bi-check-circle me-2"></i>إتمام النقل
+            </button>
+        `;
+    }
+
+    new bootstrap.Modal(document.getElementById('transferDetailsModal')).show();
+}
+
+// Approve transfer
+async function approveTransfer(transferId) {
+    if (!confirm('هل أنت متأكد من الموافقة على هذا النقل؟')) return;
+
+    try {
+        const response = await fetch(`/api/inventory/location-transfers/${transferId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('transferDetailsModal')).hide();
+            await loadTransfers();
+            showToast('success', 'تمت الموافقة على النقل بنجاح');
+        } else {
+            const error = await response.json();
+            showToast('error', error.detail || 'فشلت الموافقة على النقل');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('error', 'حدث خطأ أثناء الموافقة على النقل');
+    }
+}
+
+// Complete transfer
+async function completeTransfer(transferId) {
+    if (!confirm('هل أنت متأكد من إتمام هذا النقل؟ سيتم نقل القطعة فعلياً.')) return;
+
+    try {
+        const response = await fetch(`/api/inventory/location-transfers/${transferId}/complete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('transferDetailsModal')).hide();
+            await loadTransfers();
+            showToast('success', 'تم إتمام النقل بنجاح');
+        } else {
+            const error = await response.json();
+            showToast('error', error.detail || 'فشل إتمام النقل');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('error', 'حدث خطأ أثناء إتمام النقل');
+    }
+}
+
+// Cancel transfer
+async function cancelTransfer(transferId) {
+    if (!confirm('هل أنت متأكد من إلغاء هذا النقل؟')) return;
+
+    try {
+        const response = await fetch(`/api/inventory/location-transfers/${transferId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('transferDetailsModal')).hide();
+            await loadTransfers();
+            showToast('success', 'تم إلغاء النقل بنجاح');
+        } else {
+            const error = await response.json();
+            showToast('error', error.detail || 'فشل إلغاء النقل');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showToast('error', 'حدث خطأ أثناء إلغاء النقل');
+    }
+}
+
+// Helper functions
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showToast(type, message) {
+    // Simple alert for now
+    alert(message);
+}
+
+// Export to Excel
+function exportToExcel() {
+    const data = allTransfers.map(t => ({
+        'القطعة': t.item_details?.sku || '-',
+        'الكمية': t.quantity,
+        'من موقع': t.from_location_name || '-',
+        'إلى موقع': t.to_location_name || '-',
+        'الحالة': t.status,
+        'طلب بواسطة': t.requested_by_name || '-',
+        'التاريخ': new Date(t.created_at).toLocaleDateString('ar-EG')
+    }));
+    
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'النقل بين المواقع');
+    XLSX.writeFile(wb, 'location_transfers.xlsx');
+}
+</script>
+{% endblock %}
+

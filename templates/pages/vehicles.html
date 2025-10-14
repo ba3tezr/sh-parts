@@ -195,27 +195,59 @@ async function showAddVehicleModal() {
         `;
         
         showFormModal('{% trans "إضافة سيارة جديدة" %}', formHtml, async (formData) => {
+            // Validate required fields
+            const make = formData.get('make');
+            const model = formData.get('model');
+            const year = formData.get('year');
+            const condition = formData.get('condition');
+
+            if (!make || !model || !year || !condition) {
+                throw new Error('{% trans "الرجاء ملء جميع الحقول المطلوبة" %}');
+            }
+
             try {
+                const vehicleData = {
+                    vin: formData.get('vin') || '',
+                    make: parseInt(make),
+                    model: parseInt(model),
+                    year: parseInt(year),
+                    color: formData.get('color') || '',
+                    condition: condition,
+                    mileage: formData.get('mileage') ? parseInt(formData.get('mileage')) : 0,
+                    purchase_price: formData.get('purchase_price') ? parseFloat(formData.get('purchase_price')) : 0,
+                    intake_notes: formData.get('intake_notes') || ''
+                };
+
+                // Add received_by only if userId is available
+                const userId = document.body.dataset.userId;
+                if (userId) {
+                    vehicleData.received_by = parseInt(userId);
+                }
+
+                console.log('Sending vehicle data:', vehicleData);
+
                 const response = await app.apiRequest('/api/cars/vehicles/', {
                     method: 'POST',
-                    body: JSON.stringify({
-                        vin: formData.get('vin'),
-                        make: parseInt(formData.get('make')),
-                        model: parseInt(formData.get('model')),
-                        year: parseInt(formData.get('year')),
-                        color: formData.get('color') || '',
-                        condition: formData.get('condition'),
-                        mileage: formData.get('mileage') ? parseInt(formData.get('mileage')) : null,
-                        purchase_price: formData.get('purchase_price') ? parseFloat(formData.get('purchase_price')) : null,
-                        intake_notes: formData.get('intake_notes') || '',
-                        received_by: parseInt(document.body.dataset.userId)
-                    })
+                    body: JSON.stringify(vehicleData)
                 });
-                
-                app.showAlert('{% trans "تم إضافة السيارة بنجاح" %}', 'success');
-                setTimeout(() => location.reload(), 1000);
+
+                console.log('Vehicle created:', response);
+
+                if (app.showNotification) {
+                    app.showNotification('{% trans "تم إضافة السيارة بنجاح" %}', 'success');
+                } else if (app.showAlert) {
+                    app.showAlert('{% trans "تم إضافة السيارة بنجاح" %}', 'success');
+                }
+
+                setTimeout(() => location.reload(), 1500);
             } catch (error) {
-                app.showAlert('{% trans "فشل إضافة السيارة" %}: ' + error.message, 'error');
+                console.error('Error adding vehicle:', error);
+                if (app.showNotification) {
+                    app.showNotification('{% trans "فشل إضافة السيارة" %}: ' + error.message, 'danger');
+                } else if (app.showAlert) {
+                    app.showAlert('{% trans "فشل إضافة السيارة" %}: ' + error.message, 'error');
+                }
+                throw error; // Re-throw to prevent modal from closing
             }
         });
         

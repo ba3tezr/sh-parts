@@ -27,7 +27,14 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="نظام متكامل لإدارة قطع السيارات والمخزون والمبيعات">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SH Parts">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%9B%A0%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <link rel="apple-touch-icon" href="{% static 'icons/icon-192x192.png' %}">
     <title>{% block title %}{% trans "نظام قطع غيار السيارات" %}{% endblock %}</title>
 
     <!-- إصلاح الوميض - يُحمل أولاً قبل أي شيء -->
@@ -271,6 +278,84 @@
                     }).then(function(){ window.location.reload(); });
                 });
             });
+        });
+    </script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registered:', registration.scope);
+
+                        // Check for updates
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New service worker available
+                                    if (confirm('تحديث جديد متاح! هل تريد تحديث التطبيق؟')) {
+                                        newWorker.postMessage({ action: 'skipWaiting' });
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+
+                // Handle controller change
+                navigator.serviceWorker.addEventListener('controllerchange', function() {
+                    window.location.reload();
+                });
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Show install button if exists
+            const installBtn = document.getElementById('pwa-install-btn');
+            if (installBtn) {
+                installBtn.style.display = 'block';
+                installBtn.addEventListener('click', function() {
+                    installBtn.style.display = 'none';
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(function(choiceResult) {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        }
+                        deferredPrompt = null;
+                    });
+                });
+            }
+        });
+
+        // Check if app is installed
+        window.addEventListener('appinstalled', function() {
+            console.log('PWA installed successfully');
+            deferredPrompt = null;
+        });
+
+        // Online/Offline status
+        window.addEventListener('online', function() {
+            console.log('Back online');
+            // Show notification
+            if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                navigator.serviceWorker.ready.then(function(registration) {
+                    return registration.sync.register('sync-inventory');
+                });
+            }
+        });
+
+        window.addEventListener('offline', function() {
+            console.log('Gone offline');
         });
     </script>
 

@@ -1,0 +1,501 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}نظام الباركود - SH Parts{% endblock %}
+
+{% block extra_head %}
+<!-- JsBarcode for barcode generation -->
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<!-- Html5-QRCode for scanning -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-upc-scan me-2"></i>نظام الباركود
+            </h2>
+            <p class="text-muted mb-0">مسح وطباعة وإدارة الباركود</p>
+        </div>
+        <a href="{% url 'inventory' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-right me-2"></i>رجوع
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Scanner Section -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-camera me-2"></i>مسح الباركود
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-outline-primary active" id="cameraBtn" onclick="switchToCamera()">
+                                <i class="bi bi-camera me-2"></i>كاميرا
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" id="manualBtn" onclick="switchToManual()">
+                                <i class="bi bi-keyboard me-2"></i>إدخال يدوي
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Camera Scanner -->
+                    <div id="cameraScanner">
+                        <div id="reader" style="width: 100%; max-width: 500px; margin: 0 auto;"></div>
+                        <div class="text-center mt-3">
+                            <button class="btn btn-success" id="startScanBtn" onclick="startScanning()">
+                                <i class="bi bi-play-fill me-2"></i>بدء المسح
+                            </button>
+                            <button class="btn btn-danger" id="stopScanBtn" onclick="stopScanning()" style="display: none;">
+                                <i class="bi bi-stop-fill me-2"></i>إيقاف المسح
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Manual Input -->
+                    <div id="manualInput" style="display: none;">
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-lg" id="barcodeInput" 
+                                   placeholder="أدخل الباركود..." autofocus>
+                            <button class="btn btn-primary" onclick="searchBarcode()">
+                                <i class="bi bi-search me-2"></i>بحث
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scan Result -->
+                    <div id="scanResult" class="mt-4" style="display: none;">
+                        <div class="alert alert-success">
+                            <h6><i class="bi bi-check-circle me-2"></i>تم المسح بنجاح!</h6>
+                            <p class="mb-0">الباركود: <strong id="scannedCode"></strong></p>
+                        </div>
+                        <div id="itemInfo"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barcode Generator Section -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-printer me-2"></i>طباعة الباركود
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">اختر القطعة</label>
+                        <select class="form-select" id="itemSelect" onchange="generateBarcode()">
+                            <option value="">اختر القطعة...</option>
+                        </select>
+                    </div>
+
+                    <div id="barcodePreview" class="text-center mb-3" style="display: none;">
+                        <svg id="barcode"></svg>
+                        <div class="mt-2">
+                            <p class="mb-1"><strong id="itemName"></strong></p>
+                            <p class="mb-1" id="itemPrice"></p>
+                            <p class="mb-0 text-muted" id="itemSKU"></p>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="printBarcode()" id="printBtn" disabled>
+                            <i class="bi bi-printer me-2"></i>طباعة
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="printBulkBarcodes()">
+                            <i class="bi bi-printer-fill me-2"></i>طباعة جماعية
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="row g-4 mt-2">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center h-100" style="cursor: pointer;" onclick="quickAction('view')">
+                <div class="card-body">
+                    <i class="bi bi-eye fs-1 text-primary"></i>
+                    <h6 class="mt-3">عرض التفاصيل</h6>
+                    <p class="text-muted small mb-0">عرض معلومات القطعة</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center h-100" style="cursor: pointer;" onclick="quickAction('edit')">
+                <div class="card-body">
+                    <i class="bi bi-pencil fs-1 text-warning"></i>
+                    <h6 class="mt-3">تعديل سريع</h6>
+                    <p class="text-muted small mb-0">تعديل معلومات القطعة</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center h-100" style="cursor: pointer;" onclick="quickAction('sell')">
+                <div class="card-body">
+                    <i class="bi bi-cart fs-1 text-success"></i>
+                    <h6 class="mt-3">بيع</h6>
+                    <p class="text-muted small mb-0">إضافة إلى فاتورة</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm text-center h-100" style="cursor: pointer;" onclick="quickAction('transfer')">
+                <div class="card-body">
+                    <i class="bi bi-arrow-left-right fs-1 text-info"></i>
+                    <h6 class="mt-3">نقل</h6>
+                    <p class="text-muted small mb-0">نقل بين المواقع</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Print Modal -->
+<div class="modal fade" id="bulkPrintModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-printer-fill me-2"></i>طباعة جماعية
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">اختر القطع</label>
+                    <select class="form-select" id="bulkItemsSelect" multiple size="10">
+                    </select>
+                    <small class="text-muted">اضغط Ctrl للاختيار المتعدد</small>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">عدد النسخ لكل قطعة</label>
+                        <input type="number" class="form-control" id="copiesPerItem" value="1" min="1">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">حجم الباركود</label>
+                        <select class="form-select" id="barcodeSize">
+                            <option value="small">صغير</option>
+                            <option value="medium" selected>متوسط</option>
+                            <option value="large">كبير</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="executeBulkPrint()">
+                    <i class="bi bi-printer me-2"></i>طباعة
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let html5QrcodeScanner = null;
+let allItems = [];
+let lastScannedItem = null;
+
+// Load items on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadItems();
+});
+
+// Load items
+async function loadItems() {
+    try {
+        const response = await fetch('/api/inventory/items/');
+        const data = await response.json();
+        allItems = Array.isArray(data) ? data : (data.results || []);
+        
+        // Populate select
+        const select = document.getElementById('itemSelect');
+        const bulkSelect = document.getElementById('bulkItemsSelect');
+        
+        allItems.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = `${item.sku} - ${item.part_details?.name_ar || item.part_name_ar || 'غير محدد'}`;
+            option.dataset.barcode = item.barcode || item.sku;
+            select.appendChild(option.cloneNode(true));
+            bulkSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading items:', error);
+    }
+}
+
+// Switch to camera
+function switchToCamera() {
+    document.getElementById('cameraScanner').style.display = 'block';
+    document.getElementById('manualInput').style.display = 'none';
+    document.getElementById('cameraBtn').classList.add('active');
+    document.getElementById('manualBtn').classList.remove('active');
+}
+
+// Switch to manual
+function switchToManual() {
+    if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+        stopScanning();
+    }
+    document.getElementById('cameraScanner').style.display = 'none';
+    document.getElementById('manualInput').style.display = 'block';
+    document.getElementById('cameraBtn').classList.remove('active');
+    document.getElementById('manualBtn').classList.add('active');
+    document.getElementById('barcodeInput').focus();
+}
+
+// Start scanning
+function startScanning() {
+    html5QrcodeScanner = new Html5Qrcode("reader");
+    
+    Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess,
+                onScanFailure
+            ).then(() => {
+                document.getElementById('startScanBtn').style.display = 'none';
+                document.getElementById('stopScanBtn').style.display = 'inline-block';
+            });
+        }
+    }).catch(err => {
+        alert('فشل الوصول إلى الكاميرا: ' + err);
+    });
+}
+
+// Stop scanning
+function stopScanning() {
+    if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+        html5QrcodeScanner.stop().then(() => {
+            document.getElementById('startScanBtn').style.display = 'inline-block';
+            document.getElementById('stopScanBtn').style.display = 'none';
+            html5QrcodeScanner = null;
+        }).catch(err => {
+            console.error('Error stopping scanner:', err);
+            html5QrcodeScanner = null;
+        });
+    }
+}
+
+// On scan success
+function onScanSuccess(decodedText, decodedResult) {
+    stopScanning();
+    document.getElementById('scannedCode').textContent = decodedText;
+    document.getElementById('scanResult').style.display = 'block';
+    searchByBarcode(decodedText);
+}
+
+// On scan failure
+function onScanFailure(error) {
+    // Ignore scan failures
+}
+
+// Search barcode (manual)
+function searchBarcode() {
+    const barcode = document.getElementById('barcodeInput').value.trim();
+    if (barcode) {
+        document.getElementById('scannedCode').textContent = barcode;
+        document.getElementById('scanResult').style.display = 'block';
+        searchByBarcode(barcode);
+    }
+}
+
+// Search by barcode
+async function searchByBarcode(barcode) {
+    const item = allItems.find(i => i.barcode === barcode || i.sku === barcode);
+    
+    if (item) {
+        lastScannedItem = item;
+        displayItemInfo(item);
+    } else {
+        document.getElementById('itemInfo').innerHTML = `
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>لم يتم العثور على القطعة
+            </div>
+        `;
+    }
+}
+
+// Display item info
+function displayItemInfo(item) {
+    const html = `
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title">${item.part_details?.name_ar || item.part_name_ar || 'غير محدد'}</h6>
+                <p class="mb-1"><strong>SKU:</strong> ${item.sku}</p>
+                <p class="mb-1"><strong>الكمية:</strong> ${item.quantity}</p>
+                <p class="mb-1"><strong>السعر:</strong> ${item.selling_price} EGP</p>
+                <p class="mb-0"><strong>الحالة:</strong> <span class="badge bg-${item.status === 'AVAILABLE' ? 'success' : 'warning'}">${item.status_display || item.status}</span></p>
+            </div>
+        </div>
+    `;
+    document.getElementById('itemInfo').innerHTML = html;
+}
+
+// Generate barcode
+function generateBarcode() {
+    const select = document.getElementById('itemSelect');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (!selectedOption.value) {
+        document.getElementById('barcodePreview').style.display = 'none';
+        document.getElementById('printBtn').disabled = true;
+        return;
+    }
+    
+    const item = allItems.find(i => i.id == selectedOption.value);
+    const barcode = selectedOption.dataset.barcode;
+    
+    JsBarcode("#barcode", barcode, {
+        format: "CODE128",
+        width: 2,
+        height: 100,
+        displayValue: true
+    });
+    
+    document.getElementById('itemName').textContent = item.part_details?.name_ar || item.part_name_ar || 'غير محدد';
+    document.getElementById('itemPrice').textContent = `${item.selling_price} EGP`;
+    document.getElementById('itemSKU').textContent = item.sku;
+    document.getElementById('barcodePreview').style.display = 'block';
+    document.getElementById('printBtn').disabled = false;
+}
+
+// Print barcode
+function printBarcode() {
+    const printWindow = window.open('', '', 'width=600,height=400');
+    const barcodeHTML = document.getElementById('barcodePreview').innerHTML;
+    
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>طباعة باركود</title>
+            <style>
+                body { text-align: center; padding: 20px; font-family: Arial; }
+            </style>
+        </head>
+        <body>
+            ${barcodeHTML}
+            <script>window.print(); window.close();<\/script>
+        </body>
+        </html>
+    `);
+}
+
+// Print bulk barcodes
+function printBulkBarcodes() {
+    new bootstrap.Modal(document.getElementById('bulkPrintModal')).show();
+}
+
+// Execute bulk print
+function executeBulkPrint() {
+    const select = document.getElementById('bulkItemsSelect');
+    const selectedOptions = Array.from(select.selectedOptions);
+    
+    if (selectedOptions.length === 0) {
+        alert('الرجاء اختيار قطعة واحدة على الأقل');
+        return;
+    }
+    
+    const copies = parseInt(document.getElementById('copiesPerItem').value);
+    const printWindow = window.open('', '', 'width=800,height=600');
+    
+    let html = `
+        <html>
+        <head>
+            <title>طباعة باركود جماعية</title>
+            <style>
+                body { font-family: Arial; padding: 20px; }
+                .barcode-item { page-break-inside: avoid; margin-bottom: 30px; text-align: center; }
+            </style>
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+        </head>
+        <body>
+    `;
+    
+    selectedOptions.forEach((option, index) => {
+        const item = allItems.find(i => i.id == option.value);
+        const barcode = item.barcode || item.sku;
+        
+        for (let i = 0; i < copies; i++) {
+            html += `
+                <div class="barcode-item">
+                    <svg id="barcode_${index}_${i}"></svg>
+                    <p><strong>${item.part_details?.name_ar || item.part_name_ar || 'غير محدد'}</strong></p>
+                    <p>${item.selling_price} EGP</p>
+                    <p>${item.sku}</p>
+                </div>
+            `;
+        }
+    });
+    
+    html += `
+            <script>
+                ${selectedOptions.map((option, index) => {
+                    const item = allItems.find(i => i.id == option.value);
+                    const barcode = item.barcode || item.sku;
+                    let scripts = '';
+                    for (let i = 0; i < copies; i++) {
+                        scripts += `JsBarcode("#barcode_${index}_${i}", "${barcode}", { format: "CODE128", width: 2, height: 100 });\n`;
+                    }
+                    return scripts;
+                }).join('')}
+                window.print();
+                window.close();
+            <\/script>
+        </body>
+        </html>
+    `;
+    
+    printWindow.document.write(html);
+}
+
+// Quick actions
+function quickAction(action) {
+    if (!lastScannedItem) {
+        alert('الرجاء مسح باركود أولاً');
+        return;
+    }
+    
+    switch(action) {
+        case 'view':
+            window.location.href = `/inventory/item/?id=${lastScannedItem.id}`;
+            break;
+        case 'edit':
+            // Open edit modal (would need to implement)
+            alert('ميزة التعديل السريع قيد التطوير');
+            break;
+        case 'sell':
+            // Add to sale (would need to implement)
+            alert('ميزة البيع السريع قيد التطوير');
+            break;
+        case 'transfer':
+            window.location.href = `/inventory/transfer/`;
+            break;
+    }
+}
+
+// Allow Enter key for manual search
+document.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && document.getElementById('barcodeInput') === document.activeElement) {
+        searchBarcode();
+    }
+});
+</script>
+{% endblock %}
+

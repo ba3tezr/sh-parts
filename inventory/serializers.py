@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import WarehouseLocation, InventoryItem, InventoryItemImage, StockMovement
+from .models import WarehouseLocation, InventoryItem, InventoryItemImage, StockMovement, LocationTransfer
 from cars.serializers import PartListSerializer, VehicleSerializer
 
 
@@ -77,3 +77,34 @@ class StockMovementSerializer(serializers.ModelSerializer):
         fields = ['id', 'item', 'item_sku', 'item_part_name', 'movement_type', 'movement_type_display',
                  'quantity', 'from_location', 'from_location_name', 'to_location', 'to_location_name',
                  'reason', 'reference', 'performed_by', 'performed_by_name', 'performed_at']
+
+
+class LocationTransferSerializer(serializers.ModelSerializer):
+    item_details = serializers.SerializerMethodField()
+    from_location_name = serializers.CharField(source='from_location.__str__', read_only=True)
+    to_location_name = serializers.CharField(source='to_location.__str__', read_only=True)
+    requested_by_name = serializers.CharField(source='requested_by.get_full_name', read_only=True)
+    approved_by_name = serializers.CharField(source='approved_by.get_full_name', read_only=True)
+    completed_by_name = serializers.CharField(source='completed_by.get_full_name', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = LocationTransfer
+        fields = ['id', 'item', 'item_details', 'from_location', 'from_location_name',
+                 'to_location', 'to_location_name', 'quantity', 'status', 'status_display',
+                 'reason', 'requested_by', 'requested_by_name', 'approved_by', 'approved_by_name',
+                 'completed_by', 'completed_by_name', 'created_at', 'approved_at', 'completed_at']
+        read_only_fields = ['requested_by', 'approved_by', 'completed_by', 'created_at',
+                           'approved_at', 'completed_at', 'status']
+
+    def get_item_details(self, obj):
+        return {
+            'id': obj.item.id,
+            'sku': obj.item.sku,
+            'part_name': obj.item.part.name if obj.item.part else None,
+            'part_name_ar': obj.item.part.name_ar if obj.item.part else None,
+        }
+
+    def create(self, validated_data):
+        validated_data['requested_by'] = self.context['request'].user
+        return super().create(validated_data)

@@ -1,8 +1,8 @@
 {% extends 'base/base.html' %}
 {% load static i18n %}
 
-{% block title %}{% trans "المخزون المحسّن" %} - SH Parts{% endblock %}
-{% block page_title %}<span data-translate="inventory">{% trans "المخزون المحسّن" %}</span>{% endblock %}
+{% block title %}{% trans "المخزون" %} - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="inventory">{% trans "المخزون" %}</span>{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -314,6 +314,21 @@
                     <li><a class="dropdown-item" href="{% url 'low_stock_report' %}"><i class="bi bi-exclamation-triangle me-2"></i>القطع منخفضة المخزون</a></li>
                 </ul>
             </div>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-gear me-2"></i>الإدارة
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'warehouse_management' %}"><i class="bi bi-building me-2"></i>المخازن والمواقع</a></li>
+                    <li><a class="dropdown-item" href="{% url 'category_management' %}"><i class="bi bi-tags me-2"></i>الفئات</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{% url 'barcode_system' %}"><i class="bi bi-upc-scan me-2"></i>نظام الباركود</a></li>
+                    <li><a class="dropdown-item" href="{% url 'smart_alerts' %}"><i class="bi bi-bell me-2"></i>التنبيهات الذكية</a></li>
+                </ul>
+            </div>
+            <a href="{% url 'location_transfer' %}" class="btn btn-warning">
+                <i class="bi bi-arrow-left-right me-2"></i>نقل بين المواقع
+            </a>
             <a href="{% url 'inventory_count' %}" class="btn btn-primary">
                 <i class="bi bi-clipboard-check me-2"></i>الجرد
             </a>

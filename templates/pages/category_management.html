@@ -1,0 +1,549 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}إدارة الفئات - SH Parts{% endblock %}
+
+{% block extra_head %}
+<!-- SheetJS for Excel Export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-tags me-2"></i>إدارة الفئات
+            </h2>
+            <p class="text-muted mb-0">إدارة فئات القطع والسيارات</p>
+        </div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="openNewCategoryModal()">
+                <i class="bi bi-plus-circle me-2"></i>فئة جديدة
+            </button>
+            <button type="button" class="btn btn-success" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel me-2"></i>تصدير Excel
+            </button>
+            <a href="{% url 'inventory' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-right me-2"></i>رجوع
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">إجمالي الفئات</h6>
+                            <h3 class="mb-0" id="totalCategories">0</h3>
+                        </div>
+                        <i class="bi bi-tags fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">الفئات النشطة</h6>
+                            <h3 class="mb-0" id="activeCategories">0</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">إجمالي القطع</h6>
+                            <h3 class="mb-0" id="totalParts">0</h3>
+                        </div>
+                        <i class="bi bi-box-seam fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">الحالة</label>
+                    <select class="form-select" id="statusFilter" onchange="loadCategories()">
+                        <option value="">الكل</option>
+                        <option value="true">نشط</option>
+                        <option value="false">غير نشط</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">بحث</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="بحث..." onkeyup="loadCategories()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">عرض</label>
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="switchView('table')">
+                            <i class="bi bi-table"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="switchView('grid')">
+                            <i class="bi bi-grid-3x3"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div class="card border-0 shadow-sm" id="tableView">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم بالعربية</th>
+                            <th>الاسم بالإنجليزية</th>
+                            <th>الوصف</th>
+                            <th>عدد القطع</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoriesTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">جاري التحميل...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid View -->
+    <div id="gridView" style="display: none;">
+        <div class="row g-3" id="categoriesGrid">
+            <!-- Will be populated dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- New Category Modal -->
+<div class="modal fade" id="newCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>فئة جديدة
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <div class="mb-3">
+                        <label class="form-label">الاسم بالعربية *</label>
+                        <input type="text" class="form-control" id="nameAr" required placeholder="مثال: محرك">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الاسم بالإنجليزية *</label>
+                        <input type="text" class="form-control" id="nameEn" required placeholder="Example: Engine">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الوصف</label>
+                        <textarea class="form-control" id="description" rows="3" placeholder="وصف الفئة..."></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isActive" checked>
+                        <label class="form-check-label" for="isActive">
+                            نشط
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveCategory()">
+                    <i class="bi bi-check-circle me-2"></i>حفظ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil me-2"></i>تعديل الفئة
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCategoryForm">
+                    <input type="hidden" id="editCategoryId">
+                    <div class="mb-3">
+                        <label class="form-label">الاسم بالعربية *</label>
+                        <input type="text" class="form-control" id="editNameAr" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الاسم بالإنجليزية *</label>
+                        <input type="text" class="form-control" id="editNameEn" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الوصف</label>
+                        <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="editIsActive">
+                        <label class="form-check-label" for="editIsActive">
+                            نشط
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="updateCategory()">
+                    <i class="bi bi-check-circle me-2"></i>حفظ التغييرات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allCategories = [];
+let currentView = 'table';
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadCategories();
+});
+
+// Load categories
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/cars/categories/all/');
+        const data = await response.json();
+        allCategories = Array.isArray(data) ? data : (data.results || []);
+        
+        // Apply filters
+        let filtered = allCategories;
+        
+        const statusFilter = document.getElementById('statusFilter').value;
+        if (statusFilter !== '') {
+            filtered = filtered.filter(c => c.is_active === (statusFilter === 'true'));
+        }
+        
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        if (searchTerm) {
+            filtered = filtered.filter(c => 
+                c.name_ar?.toLowerCase().includes(searchTerm) ||
+                c.name?.toLowerCase().includes(searchTerm) ||
+                c.description?.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        displayCategories(filtered);
+        updateStatistics();
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        document.getElementById('categoriesTableBody').innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-danger py-4">
+                    <i class="bi bi-exclamation-triangle fs-3"></i>
+                    <p class="mb-0 mt-2">فشل تحميل البيانات</p>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Display categories
+function displayCategories(categories) {
+    if (currentView === 'table') {
+        displayTableView(categories);
+    } else {
+        displayGridView(categories);
+    }
+}
+
+// Display table view
+function displayTableView(categories) {
+    const tbody = document.getElementById('categoriesTableBody');
+    
+    if (categories.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-3"></i>
+                    <p class="mb-0 mt-2">لا توجد فئات</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = categories.map((category, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td><strong>${category.name_ar || '-'}</strong></td>
+            <td>${category.name || '-'}</td>
+            <td>${category.description || '-'}</td>
+            <td><span class="badge bg-primary">${category.parts_count || 0}</span></td>
+            <td>
+                ${category.is_active 
+                    ? '<span class="badge bg-success">نشط</span>' 
+                    : '<span class="badge bg-secondary">غير نشط</span>'}
+            </td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="openEditModal(${category.id})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteCategory(${category.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Display grid view
+function displayGridView(categories) {
+    const grid = document.getElementById('categoriesGrid');
+    
+    if (categories.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12 text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-2">لا توجد فئات</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = categories.map(category => `
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="mb-0">${category.name_ar || '-'}</h6>
+                        ${category.is_active 
+                            ? '<span class="badge bg-success">نشط</span>' 
+                            : '<span class="badge bg-secondary">غير نشط</span>'}
+                    </div>
+                    <p class="text-muted small mb-2">${category.name || '-'}</p>
+                    <p class="text-muted small mb-3">${category.description || '-'}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">${category.parts_count || 0} قطعة</span>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-warning" onclick="openEditModal(${category.id})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteCategory(${category.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Update statistics
+function updateStatistics() {
+    document.getElementById('totalCategories').textContent = allCategories.length;
+    document.getElementById('activeCategories').textContent = allCategories.filter(c => c.is_active).length;
+    
+    const totalParts = allCategories.reduce((sum, c) => sum + (c.parts_count || 0), 0);
+    document.getElementById('totalParts').textContent = totalParts;
+}
+
+// Switch view
+function switchView(view) {
+    currentView = view;
+    
+    if (view === 'table') {
+        document.getElementById('tableView').style.display = 'block';
+        document.getElementById('gridView').style.display = 'none';
+    } else {
+        document.getElementById('tableView').style.display = 'none';
+        document.getElementById('gridView').style.display = 'block';
+    }
+    
+    displayCategories(allCategories);
+}
+
+// Open new category modal
+function openNewCategoryModal() {
+    document.getElementById('categoryForm').reset();
+    document.getElementById('isActive').checked = true;
+    new bootstrap.Modal(document.getElementById('newCategoryModal')).show();
+}
+
+// Save category
+async function saveCategory() {
+    const form = document.getElementById('categoryForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const data = {
+        name_ar: document.getElementById('nameAr').value,
+        name: document.getElementById('nameEn').value,
+        description: document.getElementById('description').value,
+        is_active: document.getElementById('isActive').checked
+    };
+    
+    try {
+        const response = await fetch('/api/cars/categories/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('newCategoryModal')).hide();
+            await loadCategories();
+            alert('تم إضافة الفئة بنجاح');
+        } else {
+            const error = await response.json();
+            alert(error.detail || 'فشل إضافة الفئة');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء إضافة الفئة');
+    }
+}
+
+// Open edit modal
+function openEditModal(categoryId) {
+    const category = allCategories.find(c => c.id === categoryId);
+    if (!category) return;
+    
+    document.getElementById('editCategoryId').value = category.id;
+    document.getElementById('editNameAr').value = category.name_ar || '';
+    document.getElementById('editNameEn').value = category.name || '';
+    document.getElementById('editDescription').value = category.description || '';
+    document.getElementById('editIsActive').checked = category.is_active;
+    
+    new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
+}
+
+// Update category
+async function updateCategory() {
+    const categoryId = document.getElementById('editCategoryId').value;
+    
+    const data = {
+        name_ar: document.getElementById('editNameAr').value,
+        name: document.getElementById('editNameEn').value,
+        description: document.getElementById('editDescription').value,
+        is_active: document.getElementById('editIsActive').checked
+    };
+    
+    try {
+        const response = await fetch(`/api/cars/categories/${categoryId}/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
+            await loadCategories();
+            alert('تم تحديث الفئة بنجاح');
+        } else {
+            const error = await response.json();
+            alert(error.detail || 'فشل تحديث الفئة');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء تحديث الفئة');
+    }
+}
+
+// Delete category
+async function deleteCategory(categoryId) {
+    if (!confirm('هل أنت متأكد من حذف هذه الفئة؟')) return;
+    
+    try {
+        const response = await fetch(`/api/cars/categories/${categoryId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        if (response.ok) {
+            await loadCategories();
+            alert('تم حذف الفئة بنجاح');
+        } else {
+            const error = await response.json();
+            alert(error.detail || 'فشل حذف الفئة');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء حذف الفئة');
+    }
+}
+
+// Export to Excel
+function exportToExcel() {
+    const data = allCategories.map(c => ({
+        'الاسم بالعربية': c.name_ar || '-',
+        'الاسم بالإنجليزية': c.name || '-',
+        'الوصف': c.description || '-',
+        'عدد القطع': c.parts_count || 0,
+        'الحالة': c.is_active ? 'نشط' : 'غير نشط'
+    }));
+    
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'الفئات');
+    XLSX.writeFile(wb, 'categories.xlsx');
+}
+
+// Helper function
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+

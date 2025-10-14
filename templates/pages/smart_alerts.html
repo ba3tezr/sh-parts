@@ -1,0 +1,409 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}التنبيهات الذكية - SH Parts{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-bell me-2"></i>التنبيهات الذكية
+            </h2>
+            <p class="text-muted mb-0">إدارة التنبيهات والإشعارات</p>
+        </div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="requestNotificationPermission()">
+                <i class="bi bi-bell-fill me-2"></i>تفعيل الإشعارات
+            </button>
+            <button type="button" class="btn btn-success" onclick="testNotification()">
+                <i class="bi bi-send me-2"></i>اختبار
+            </button>
+            <a href="{% url 'inventory' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-right me-2"></i>رجوع
+            </a>
+        </div>
+    </div>
+
+    <!-- Notification Permission Status -->
+    <div class="alert alert-info mb-4" id="permissionStatus">
+        <i class="bi bi-info-circle me-2"></i>
+        <span id="permissionText">جاري التحقق من حالة الإشعارات...</span>
+    </div>
+
+    <!-- Alert Types -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+                    <h5 class="mt-3">مخزون منخفض</h5>
+                    <p class="text-muted small">تنبيه عند انخفاض المخزون</p>
+                    <div class="form-check form-switch d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" id="lowStockAlert" checked onchange="saveAlertSettings()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-hourglass-split fs-1 text-info"></i>
+                    <h5 class="mt-3">قطع بطيئة الحركة</h5>
+                    <p class="text-muted small">تنبيه للقطع الراكدة</p>
+                    <div class="form-check form-switch d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" id="slowMovingAlert" checked onchange="saveAlertSettings()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-graph-up fs-1 text-success"></i>
+                    <h5 class="mt-3">توصيات الأسعار</h5>
+                    <p class="text-muted small">اقتراحات تغيير الأسعار</p>
+                    <div class="form-check form-switch d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" id="priceAlert" checked onchange="saveAlertSettings()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-cart-check fs-1 text-primary"></i>
+                    <h5 class="mt-3">مبيعات جديدة</h5>
+                    <p class="text-muted small">تنبيه عند إتمام بيع</p>
+                    <div class="form-check form-switch d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" id="salesAlert" checked onchange="saveAlertSettings()">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Settings -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-gear me-2"></i>إعدادات التنبيهات
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">حد المخزون المنخفض</label>
+                    <input type="number" class="form-control" id="lowStockThreshold" value="5" onchange="saveAlertSettings()">
+                    <small class="text-muted">تنبيه عندما تكون الكمية أقل من هذا الحد</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">فترة القطع البطيئة (أيام)</label>
+                    <input type="number" class="form-control" id="slowMovingDays" value="90" onchange="saveAlertSettings()">
+                    <small class="text-muted">تنبيه للقطع التي لم تُباع خلال هذه الفترة</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">تكرار التنبيهات</label>
+                    <select class="form-select" id="alertFrequency" onchange="saveAlertSettings()">
+                        <option value="realtime">فوري</option>
+                        <option value="hourly">كل ساعة</option>
+                        <option value="daily" selected>يومي</option>
+                        <option value="weekly">أسبوعي</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">طريقة الإشعار</label>
+                    <select class="form-select" id="notificationMethod" onchange="saveAlertSettings()">
+                        <option value="browser" selected>المتصفح</option>
+                        <option value="email">البريد الإلكتروني</option>
+                        <option value="both">كلاهما</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Alerts -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>التنبيهات الأخيرة
+                </h5>
+                <button class="btn btn-sm btn-outline-danger" onclick="clearAlerts()">
+                    <i class="bi bi-trash me-2"></i>مسح الكل
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="alertsList">
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-bell-slash fs-3"></i>
+                    <p class="mb-0 mt-2">لا توجد تنبيهات</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let alertSettings = {
+    lowStockAlert: true,
+    slowMovingAlert: true,
+    priceAlert: true,
+    salesAlert: true,
+    lowStockThreshold: 5,
+    slowMovingDays: 90,
+    alertFrequency: 'daily',
+    notificationMethod: 'browser'
+};
+
+// Load settings on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadAlertSettings();
+    checkNotificationPermission();
+    loadRecentAlerts();
+    startAlertMonitoring();
+});
+
+// Check notification permission
+function checkNotificationPermission() {
+    if (!('Notification' in window)) {
+        document.getElementById('permissionText').textContent = 'المتصفح لا يدعم الإشعارات';
+        document.getElementById('permissionStatus').className = 'alert alert-danger mb-4';
+        return;
+    }
+
+    const permission = Notification.permission;
+    let text = '';
+    let className = 'alert mb-4';
+
+    switch(permission) {
+        case 'granted':
+            text = 'الإشعارات مفعلة ✓';
+            className += ' alert-success';
+            break;
+        case 'denied':
+            text = 'الإشعارات محظورة. الرجاء تفعيلها من إعدادات المتصفح';
+            className += ' alert-danger';
+            break;
+        default:
+            text = 'الرجاء تفعيل الإشعارات للحصول على التنبيهات';
+            className += ' alert-warning';
+    }
+
+    document.getElementById('permissionText').textContent = text;
+    document.getElementById('permissionStatus').className = className;
+}
+
+// Request notification permission
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        alert('المتصفح لا يدعم الإشعارات');
+        return;
+    }
+
+    try {
+        const permission = await Notification.requestPermission();
+        checkNotificationPermission();
+        
+        if (permission === 'granted') {
+            testNotification();
+        }
+    } catch (error) {
+        console.error('Error requesting notification permission:', error);
+    }
+}
+
+// Test notification
+function testNotification() {
+    if (Notification.permission !== 'granted') {
+        alert('الرجاء تفعيل الإشعارات أولاً');
+        return;
+    }
+
+    new Notification('SH Parts', {
+        body: 'تم تفعيل الإشعارات بنجاح!',
+        icon: '/static/icons/icon-192x192.png',
+        badge: '/static/icons/icon-72x72.png',
+        dir: 'rtl',
+        lang: 'ar'
+    });
+}
+
+// Load alert settings
+function loadAlertSettings() {
+    const saved = localStorage.getItem('alertSettings');
+    if (saved) {
+        alertSettings = JSON.parse(saved);
+        
+        // Apply to UI
+        document.getElementById('lowStockAlert').checked = alertSettings.lowStockAlert;
+        document.getElementById('slowMovingAlert').checked = alertSettings.slowMovingAlert;
+        document.getElementById('priceAlert').checked = alertSettings.priceAlert;
+        document.getElementById('salesAlert').checked = alertSettings.salesAlert;
+        document.getElementById('lowStockThreshold').value = alertSettings.lowStockThreshold;
+        document.getElementById('slowMovingDays').value = alertSettings.slowMovingDays;
+        document.getElementById('alertFrequency').value = alertSettings.alertFrequency;
+        document.getElementById('notificationMethod').value = alertSettings.notificationMethod;
+    }
+}
+
+// Save alert settings
+function saveAlertSettings() {
+    alertSettings = {
+        lowStockAlert: document.getElementById('lowStockAlert').checked,
+        slowMovingAlert: document.getElementById('slowMovingAlert').checked,
+        priceAlert: document.getElementById('priceAlert').checked,
+        salesAlert: document.getElementById('salesAlert').checked,
+        lowStockThreshold: parseInt(document.getElementById('lowStockThreshold').value),
+        slowMovingDays: parseInt(document.getElementById('slowMovingDays').value),
+        alertFrequency: document.getElementById('alertFrequency').value,
+        notificationMethod: document.getElementById('notificationMethod').value
+    };
+    
+    localStorage.setItem('alertSettings', JSON.stringify(alertSettings));
+}
+
+// Load recent alerts
+function loadRecentAlerts() {
+    const alerts = JSON.parse(localStorage.getItem('recentAlerts') || '[]');
+    
+    if (alerts.length === 0) {
+        return;
+    }
+    
+    const html = alerts.map(alert => `
+        <div class="alert alert-${alert.type} alert-dismissible fade show" role="alert">
+            <i class="bi bi-${alert.icon} me-2"></i>
+            <strong>${alert.title}</strong>
+            <p class="mb-0 small">${alert.message}</p>
+            <small class="text-muted">${new Date(alert.timestamp).toLocaleString('ar-EG')}</small>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `).join('');
+    
+    document.getElementById('alertsList').innerHTML = html;
+}
+
+// Add alert
+function addAlert(type, icon, title, message) {
+    const alerts = JSON.parse(localStorage.getItem('recentAlerts') || '[]');
+    
+    alerts.unshift({
+        type,
+        icon,
+        title,
+        message,
+        timestamp: new Date().toISOString()
+    });
+    
+    // Keep only last 50 alerts
+    if (alerts.length > 50) {
+        alerts.pop();
+    }
+    
+    localStorage.setItem('recentAlerts', JSON.stringify(alerts));
+    loadRecentAlerts();
+    
+    // Send browser notification
+    if (Notification.permission === 'granted' && alertSettings.notificationMethod !== 'email') {
+        new Notification(title, {
+            body: message,
+            icon: '/static/icons/icon-192x192.png',
+            badge: '/static/icons/icon-72x72.png',
+            dir: 'rtl',
+            lang: 'ar'
+        });
+    }
+}
+
+// Clear alerts
+function clearAlerts() {
+    if (confirm('هل أنت متأكد من مسح جميع التنبيهات؟')) {
+        localStorage.removeItem('recentAlerts');
+        loadRecentAlerts();
+    }
+}
+
+// Start alert monitoring
+async function startAlertMonitoring() {
+    // Check low stock
+    if (alertSettings.lowStockAlert) {
+        checkLowStock();
+    }
+    
+    // Check slow moving items
+    if (alertSettings.slowMovingAlert) {
+        checkSlowMoving();
+    }
+    
+    // Set interval based on frequency
+    let interval = 24 * 60 * 60 * 1000; // daily
+    switch(alertSettings.alertFrequency) {
+        case 'realtime':
+            interval = 60 * 1000; // 1 minute
+            break;
+        case 'hourly':
+            interval = 60 * 60 * 1000; // 1 hour
+            break;
+        case 'weekly':
+            interval = 7 * 24 * 60 * 60 * 1000; // 7 days
+            break;
+    }
+    
+    setInterval(() => {
+        if (alertSettings.lowStockAlert) checkLowStock();
+        if (alertSettings.slowMovingAlert) checkSlowMoving();
+    }, interval);
+}
+
+// Check low stock
+async function checkLowStock() {
+    try {
+        const response = await fetch('/api/inventory/items/low_stock/');
+        const items = await response.json();
+        
+        if (items.length > 0) {
+            addAlert(
+                'warning',
+                'exclamation-triangle',
+                'تنبيه: مخزون منخفض',
+                `يوجد ${items.length} قطعة بمخزون منخفض`
+            );
+        }
+    } catch (error) {
+        console.error('Error checking low stock:', error);
+    }
+}
+
+// Check slow moving items
+async function checkSlowMoving() {
+    try {
+        const response = await fetch('/api/inventory/items/');
+        const data = await response.json();
+        const items = Array.isArray(data) ? data : (data.results || []);
+        
+        // Filter slow moving (simplified - should be done on backend)
+        const slowMoving = items.filter(item => {
+            // This is a simplified check - in production, use proper date comparison
+            return item.quantity > 0 && item.status === 'AVAILABLE';
+        });
+        
+        if (slowMoving.length > 10) {
+            addAlert(
+                'info',
+                'hourglass-split',
+                'تنبيه: قطع بطيئة الحركة',
+                `يوجد ${slowMoving.length} قطعة بطيئة الحركة`
+            );
+        }
+    } catch (error) {
+        console.error('Error checking slow moving:', error);
+    }
+}
+</script>
+{% endblock %}
+

@@ -183,3 +183,37 @@ class StockMovement(models.Model):
 
     def __str__(self):
         return f"{self.movement_type} - {self.item.sku} - {self.quantity} units"
+
+
+class LocationTransfer(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', _('Pending')),
+        ('APPROVED', _('Approved')),
+        ('COMPLETED', _('Completed')),
+        ('CANCELLED', _('Cancelled')),
+    ]
+
+    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE, related_name='location_transfers')
+    from_location = models.ForeignKey(WarehouseLocation, on_delete=models.CASCADE, related_name='transfers_from')
+    to_location = models.ForeignKey(WarehouseLocation, on_delete=models.CASCADE, related_name='transfers_to')
+    quantity = models.IntegerField(_('quantity'))
+    status = models.CharField(_('status'), max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    reason = models.TextField(_('reason'), blank=True)
+
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='transfer_requests')
+    approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='transfer_approvals')
+    completed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='transfer_completions')
+
+    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
+    approved_at = models.DateTimeField(_('approved at'), null=True, blank=True)
+    completed_at = models.DateTimeField(_('completed at'), null=True, blank=True)
+
+    stock_movement = models.ForeignKey(StockMovement, on_delete=models.SET_NULL, null=True, blank=True, related_name='transfer')
+
+    class Meta:
+        verbose_name = _('location transfer')
+        verbose_name_plural = _('location transfers')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Transfer {self.id} - {self.item.sku} - {self.status}"

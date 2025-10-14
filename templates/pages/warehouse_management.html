@@ -1,0 +1,623 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}إدارة المخازن والمواقع - SH Parts{% endblock %}
+
+{% block extra_head %}
+<!-- SheetJS for Excel Export -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-building me-2"></i>إدارة المخازن والمواقع
+            </h2>
+            <p class="text-muted mb-0">إدارة المخازن والممرات والرفوف</p>
+        </div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="openNewLocationModal()">
+                <i class="bi bi-plus-circle me-2"></i>موقع جديد
+            </button>
+            <button type="button" class="btn btn-success" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel me-2"></i>تصدير Excel
+            </button>
+            <a href="{% url 'inventory' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-right me-2"></i>رجوع
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">إجمالي المواقع</h6>
+                            <h3 class="mb-0" id="totalLocations">0</h3>
+                        </div>
+                        <i class="bi bi-geo-alt fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">المواقع النشطة</h6>
+                            <h3 class="mb-0" id="activeLocations">0</h3>
+                        </div>
+                        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">إجمالي القطع</h6>
+                            <h3 class="mb-0" id="totalItems">0</h3>
+                        </div>
+                        <i class="bi bi-box-seam fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                <div class="card-body text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 opacity-75">المخازن</h6>
+                            <h3 class="mb-0" id="totalWarehouses">0</h3>
+                        </div>
+                        <i class="bi bi-building fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">المخزن</label>
+                    <select class="form-select" id="warehouseFilter" onchange="loadLocations()">
+                        <option value="">الكل</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">الحالة</label>
+                    <select class="form-select" id="statusFilter" onchange="loadLocations()">
+                        <option value="">الكل</option>
+                        <option value="true">نشط</option>
+                        <option value="false">غير نشط</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">بحث</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="بحث..." onkeyup="loadLocations()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">عرض</label>
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="switchView('table')">
+                            <i class="bi bi-table"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="switchView('grid')">
+                            <i class="bi bi-grid-3x3"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div class="card border-0 shadow-sm" id="tableView">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>المخزن</th>
+                            <th>الممر</th>
+                            <th>الرف</th>
+                            <th>الصندوق</th>
+                            <th>عدد القطع</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="locationsTableBody">
+                        <tr>
+                            <td colspan="8" class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">جاري التحميل...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid View -->
+    <div id="gridView" style="display: none;">
+        <div class="row g-3" id="locationsGrid">
+            <!-- Will be populated dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- New Location Modal -->
+<div class="modal fade" id="newLocationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>موقع جديد
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="locationForm">
+                    <div class="mb-3">
+                        <label class="form-label">المخزن *</label>
+                        <input type="text" class="form-control" id="warehouse" required placeholder="مثال: المخزن الرئيسي">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الممر</label>
+                        <input type="text" class="form-control" id="aisle" placeholder="مثال: A">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الرف</label>
+                        <input type="text" class="form-control" id="shelf" placeholder="مثال: 1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الصندوق</label>
+                        <input type="text" class="form-control" id="bin" placeholder="مثال: A">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الوصف</label>
+                        <textarea class="form-control" id="description" rows="3" placeholder="وصف الموقع..."></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isActive" checked>
+                        <label class="form-check-label" for="isActive">
+                            نشط
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveLocation()">
+                    <i class="bi bi-check-circle me-2"></i>حفظ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Location Modal -->
+<div class="modal fade" id="editLocationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil me-2"></i>تعديل الموقع
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editLocationForm">
+                    <input type="hidden" id="editLocationId">
+                    <div class="mb-3">
+                        <label class="form-label">المخزن *</label>
+                        <input type="text" class="form-control" id="editWarehouse" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الممر</label>
+                        <input type="text" class="form-control" id="editAisle">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الرف</label>
+                        <input type="text" class="form-control" id="editShelf">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الصندوق</label>
+                        <input type="text" class="form-control" id="editBin">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الوصف</label>
+                        <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="editIsActive">
+                        <label class="form-check-label" for="editIsActive">
+                            نشط
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="updateLocation()">
+                    <i class="bi bi-check-circle me-2"></i>حفظ التغييرات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allLocations = [];
+let currentView = 'table';
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadLocations();
+});
+
+// Load locations
+async function loadLocations() {
+    try {
+        const response = await fetch('/api/inventory/locations/');
+        const data = await response.json();
+        allLocations = Array.isArray(data) ? data : (data.results || []);
+        
+        // Apply filters
+        let filtered = allLocations;
+        
+        const warehouseFilter = document.getElementById('warehouseFilter').value;
+        if (warehouseFilter) {
+            filtered = filtered.filter(l => l.warehouse === warehouseFilter);
+        }
+        
+        const statusFilter = document.getElementById('statusFilter').value;
+        if (statusFilter !== '') {
+            filtered = filtered.filter(l => l.is_active === (statusFilter === 'true'));
+        }
+        
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        if (searchTerm) {
+            filtered = filtered.filter(l => 
+                l.warehouse?.toLowerCase().includes(searchTerm) ||
+                l.aisle?.toLowerCase().includes(searchTerm) ||
+                l.shelf?.toLowerCase().includes(searchTerm) ||
+                l.bin?.toLowerCase().includes(searchTerm) ||
+                l.description?.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        displayLocations(filtered);
+        updateStatistics();
+        populateWarehouseFilter();
+    } catch (error) {
+        console.error('Error loading locations:', error);
+        document.getElementById('locationsTableBody').innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-danger py-4">
+                    <i class="bi bi-exclamation-triangle fs-3"></i>
+                    <p class="mb-0 mt-2">فشل تحميل البيانات</p>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Display locations
+function displayLocations(locations) {
+    if (currentView === 'table') {
+        displayTableView(locations);
+    } else {
+        displayGridView(locations);
+    }
+}
+
+// Display table view
+function displayTableView(locations) {
+    const tbody = document.getElementById('locationsTableBody');
+    
+    if (locations.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                    <i class="bi bi-inbox fs-3"></i>
+                    <p class="mb-0 mt-2">لا توجد مواقع</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = locations.map((location, index) => `
+        <tr>
+            <td>${index + 1}</td>
+            <td><strong>${location.warehouse || '-'}</strong></td>
+            <td>${location.aisle || '-'}</td>
+            <td>${location.shelf || '-'}</td>
+            <td>${location.bin || '-'}</td>
+            <td><span class="badge bg-primary">${location.items_count || 0}</span></td>
+            <td>
+                ${location.is_active 
+                    ? '<span class="badge bg-success">نشط</span>' 
+                    : '<span class="badge bg-secondary">غير نشط</span>'}
+            </td>
+            <td>
+                <button class="btn btn-sm btn-warning" onclick="openEditModal(${location.id})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteLocation(${location.id})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Display grid view
+function displayGridView(locations) {
+    const grid = document.getElementById('locationsGrid');
+    
+    if (locations.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12 text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-2">لا توجد مواقع</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.innerHTML = locations.map(location => `
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="mb-0">${location.warehouse || '-'}</h6>
+                        ${location.is_active 
+                            ? '<span class="badge bg-success">نشط</span>' 
+                            : '<span class="badge bg-secondary">غير نشط</span>'}
+                    </div>
+                    <p class="text-muted small mb-2">
+                        ${location.full_location || '-'}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">${location.items_count || 0} قطعة</span>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-warning" onclick="openEditModal(${location.id})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteLocation(${location.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Update statistics
+function updateStatistics() {
+    document.getElementById('totalLocations').textContent = allLocations.length;
+    document.getElementById('activeLocations').textContent = allLocations.filter(l => l.is_active).length;
+    
+    const totalItems = allLocations.reduce((sum, l) => sum + (l.items_count || 0), 0);
+    document.getElementById('totalItems').textContent = totalItems;
+    
+    const warehouses = new Set(allLocations.map(l => l.warehouse));
+    document.getElementById('totalWarehouses').textContent = warehouses.size;
+}
+
+// Populate warehouse filter
+function populateWarehouseFilter() {
+    const warehouses = [...new Set(allLocations.map(l => l.warehouse))];
+    const select = document.getElementById('warehouseFilter');
+    const currentValue = select.value;
+    
+    select.innerHTML = '<option value="">الكل</option>';
+    warehouses.forEach(warehouse => {
+        const option = document.createElement('option');
+        option.value = warehouse;
+        option.textContent = warehouse;
+        select.appendChild(option);
+    });
+    
+    select.value = currentValue;
+}
+
+// Switch view
+function switchView(view) {
+    currentView = view;
+    
+    if (view === 'table') {
+        document.getElementById('tableView').style.display = 'block';
+        document.getElementById('gridView').style.display = 'none';
+    } else {
+        document.getElementById('tableView').style.display = 'none';
+        document.getElementById('gridView').style.display = 'block';
+    }
+    
+    displayLocations(allLocations);
+}
+
+// Open new location modal
+function openNewLocationModal() {
+    document.getElementById('locationForm').reset();
+    document.getElementById('isActive').checked = true;
+    new bootstrap.Modal(document.getElementById('newLocationModal')).show();
+}
+
+// Save location
+async function saveLocation() {
+    const form = document.getElementById('locationForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const data = {
+        warehouse: document.getElementById('warehouse').value,
+        aisle: document.getElementById('aisle').value,
+        shelf: document.getElementById('shelf').value,
+        bin: document.getElementById('bin').value,
+        description: document.getElementById('description').value,
+        is_active: document.getElementById('isActive').checked
+    };
+    
+    try {
+        const response = await fetch('/api/inventory/locations/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('newLocationModal')).hide();
+            await loadLocations();
+            alert('تم إضافة الموقع بنجاح');
+        } else {
+            const error = await response.json();
+            alert(error.detail || 'فشل إضافة الموقع');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء إضافة الموقع');
+    }
+}
+
+// Open edit modal
+function openEditModal(locationId) {
+    const location = allLocations.find(l => l.id === locationId);
+    if (!location) return;
+    
+    document.getElementById('editLocationId').value = location.id;
+    document.getElementById('editWarehouse').value = location.warehouse || '';
+    document.getElementById('editAisle').value = location.aisle || '';
+    document.getElementById('editShelf').value = location.shelf || '';
+    document.getElementById('editBin').value = location.bin || '';
+    document.getElementById('editDescription').value = location.description || '';
+    document.getElementById('editIsActive').checked = location.is_active;
+    
+    new bootstrap.Modal(document.getElementById('editLocationModal')).show();
+}
+
+// Update location
+async function updateLocation() {
+    const locationId = document.getElementById('editLocationId').value;
+    
+    const data = {
+        warehouse: document.getElementById('editWarehouse').value,
+        aisle: document.getElementById('editAisle').value,
+        shelf: document.getElementById('editShelf').value,
+        bin: document.getElementById('editBin').value,
+        description: document.getElementById('editDescription').value,
+        is_active: document.getElementById('editIsActive').checked
+    };
+    
+    try {
+        const response = await fetch(`/api/inventory/locations/${locationId}/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+            bootstrap.Modal.getInstance(document.getElementById('editLocationModal')).hide();
+            await loadLocations();
+            alert('تم تحديث الموقع بنجاح');
+        } else {
+            const error = await response.json();
+            alert(error.detail || 'فشل تحديث الموقع');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء تحديث الموقع');
+    }
+}
+
+// Delete location
+async function deleteLocation(locationId) {
+    if (!confirm('هل أنت متأكد من حذف هذا الموقع؟')) return;
+    
+    try {
+        const response = await fetch(`/api/inventory/locations/${locationId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        if (response.ok) {
+            await loadLocations();
+            alert('تم حذف الموقع بنجاح');
+        } else {
+            const error = await response.json();
+            alert(error.detail || 'فشل حذف الموقع');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء حذف الموقع');
+    }
+}
+
+// Export to Excel
+function exportToExcel() {
+    const data = allLocations.map(l => ({
+        'المخزن': l.warehouse || '-',
+        'الممر': l.aisle || '-',
+        'الرف': l.shelf || '-',
+        'الصندوق': l.bin || '-',
+        'عدد القطع': l.items_count || 0,
+        'الحالة': l.is_active ? 'نشط' : 'غير نشط',
+        'الوصف': l.description || '-'
+    }));
+    
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'المواقع');
+    XLSX.writeFile(wb, 'warehouse_locations.xlsx');
+}
+
+// Helper function
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+

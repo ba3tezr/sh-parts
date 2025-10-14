@@ -92,6 +92,31 @@ def low_stock_report(request):
     """تقرير القطع منخفضة المخزون - Low Stock Report"""
     return render(request, 'pages/low_stock_report.html')
 
+@login_required
+def location_transfer(request):
+    """نقل بين المواقع - Location Transfer"""
+    return render(request, 'pages/location_transfer.html')
+
+@login_required
+def barcode_system(request):
+    """نظام الباركود - Barcode System"""
+    return render(request, 'pages/barcode_system.html')
+
+@login_required
+def warehouse_management(request):
+    """إدارة المخازن - Warehouse Management"""
+    return render(request, 'pages/warehouse_management.html')
+
+@login_required
+def category_management(request):
+    """إدارة الفئات - Category Management"""
+    return render(request, 'pages/category_management.html')
+
+@login_required
+def smart_alerts(request):
+    """التنبيهات الذكية - Smart Alerts"""
+    return render(request, 'pages/smart_alerts.html')
+
 
 @login_required
 def sales_list(request):

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
-from .models import WarehouseLocation, InventoryItem, InventoryItemImage, StockMovement
+from .models import WarehouseLocation, InventoryItem, InventoryItemImage, StockMovement, LocationTransfer
 
 
 @admin.register(WarehouseLocation)
@@ -55,9 +55,35 @@ class InventoryItemAdmin(admin.ModelAdmin):
 
 @admin.register(StockMovement)
 class StockMovementAdmin(admin.ModelAdmin):
-    list_display = ('item', 'movement_type', 'quantity', 'from_location', 'to_location', 
+    list_display = ('item', 'movement_type', 'quantity', 'from_location', 'to_location',
                    'performed_by', 'performed_at')
     list_filter = ('movement_type', 'performed_at')
     search_fields = ('item__sku', 'reference', 'reason')
     date_hierarchy = 'performed_at'
     readonly_fields = ('performed_at',)
+
+
+@admin.register(LocationTransfer)
+class LocationTransferAdmin(admin.ModelAdmin):
+    list_display = ('id', 'item', 'from_location', 'to_location', 'quantity', 'status',
+                   'requested_by', 'created_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('item__sku', 'reason')
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'approved_at', 'completed_at')
+
+    fieldsets = (
+        (_('Transfer Information'), {
+            'fields': ('item', 'from_location', 'to_location', 'quantity', 'reason')
+        }),
+        (_('Status'), {
+            'fields': ('status', 'stock_movement')
+        }),
+        (_('Tracking'), {
+            'fields': ('requested_by', 'approved_by', 'completed_by')
+        }),
+        (_('Timestamps'), {
+            'fields': ('created_at', 'approved_at', 'completed_at'),
+            'classes': ('collapse',)
+        }),
+    )
