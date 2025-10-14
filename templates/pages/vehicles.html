@@ -114,7 +114,7 @@ async function showAddVehicleModal() {
         ).join('');
         
         const formHtml = `
-            <form id="addVehicleForm" class="add-vehicle-form">
+            <form id="addVehicleForm" class="add-vehicle-form" onsubmit="return false;">
                 <div class="form-section">
                     <h5><i class="bi bi-car-front"></i> {% trans "معلومات السيارة" %}</h5>
 
@@ -187,14 +187,14 @@ async function showAddVehicleModal() {
                 </div>
 
                 <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg">
+                    <button type="button" class="btn btn-primary btn-lg" id="saveVehicleBtn">
                         <i class="bi bi-check-circle"></i> {% trans "حفظ السيارة" %}
                     </button>
                 </div>
             </form>
         `;
-        
-        showFormModal('{% trans "إضافة سيارة جديدة" %}', formHtml, async (formData) => {
+
+        const handleSubmit = async (formData) => {
             // Validate required fields
             const make = formData.get('make');
             const model = formData.get('model');
@@ -249,8 +249,35 @@ async function showAddVehicleModal() {
                 }
                 throw error; // Re-throw to prevent modal from closing
             }
-        });
-        
+        };
+
+        showFormModal('{% trans "إضافة سيارة جديدة" %}', formHtml, handleSubmit);
+
+        // Hide the default modal footer button and attach handler to form button
+        setTimeout(() => {
+            const modalSubmitBtn = document.getElementById('modalSubmitBtn');
+            if (modalSubmitBtn) {
+                modalSubmitBtn.style.display = 'none';
+            }
+
+            const saveVehicleBtn = document.getElementById('saveVehicleBtn');
+            if (saveVehicleBtn) {
+                saveVehicleBtn.addEventListener('click', async () => {
+                    const form = document.getElementById('addVehicleForm');
+                    const formData = new FormData(form);
+
+                    try {
+                        await handleSubmit(formData);
+                        // Close modal on success
+                        const modal = bootstrap.Modal.getInstance(document.querySelector('.modal.show'));
+                        if (modal) modal.hide();
+                    } catch (error) {
+                        // Error already handled in handleSubmit
+                    }
+                });
+            }
+        }, 100);
+
     } catch (error) {
         app.showAlert('فشل تحميل بيانات الماركات', 'error');
     }
