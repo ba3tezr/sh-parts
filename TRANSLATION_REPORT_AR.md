@@ -67,7 +67,7 @@ msgstr ""  # ❌ فارغ
 
 #: authentication/models.py:36
 msgid "Sales"
-msgstr "المبيعات"  # ✅ مترجم
+msgstr "المبيعا ت"  # ✅ مترجم
 ```
 
 **⚠️ المشكلة الرئيسية:**
