@@ -1,8 +1,8 @@
 {% extends 'base/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}المخزون - SH Parts{% endblock %}
-{% block page_title %}<span data-translate="inventory">المخزون</span>{% endblock %}
+{% block title %}{% trans "المخزون" %} - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="inventory">{% trans "المخزون" %}</span>{% endblock %}
 
 {% block content %}
 <!-- إحصائيات سريعة -->
@@ -68,8 +68,9 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <input type="text" class="form-control" id="searchInput" 
+                        <input type="text" class="form-control" id="searchInput"
                                placeholder="بحث برمز SKU أو اسم القطعة...">
+                               <datalist id="inventorySearchSuggestions"></datalist>
                     </div>
                     <div class="col-md-2">
                         <select class="form-select" id="filterStatus">
@@ -314,25 +315,29 @@ async function loadVehicles() {
 
 // حفظ قطعة جديدة
 async function saveItem() {
+    const userId = parseInt(document.body.dataset.userId);
     const formData = {
         part: document.getElementById('part').value,
         vehicle_source: document.getElementById('vehicle_source').value || null,
         condition: document.getElementById('item_condition').value,
+        status: 'AVAILABLE',
         quantity: document.getElementById('quantity').value,
+        min_quantity: 0,
         cost_price: document.getElementById('cost_price').value,
         selling_price: document.getElementById('selling_price').value,
         location: document.getElementById('location').value || null,
+        barcode: '',
         notes: document.getElementById('item_notes').value,
-        added_by: 1
+        added_by: userId
     };
-    
+
     const result = await app.apiRequest('/api/inventory/items/', {
         method: 'POST',
         body: JSON.stringify(formData)
     });
-    
+
     if (result) {
-        app.showNotification('تم إضافة القطعة بنجاح', 'success');
+        app.showAlert('تم إضافة القطعة بنجاح', 'success');
         bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
         location.reload();
     }
@@ -340,40 +345,97 @@ async function saveItem() {
 
 // عرض تفاصيل قطعة
 function viewItem(id) {
-    alert(`عرض تفاصيل القطعة رقم: ${id}`);
+    actionModals.showInfoModal({ title: '{% trans "تفاصيل القطعة" %}', message: `{% trans "عرض تفاصيل القطعة رقم:" %} ${id}`, type: 'info' });
 }
 
 // تعديل قطعة
 function editItem(id) {
-    alert(`تعديل القطعة رقم: ${id}`);
+    actionModals.showInfoModal({ title: '{% trans "تعديل القطعة" %}', message: `{% trans "تعديل القطعة رقم:" %} ${id}`, type: 'warning' });
 }
 
 // عرض QR Code
 function showQR(id) {
-    alert(`عرض QR Code للقطعة رقم: ${id}`);
+    actionModals.showInfoModal({ title: 'QR Code', message: `{% trans "عرض QR Code للقطعة رقم:" %} ${id}`, type: 'info' });
 }
 
 // طباعة QR Codes
 function printQRCodes() {
-    app.showNotification('جاري تحضير رموز QR للطباعة...', 'info');
+    app.showAlert('جاري تحضير رموز QR للطباعة...', 'info');
 }
 
-// البحث
+// البحث مع دعم العربية + اقتراحات تلقائية من الخادم
+function normalize(txt){ try { return (txt||'').toLocaleLowerCase(); } catch(e){ return (txt||'').toLowerCase(); } }
+
+async function fetchInventorySuggestions(q){
+  if (!q || q.length < 2) { document.getElementById('inventorySearchSuggestions').innerHTML=''; return; }
+  try{
+    const data = await app.apiRequest('/api/inventory/items/?search=' + encodeURIComponent(q));
+    const results = data && data.results ? data.results : [];
+    const html = results.slice(0,10).map(it => `<option value="${it.sku}">${(it.part && (it.part.name_ar||it.part.name))||''}</option>`).join('');
+    document.getElementById('inventorySearchSuggestions').innerHTML = html;
+  } catch(e){ /* ignore */ }
+}
+
 document.getElementById('searchInput')?.addEventListener('input', function() {
-    const searchValue = this.value.toLowerCase();
+    const searchValue = normalize(this.value);
+    fetchInventorySuggestions(this.value);
     const rows = document.querySelectorAll('#inventoryTable tbody tr');
-    
     rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
+        const text = normalize(row.textContent);
         row.style.display = text.includes(searchValue) ? '' : 'none';
     });
 });
+
+// تحميل إحصائيات المخزون
+async function loadInventoryStats() {
+    try {
+        // جلب جميع القطع
+        const data = await app.apiRequest('/api/inventory/items/');
+
+        if (data && data.results) {
+            const items = data.results;
+
+            // إجمالي القطع
+            const totalItems = data.count || items.length;
+            document.getElementById('totalItems').textContent = totalItems;
+
+            // القطع المتوفرة
+            const availableItems = items.filter(item => item.status === 'AVAILABLE').length;
+            document.getElementById('availableItems').textContent = availableItems;
+
+            // القطع منخفضة المخزون
+            const lowStockItems = items.filter(item => item.is_low_stock).length;
+            document.getElementById('lowStockItems').textContent = lowStockItems;
+
+            // قيمة المخزون (القطع المتوفرة فقط)
+            const inventoryValue = items
+                .filter(item => item.status === 'AVAILABLE')
+                .reduce((sum, item) => {
+                    const price = parseFloat(item.selling_price || 0);
+                    const quantity = parseInt(item.quantity || 0);
+                    return sum + (price * quantity);
+                }, 0);
+
+            const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+            document.getElementById('inventoryValue').textContent =
+                `${inventoryValue.toFixed(2)} ${currencySymbol}`;
+        }
+    } catch (error) {
+        console.error('Error loading inventory stats:', error);
+        // عرض قيم افتراضية في حالة الخطأ
+        document.getElementById('totalItems').textContent = '0';
+        document.getElementById('availableItems').textContent = '0';
+        document.getElementById('lowStockItems').textContent = '0';
+        document.getElementById('inventoryValue').textContent = '0';
+    }
+}
 
 // تحميل البيانات عند فتح الصفحة
 document.addEventListener('DOMContentLoaded', () => {
     loadParts();
     loadLocations();
     loadVehicles();
+    loadInventoryStats();
 });
 </script>
 {% endblock %}

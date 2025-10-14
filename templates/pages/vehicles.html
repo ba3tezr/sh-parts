@@ -1,7 +1,7 @@
 {% extends 'base/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}السيارات{% endblock %}
+{% block title %}{% trans "السيارات" %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -9,7 +9,7 @@
     max-width: 600px;
 }
 .form-section {
-    background: var(--bg-secondary);
+    background: var(--card-bg);
     padding: 1.5rem;
     border-radius: 8px;
     margin-bottom: 1rem;
@@ -27,11 +27,11 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>
             <i class="bi bi-car-front"></i>
-            <span data-translate="vehicles">السيارات</span>
+            <span data-translate="vehicles">{% trans "السيارات" %}</span>
         </h2>
         <button class="btn btn-primary" onclick="showAddVehicleModal()">
             <i class="bi bi-plus-circle"></i>
-            إضافة سيارة جديدة
+            {% trans "إضافة سيارة جديدة" %}
         </button>
     </div>
     
@@ -42,13 +42,13 @@
                     <thead>
                         <tr>
                             <th>VIN</th>
-                            <th>الماركة</th>
-                            <th>الموديل</th>
-                            <th>السنة</th>
-                            <th>اللون</th>
-                            <th>الحالة</th>
-                            <th>تاريخ الاستلام</th>
-                            <th>الإجراءات</th>
+                            <th>{% trans "الماركة" %}</th>
+                            <th>{% trans "الموديل" %}</th>
+                            <th>{% trans "السنة" %}</th>
+                            <th>{% trans "اللون" %}</th>
+                            <th>{% trans "الحالة" %}</th>
+                            <th>{% trans "تاريخ الاستلام" %}</th>
+                            <th>{% trans "الإجراءات" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -61,30 +61,30 @@
                             <td>{{ vehicle.color|default:"-" }}</td>
                             <td>
                                 {% if vehicle.is_dismantled %}
-                                    <span class="badge bg-success">تم التفكيك</span>
+                                    <span class="badge bg-success">{% trans "تم التفكيك" %}</span>
                                 {% else %}
-                                    <span class="badge bg-warning">قيد الانتظار</span>
+                                    <span class="badge bg-warning">{% trans "قيد الانتظار" %}</span>
                                 {% endif %}
                             </td>
                             <td>{{ vehicle.intake_date|date:"Y-m-d" }}</td>
                             <td>
                                 <div class="btn-group" role="group">
                                     {% if not vehicle.is_dismantled %}
-                                    <a href="{% url 'vehicle_dismantle' vehicle.id %}" 
+                                    <a href="{% url 'vehicle_dismantle' vehicle.id %}"
                                        class="btn btn-sm btn-success"
-                                       title="تفكيك السيارة">
+                                       title="{% trans "تفكيك السيارة" %}">
                                         <i class="bi bi-tools"></i>
-                                        تفكيك
+                                        {% trans "تفكيك" %}
                                     </a>
                                     {% endif %}
-                                    <button class="btn btn-sm btn-info" 
+                                    <button class="btn btn-sm btn-info"
                                             onclick="viewVehicleDetails({{ vehicle.id }})"
-                                            title="عرض التفاصيل">
+                                            title="{% trans "عرض التفاصيل" %}">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-danger" 
+                                    <button class="btn btn-sm btn-danger"
                                             onclick="deleteVehicle({{ vehicle.id }})"
-                                            title="حذف">
+                                            title="{% trans "حذف" %}">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -92,7 +92,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="8" class="text-center">لا توجد سيارات مسجلة</td>
+                            <td colspan="8" class="text-center">{% trans "لا توجد سيارات مسجلة" %}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -106,7 +106,7 @@
 async function showAddVehicleModal() {
     // تحميل الماركات من API
     try {
-        const makesResponse = await app.apiRequest('/api/cars-data/makes/');
+        const makesResponse = await app.apiRequest('/api/cars/makes/');
         const makes = makesResponse.results || [];
         
         const makesOptions = makes.map(make => 
@@ -116,105 +116,106 @@ async function showAddVehicleModal() {
         const formHtml = `
             <form id="addVehicleForm" class="add-vehicle-form">
                 <div class="form-section">
-                    <h5><i class="bi bi-car-front"></i> معلومات السيارة</h5>
-                    
+                    <h5><i class="bi bi-car-front"></i> {% trans "معلومات السيارة" %}</h5>
+
                     <div class="mb-3">
-                        <label class="form-label">VIN (اختياري)</label>
+                        <label class="form-label">VIN ({% trans "اختياري" %})</label>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="vin" placeholder="أدخل رقم VIN">
+                            <input type="text" class="form-control" id="vin" name="vin" placeholder="{% trans "أدخل رقم VIN" %}">
                             <button type="button" class="btn btn-outline-primary" onclick="decodeVIN()">
-                                <i class="bi bi-search"></i> فك
+                                <i class="bi bi-search"></i> {% trans "فك" %}
                             </button>
                         </div>
-                        <small class="text-muted">يمكنك إدخال VIN للحصول على البيانات تلقائياً</small>
+                        <small class="text-muted">{% trans "يمكنك إدخال VIN للحصول على البيانات تلقائياً" %}</small>
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label class="form-label">الماركة *</label>
-                        <select class="form-select" id="make" required onchange="loadModels()">
-                            <option value="">اختر الماركة</option>
+                        <label class="form-label">{% trans "الماركة" %} *</label>
+                        <select class="form-select" id="make" name="make" required onchange="loadModels()">
+                            <option value="">{% trans "اختر الماركة" %}</option>
                             ${makesOptions}
                         </select>
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label class="form-label">الموديل *</label>
-                        <select class="form-select" id="model" required disabled>
-                            <option value="">اختر الموديل أولاً</option>
+                        <label class="form-label">{% trans "الموديل" %} *</label>
+                        <select class="form-select" id="model" name="model" required disabled>
+                            <option value="">{% trans "اختر الموديل أولاً" %}</option>
                         </select>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">السنة *</label>
-                            <input type="number" class="form-control" id="year" min="1990" max="2026" required>
+                            <label class="form-label">{% trans "السنة" %} *</label>
+                            <input type="number" class="form-control" id="year" name="year" min="1990" max="2026" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">اللون</label>
-                            <input type="text" class="form-control" id="color" placeholder="مثال: أبيض">
+                            <label class="form-label">{% trans "اللون" %}</label>
+                            <input type="text" class="form-control" id="color" name="color" placeholder="{% trans "مثال: أبيض" %}">
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="form-section">
-                    <h5><i class="bi bi-gear"></i> تفاصيل إضافية</h5>
-                    
+                    <h5><i class="bi bi-gear"></i> {% trans "تفاصيل إضافية" %}</h5>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">الحالة *</label>
-                            <select class="form-control" id="condition" required>
-                                <option value="EXCELLENT">ممتاز</option>
-                                <option value="GOOD" selected>جيد</option>
-                                <option value="FAIR">مقبول</option>
-                                <option value="POOR">سيئ</option>
+                            <label class="form-label">{% trans "الحالة" %} *</label>
+                            <select class="form-control" id="condition" name="condition" required>
+                                <option value="EXCELLENT">{% trans "ممتاز" %}</option>
+                                <option value="GOOD" selected>{% trans "جيد" %}</option>
+                                <option value="FAIR">{% trans "مقبول" %}</option>
+                                <option value="POOR">{% trans "سيئ" %}</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">المسافة المقطوعة (كم)</label>
-                            <input type="number" class="form-control" id="mileage" placeholder="0">
+                            <label class="form-label">{% trans "المسافة المقطوعة (كم)" %}</label>
+                            <input type="number" class="form-control" id="mileage" name="mileage" placeholder="0">
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label class="form-label">سعر الشراء</label>
-                        <input type="number" class="form-control" id="purchase_price" placeholder="0" step="0.01">
+                        <label class="form-label">{% trans "سعر الشراء" %}</label>
+                        <input type="number" class="form-control" id="purchase_price" name="purchase_price" placeholder="0" step="0.01">
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label class="form-label">ملاحظات</label>
-                        <textarea class="form-control" id="notes" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
+                        <label class="form-label">{% trans "ملاحظات" %}</label>
+                        <textarea class="form-control" id="notes" name="intake_notes" rows="3" placeholder="{% trans "أي ملاحظات إضافية..." %}"></textarea>
                     </div>
                 </div>
-                
+
                 <div class="d-grid gap-2">
                     <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-check-circle"></i> حفظ السيارة
+                        <i class="bi bi-check-circle"></i> {% trans "حفظ السيارة" %}
                     </button>
                 </div>
             </form>
         `;
         
-        showFormModal('إضافة سيارة جديدة', formHtml, async (formData) => {
+        showFormModal('{% trans "إضافة سيارة جديدة" %}', formHtml, async (formData) => {
             try {
                 const response = await app.apiRequest('/api/cars/vehicles/', {
                     method: 'POST',
                     body: JSON.stringify({
-                        vin: formData.get('vin') || null,
-                        make_id: parseInt(formData.get('make')),
-                        model_id: parseInt(formData.get('model')),
+                        vin: formData.get('vin'),
+                        make: parseInt(formData.get('make')),
+                        model: parseInt(formData.get('model')),
                         year: parseInt(formData.get('year')),
-                        color: formData.get('color') || null,
+                        color: formData.get('color') || '',
                         condition: formData.get('condition'),
-                        mileage: parseInt(formData.get('mileage')) || 0,
-                        purchase_price: parseFloat(formData.get('purchase_price')) || 0,
-                        notes: formData.get('notes') || ''
+                        mileage: formData.get('mileage') ? parseInt(formData.get('mileage')) : null,
+                        purchase_price: formData.get('purchase_price') ? parseFloat(formData.get('purchase_price')) : null,
+                        intake_notes: formData.get('intake_notes') || '',
+                        received_by: parseInt(document.body.dataset.userId)
                     })
                 });
                 
-                app.showAlert('تم إضافة السيارة بنجاح', 'success');
+                app.showAlert('{% trans "تم إضافة السيارة بنجاح" %}', 'success');
                 setTimeout(() => location.reload(), 1000);
             } catch (error) {
-                app.showAlert('فشل إضافة السيارة: ' + error.message, 'error');
+                app.showAlert('{% trans "فشل إضافة السيارة" %}: ' + error.message, 'error');
             }
         });
         
@@ -226,33 +227,32 @@ async function showAddVehicleModal() {
 async function loadModels() {
     const makeSelect = document.getElementById('make');
     const modelSelect = document.getElementById('model');
-    const makeName = makeSelect.options[makeSelect.selectedIndex].text;
-    
-    if (!makeName || makeName === 'اختر الماركة') {
+    const makeId = makeSelect.value;
+
+    if (!makeId) {
         modelSelect.disabled = true;
-        modelSelect.innerHTML = '<option value="">اختر الماركة أولاً</option>';
+        modelSelect.innerHTML = '<option value="">{% trans "اختر الماركة أولاً" %}</option>';
         return;
     }
-    
+
     try {
         modelSelect.disabled = true;
-        modelSelect.innerHTML = '<option value="">جاري التحميل...</option>';
-        
-        const response = await app.apiRequest(`/api/cars-data/models/${encodeURIComponent(makeName)}/`);
-        const models = response.results || [];
-        
-        if (models.length === 0) {
-            modelSelect.innerHTML = '<option value="">لا توجد موديلات متاحة</option>';
+        modelSelect.innerHTML = '<option value="">{% trans "جاري التحميل..." %}</option>';
+
+        const models = await app.apiRequest(`/api/cars/makes/${makeId}/models/`);
+
+        if (!models || models.length === 0) {
+            modelSelect.innerHTML = '<option value="">{% trans "لا توجد موديلات متاحة" %}</option>';
             return;
         }
-        
-        modelSelect.innerHTML = '<option value="">اختر الموديل</option>' +
+
+        modelSelect.innerHTML = '<option value="">{% trans "اختر الموديل" %}</option>' +
             models.map(model => `<option value="${model.id}">${model.name}</option>`).join('');
         modelSelect.disabled = false;
-        
+
     } catch (error) {
-        modelSelect.innerHTML = '<option value="">فشل التحميل</option>';
-        app.showAlert('فشل تحميل الموديلات', 'error');
+        modelSelect.innerHTML = '<option value="">{% trans "فشل التحميل" %}</option>';
+        app.showAlert('{% trans "فشل تحميل الموديلات" %}', 'danger');
     }
 }
 
@@ -261,12 +261,12 @@ async function decodeVIN() {
     const vin = vinInput.value.trim();
     
     if (!vin || vin.length < 17) {
-        app.showAlert('الرجاء إدخال VIN صحيح (17 حرف)', 'warning');
+        app.showAlert('{% trans "الرجاء إدخال VIN صحيح (17 حرف)" %}', 'warning');
         return;
     }
     
     try {
-        showLoadingModal('جاري فك تشفير VIN...');
+        showLoadingModal('{% trans "جاري فك تشفير VIN..." %}');
         
         const response = await app.apiRequest(`/api/cars-data/decode-vin/${vin}/`);
         
@@ -288,35 +288,84 @@ async function decodeVIN() {
             document.getElementById('year').value = response.year;
         }
         
-        app.showAlert('تم فك VIN بنجاح', 'success');
+        app.showAlert('{% trans "تم فك VIN بنجاح" %}', 'success');
         
     } catch (error) {
         closeModal();
-        app.showAlert('فشل فك VIN', 'error');
+        app.showAlert('{% trans "فشل فك VIN" %}', 'error');
     }
 }
 
-function viewVehicleDetails(id) {
-    window.location.href = `/vehicles/${id}/`;
+async function viewVehicleDetails(id) {
+    try {
+        const [vehicle, parts] = await Promise.all([
+            app.apiRequest(`/api/cars/vehicles/${id}/`),
+            app.apiRequest(`/api/cars/vehicles/${id}/extracted_parts/`)
+        ]);
+        const partsRows = (parts && parts.results ? parts.results : parts || []).map(p => `
+            <tr>
+                <td>${p.part && (p.part.name_ar || p.part.name) || '-'}</td>
+                <td><span class="badge bg-info">${p.quantity || 1}</span></td>
+                <td><strong class="text-success">${p.selling_price || 0} ${document.body.dataset.currencySymbol || '﷼'}</strong></td>
+                <td>${p.sku || '-'}</td>
+            </tr>
+        `).join('') || `<tr><td colspan="4" class="text-center text-muted">{% trans "لا توجد قطع مستخرجة" %}</td></tr>`;
+
+        const html = `
+            <div class="row g-3">
+                <div class="col-md-5">
+                    <div class="card"><div class="card-body">
+                        <h5 class="mb-3"><i class="bi bi-car-front me-2"></i>بيانات السيارة</h5>
+                        <div><strong>VIN:</strong> ${vehicle.vin || '-'}</div>
+                        <div><strong>الماركة:</strong> ${vehicle.make_name || '-'}</div>
+                        <div><strong>الموديل:</strong> ${vehicle.model_name || '-'}</div>
+                        <div><strong>السنة:</strong> ${vehicle.year || '-'}</div>
+                        <div><strong>الحالة:</strong> ${vehicle.condition || '-'}</div>
+                        <div><strong>ملاحظات:</strong> ${vehicle.intake_notes || '-'}</div>
+                    </div></div>
+                </div>
+                <div class="col-md-7">
+                    <div class="card"><div class="card-body">
+                        <h5 class="mb-3"><i class="bi bi-gear me-2"></i>القطع المستخرجة</h5>
+                        <div class="table-responsive" style="max-height:320px;overflow:auto;">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light"><tr>
+                                <th>القطعة</th><th>الكمية</th><th>السعر</th><th>SKU</th>
+                            </tr></thead>
+                            <tbody>${partsRows}</tbody>
+                        </table>
+                        </div>
+                    </div></div>
+                </div>
+            </div>`;
+
+        // Use a modal to show details
+        window.showFormModal('{% trans "تفاصيل السيارة" %}', html, function(){ /* no submit */ return Promise.resolve(); });
+        // Hide submit button
+        const submitBtn = document.getElementById('modalSubmitBtn');
+        if (submitBtn) submitBtn.style.display = 'none';
+    } catch (e) {
+        actionModals.showInfoModal({ title: '{% trans "خطأ" %}', message: '{% trans "تعذر تحميل تفاصيل السيارة" %}', type: 'error' });
+    }
 }
 
 function deleteVehicle(id) {
     showConfirmModal(
-        'تأكيد الحذف',
-        'هل أنت متأكد من حذف هذه السيارة؟ لا يمكن التراجع عن هذا الإجراء.',
+        '{% trans "تأكيد الحذف" %}',
+        '{% trans "هل أنت متأكد من حذف هذه السيارة؟ لا يمكن التراجع عن هذا الإجراء." %}',
         async () => {
             try {
                 await app.apiRequest(`/api/cars/vehicles/${id}/`, {
                     method: 'DELETE'
                 });
-                
-                app.showAlert('تم حذف السيارة بنجاح', 'success');
+
+                app.showAlert('{% trans "تم حذف السيارة بنجاح" %}', 'success');
                 setTimeout(() => location.reload(), 1000);
             } catch (error) {
-                app.showAlert('فشل حذف السيارة', 'error');
+                app.showAlert('{% trans "فشل حذف السيارة" %}', 'error');
             }
         }
     );
 }
-
+</script>
 {% endblock %}

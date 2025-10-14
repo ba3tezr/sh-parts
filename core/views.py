@@ -80,17 +80,17 @@ def login_view(request):
         return redirect('dashboard')
     
     if request.method == 'POST':
-        email = request.POST.get('email')
+        username = request.POST.get('username')
         password = request.POST.get('password')
-        
-        user = authenticate(request, email=email, password=password)
-        
+
+        user = authenticate(request, username=username, password=password)
+
         if user is not None:
             login(request, user)
             return redirect('dashboard')
         else:
-            messages.error(request, 'البريد الإلكتروني أو كلمة المرور غير صحيحة')
-    
+            messages.error(request, 'اسم المستخدم أو كلمة المرور غير صحيحة')
+
     return render(request, 'pages/login.html')
 
 

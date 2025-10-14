@@ -1,6 +1,6 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ LANGUAGE_CODE|default:'ar' }}" dir="{% if LANGUAGE_CODE|default:'ar'|slice:":2" == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <!-- تطبيق الثيم فوراً قبل أي شيء آخر - منع الوميض 100% -->
     <script>
@@ -8,12 +8,12 @@
             const savedTheme = localStorage.getItem('theme') || 'dark-blue';
             const html = document.documentElement;
             const body = document.body;
-            
+
             // تطبيق الثيم فوراً على html قبل تحميل أي شيء
             if (savedTheme !== 'dark-blue') {
                 html.setAttribute('data-theme', savedTheme);
             }
-            
+
             // تطبيق على body أيضاً بعد تحميله
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', function() {
@@ -24,16 +24,21 @@
             }
         })();
     </script>
-    
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}نظام قطع غيار السيارات{% endblock %}</title>
-    
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%9B%A0%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <title>{% block title %}{% trans "نظام قطع غيار السيارات" %}{% endblock %}</title>
+
     <!-- إصلاح الوميض - يُحمل أولاً قبل أي شيء -->
     <link rel="stylesheet" href="{% static 'css/no-flicker.css' %}">
-    
-    <!-- Bootstrap 5 RTL -->
+
+    <!-- Bootstrap 5 (RTL/LTR conditional) -->
+    {% if LANGUAGE_CODE|default:'ar'|slice:":2" == 'ar' %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    {% else %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% endif %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <!-- Cairo Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,10 +48,10 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/color-improvements.css' %}">
     <link rel="stylesheet" href="{% static 'css/action-modals.css' %}">
-    
+
     {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body data-user-id="{{ request.user.id }}" data-currency-symbol="{{ currency_symbol }}">
     <!-- Sidebar -->
     <nav class="sidebar">
         <div class="logo">
@@ -55,85 +60,88 @@
                 <span data-translate="app_name">SH Parts</span>
             </h2>
         </div>
-        
+
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" 
+                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
                    href="{% url 'dashboard' %}">
                     <i class="bi bi-speedometer2"></i>
-                    <span data-translate="dashboard">لوحة التحكم</span>
+                    <span data-translate="dashboard">{% trans "Dashboard" %}</span>
                 </a>
             </li>
-            
+
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'vehicles' %}active{% endif %}" 
+                <a class="nav-link {% if request.resolver_match.url_name == 'vehicles' %}active{% endif %}"
                    href="{% url 'vehicles' %}">
                     <i class="bi bi-car-front"></i>
-                    <span data-translate="vehicles">السيارات</span>
+                    <span data-translate="vehicles">{% trans "Vehicles" %}</span>
                 </a>
             </li>
-            
+
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}" 
+                <a class="nav-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}"
                    href="{% url 'inventory' %}">
                     <i class="bi bi-box-seam"></i>
-                    <span data-translate="inventory">المخزون</span>
+                    <span data-translate="inventory">{% trans "Inventory" %}</span>
                 </a>
             </li>
-            
+
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'sales' %}active{% endif %}" 
+                <a class="nav-link {% if request.resolver_match.url_name == 'sales' %}active{% endif %}"
                    href="{% url 'sales' %}">
                     <i class="bi bi-cart3"></i>
-                    <span data-translate="sales">المبيعات</span>
+                    <span data-translate="sales">{% trans "Sales" %}</span>
                 </a>
             </li>
-            
+
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'customers' %}active{% endif %}" 
+                <a class="nav-link {% if request.resolver_match.url_name == 'customers' %}active{% endif %}"
                    href="{% url 'customers' %}">
                     <i class="bi bi-people"></i>
-                    <span data-translate="customers">العملاء</span>
+                    <span data-translate="customers">{% trans "Customers" %}</span>
                 </a>
             </li>
-            
+
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" 
+                <a class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}"
                    href="{% url 'reports' %}">
                     <i class="bi bi-graph-up"></i>
-                    <span data-translate="reports">التقارير</span>
+                    <span data-translate="reports">{% trans "Reports" %}</span>
                 </a>
             </li>
-            
+
             {% if user.is_staff %}
             <!-- قسم الإدارة -->
             <li class="nav-section mt-3">
-                <small class="text-muted px-3">إدارة النظام</small>
+                <small class="text-muted px-3">{% trans "System Management" %}</small>
             </li>
             <li class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'price_management' %}active{% endif %}" 
+                <a class="nav-link {% if request.resolver_match.url_name == 'price_management' %}active{% endif %}"
                    href="{% url 'price_management' %}">
                     <i class="bi bi-cash-coin"></i>
-                    <span>إدارة الأسعار</span>
+                    <span>{% trans "Price Management" %}</span>
                 </a>
             </li>
             {% endif %}
-            
+
             <li class="nav-item mt-4">
                 <a class="nav-link" href="#">
                     <i class="bi bi-gear"></i>
-                    <span data-translate="settings">الإعدادات</span>
+                    <span data-translate="settings">{% trans "Settings" %}</span>
                 </a>
             </li>
-            
+
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'logout' %}">
                     <i class="bi bi-box-arrow-right"></i>
-                    <span data-translate="logout">تسجيل الخروج</span>
+                    <span data-translate="logout">{% trans "Logout" %}</span>
                 </a>
             </li>
         </ul>
     </nav>
+
+    <!-- Container for dynamically injected action modals -->
+    <div id="action-modal-container"></div>
 
     <!-- Main Content -->
     <main class="main-content">
@@ -143,41 +151,44 @@
                 <button class="btn btn-link sidebar-toggle d-md-none me-3">
                     <i class="bi bi-list fs-3"></i>
                 </button>
-                <h1 class="mb-0">{% block page_title %}لوحة التحكم{% endblock %}</h1>
+                <h1 class="mb-0">{% block page_title %}{% trans "لوحة التحكم" %}{% endblock %}</h1>
             </div>
-            
+
             <div class="d-flex align-items-center gap-3">
                 <!-- Theme Switcher -->
                 <div class="theme-switcher">
-                    <button class="theme-btn dark-blue active" 
-                            data-theme="dark-blue" 
+                    <button class="theme-btn dark-blue active"
+                            data-theme="dark-blue"
                             title="الثيم الأزرق الداكن / Dark Blue Theme"></button>
-                    <button class="theme-btn light" 
-                            data-theme="light" 
+                    <button class="theme-btn light"
+                            data-theme="light"
                             title="الثيم الفاتح / Light Theme"></button>
-                    <button class="theme-btn high-contrast" 
-                            data-theme="high-contrast" 
+                    <button class="theme-btn high-contrast"
+                            data-theme="high-contrast"
                             title="التباين العالي / High Contrast"></button>
+                        <button class="theme-btn olive-sage"
+                                data-theme="olive-sage"
+                                title="الثيم الزيتي / Olive Sage Theme"></button>
                 </div>
-                
+
                 <!-- Language Switcher -->
                 <div class="lang-switcher">
-                    <button class="lang-btn active" data-lang="ar">ع</button>
-                    <button class="lang-btn" data-lang="en">EN</button>
+                    <button class="lang-btn {% if LANGUAGE_CODE|default:'ar'|slice:":2" == 'ar' %}active{% endif %}" data-lang="ar">ع</button>
+                    <button class="lang-btn {% if LANGUAGE_CODE|default:'ar'|slice:":2" == 'en' %}active{% endif %}" data-lang="en">EN</button>
                 </div>
-                
+
                 <!-- User Profile -->
                 <div class="dropdown">
-                    <button class="btn btn-link text-decoration-none dropdown-toggle" 
-                            type="button" 
+                    <button class="btn btn-link text-decoration-none dropdown-toggle"
+                            type="button"
                             data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle fs-4"></i>
-                        <span class="ms-2">{{ request.user.first_name|default:request.user.email }}</span>
+                        <span class="ms-2">{{ request.user.first_name|default:request.user.username }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li>
                             <div class="dropdown-header">
-                                <strong>{{ request.user.email }}</strong>
+                                <strong>{{ request.user.username }}</strong>
                                 <br>
                                 <small class="text-muted">{{ request.user.get_role_display }}</small>
                             </div>
@@ -187,23 +198,23 @@
                         <li>
                             <a class="dropdown-item" href="{% url 'admin:index' %}" target="_blank">
                                 <i class="bi bi-shield-lock me-2"></i>
-                                لوحة الإدارة
+                                {% trans "لوحة الإدارة" %}
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         {% endif %}
                         <li><a class="dropdown-item" href="#">
                             <i class="bi bi-person me-2"></i>
-                            الملف الشخصي
+                            {% trans "الملف الشخصي" %}
                         </a></li>
                         <li><a class="dropdown-item" href="#">
                             <i class="bi bi-gear me-2"></i>
-                            الإعدادات
+                            {% trans "الإعدادات" %}
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'logout' %}">
                             <i class="bi bi-box-arrow-right me-2"></i>
-                            تسجيل الخروج
+                            {% trans "تسجيل الخروج" %}
                         </a></li>
                     </ul>
                 </div>
@@ -218,19 +229,47 @@
 
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Custom JS -->
     <script src="{% static 'js/action-modals.js' %}"></script>
     <script src="{% static 'js/app.js' %}"></script>
-    
+
     <!-- تهيئة التطبيق -->
     <script>
-        // منع الوميض عند تحميل الصفحة
+        // منع الوميض + مزامنة الإعدادات + تبديل اللغة
         document.addEventListener('DOMContentLoaded', function() {
+            // إظهار الجسم بعد التحميل لتفادي الوميض
             document.body.style.visibility = 'visible';
+
+            // مزامنة رمز العملة من الخادم إلى إعدادات الواجهة
+            try {
+                var sym = document.body.dataset.currencySymbol;
+                if (sym && window.app && app.getSettings && app.setSettings) {
+                    var s = app.getSettings();
+                    s.currency_symbol = sym;
+                    app.setSettings(s);
+                }
+            } catch(e){}
+
+            // تبديل اللغة عبر Django set_language
+            function getCookie(name){
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+            }
+            document.querySelectorAll('.lang-btn').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    var lang = btn.getAttribute('data-lang');
+                    fetch('/i18n/setlang/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': getCookie('csrftoken') },
+                        body: new URLSearchParams({ language: lang, next: window.location.pathname })
+                    }).then(function(){ window.location.reload(); });
+                });
+            });
         });
     </script>
-    
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

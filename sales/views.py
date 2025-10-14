@@ -65,12 +65,20 @@ class SaleViewSet(viewsets.ModelViewSet):
                         {'error': f'Insufficient quantity for {inventory_item.part.name}'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                
+
+                # خصم الكمية
                 inventory_item.quantity -= item.quantity
+
+                # تحديث الحالة
                 if inventory_item.quantity == 0:
                     inventory_item.status = 'SOLD'
+                else:
+                    # إذا كانت محجوزة، نعيدها لمتوفرة بعد خصم الكمية
+                    if inventory_item.status == 'RESERVED':
+                        inventory_item.status = 'AVAILABLE'
+
                 inventory_item.save()
-                
+
                 # Create stock movement
                 from inventory.models import StockMovement
                 StockMovement.objects.create(
@@ -81,7 +89,7 @@ class SaleViewSet(viewsets.ModelViewSet):
                     reference=sale.invoice_number,
                     performed_by=request.user
                 )
-            
+
             sale.status = 'COMPLETED'
             sale.completed_at = timezone.now()
             sale.save()
@@ -91,17 +99,26 @@ class SaleViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
-        """Cancel a sale"""
+        """Cancel a sale and release reserved items"""
         sale = self.get_object()
         if sale.status == 'COMPLETED':
             return Response(
                 {'error': 'Completed sales cannot be cancelled'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
-        sale.status = 'CANCELLED'
-        sale.save()
-        
+
+        with transaction.atomic():
+            # إلغاء حجز القطع
+            for item in sale.items.all():
+                inventory_item = item.inventory_item
+                if inventory_item.status == 'RESERVED':
+                    inventory_item.status = 'AVAILABLE'
+                    inventory_item.save()
+
+            # إلغاء الطلب
+            sale.status = 'CANCELLED'
+            sale.save()
+
         serializer = self.get_serializer(sale)
         return Response(serializer.data)
     

@@ -1,8 +1,9 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}لوحة التحكم - SH Parts{% endblock %}
-{% block page_title %}<span data-translate="dashboard">لوحة التحكم</span>{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "لوحة التحكم" %} - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="dashboard">{% trans "لوحة التحكم" %}</span>{% endblock %}
 
 {% block content %}
 <!-- إحصائيات سريعة - Quick Stats -->
@@ -77,7 +78,7 @@
                     <i class="bi bi-cart-check me-2"></i>
                     <span data-translate="recent_sales">آخر المبيعات</span>
                 </h5>
-                <a href="#" class="btn btn-sm btn-primary">عرض الكل</a>
+                <a href="#" class="btn btn-sm btn-primary">{% trans "عرض الكل" %}</a>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -128,7 +129,7 @@
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-bar-chart-line me-2"></i>
-                    <span data-translate="sales_chart">مخطط المبيعات</span>
+                    <span data-translate="sales_chart">{% trans "مخطط المبيعات" %}</span>
                 </h5>
             </div>
             <div class="card-body">
@@ -159,83 +160,246 @@ async function loadDashboardData() {
 
 // تحميل الإحصائيات - Load Stats
 async function loadStats() {
-    // محاكاة البيانات - هنا ستستدعي الـ API الفعلي
-    const totalSales = 125000;
-    document.getElementById('total-sales').textContent = app.formatCurrency(totalSales);
-    document.getElementById('total-inventory').textContent = app.formatNumber(35);
-    document.getElementById('total-customers').textContent = app.formatNumber(0);
-    document.getElementById('pending-orders').textContent = '0';
-    
-    // تحديث نص العملة
-    const settings = app.getSettings();
-    if (settings) {
-        document.getElementById('currency-label').textContent = settings.currency_symbol;
+    try {
+        // جلب بيانات المبيعات
+        const salesData = await app.apiRequest('/api/sales/');
+        const totalSalesAmount = salesData.results ? salesData.results.reduce((sum, sale) => sum + parseFloat(sale.total_amount || 0), 0) : 0;
+        const pendingOrders = salesData.results ? salesData.results.filter(sale => sale.status === 'DRAFT').length : 0;
+
+        // جلب بيانات المخزون
+        const inventoryData = await app.apiRequest('/api/inventory/items/');
+        const totalInventory = inventoryData.count || 0;
+
+        // جلب بيانات العملاء
+        const customersData = await app.apiRequest('/api/customers/');
+        const totalCustomers = customersData.count || 0;
+
+        // تحديث العرض
+        document.getElementById('total-sales').textContent = app.formatCurrency(totalSalesAmount);
+        document.getElementById('total-inventory').textContent = app.formatNumber(totalInventory);
+        document.getElementById('total-customers').textContent = app.formatNumber(totalCustomers);
+        document.getElementById('pending-orders').textContent = pendingOrders;
+
+        // تحديث نص العملة
+        const settings = app.getSettings();
+        if (settings) {
+            document.getElementById('currency-label').textContent = settings.currency_symbol;
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+        // عرض قيم افتراضية في حالة الخطأ
+        document.getElementById('total-sales').textContent = '0';
+        document.getElementById('total-inventory').textContent = '0';
+        document.getElementById('total-customers').textContent = '0';
+        document.getElementById('pending-orders').textContent = '0';
     }
 }
 
 // تحميل آخر المبيعات - Load Recent Sales
 async function loadRecentSales() {
     const tbody = document.getElementById('recent-sales-tbody');
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">لا توجد مبيعات بعد</td></tr>';
+
+    try {
+        const data = await app.apiRequest('/api/sales/?ordering=-created_at&limit=5');
+
+        if (!data || !data.results || data.results.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">{% trans "لا توجد مبيعات بعد" %}</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        data.results.forEach(sale => {
+            const statusBadge = sale.status === 'COMPLETED' ? 'bg-success' :
+                              sale.status === 'DRAFT' ? 'bg-warning' : 'bg-secondary';
+            const statusText = sale.status_display || sale.status;
+            const date = new Date(sale.created_at).toLocaleDateString('ar-EG');
+            const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+            const row = `
+                <tr>
+                    <td><strong>${sale.invoice_number}</strong></td>
+                    <td>${sale.customer_name || '-'}</td>
+                    <td><strong>${parseFloat(sale.total_amount).toFixed(2)} ${currencySymbol}</strong></td>
+                    <td><span class="badge ${statusBadge}">${statusText}</span></td>
+                    <td>${date}</td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    } catch (error) {
+        console.error('Error loading recent sales:', error);
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">خطأ في تحميل البيانات</td></tr>';
+    }
 }
 
 // تحميل منخفض المخزون - Load Low Stock
 async function loadLowStock() {
     const container = document.getElementById('low-stock-list');
-    container.innerHTML = '<div class="text-center text-muted">لا توجد قطع منخفضة المخزون</div>';
-    document.getElementById('low-stock-count').textContent = '0';
+    const countBadge = document.getElementById('low-stock-count');
+
+    try {
+        const data = await app.apiRequest('/api/inventory/items/?is_low_stock=true');
+
+        if (!data || !data.results || data.results.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted">{% trans "لا توجد قطع منخفضة المخزون" %}</div>';
+            countBadge.textContent = '0';
+            return;
+        }
+
+        countBadge.textContent = data.count || data.results.length;
+
+        container.innerHTML = '';
+        data.results.forEach(item => {
+            const partName = item.part_name_ar || item.part_name || 'غير معروف';
+            const itemHtml = `
+                <div class="d-flex justify-content-between align-items-center mb-3 p-2 border-bottom">
+                    <div>
+                        <strong>${partName}</strong><br>
+                        <small class="text-muted">SKU: ${item.sku}</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-danger">${item.quantity}</span>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', itemHtml);
+        });
+    } catch (error) {
+        console.error('Error loading low stock:', error);
+        container.innerHTML = '<div class="text-center text-danger">خطأ في تحميل البيانات</div>';
+        countBadge.textContent = '0';
+    }
 }
 
 // تحميل رسم المبيعات - Load Sales Chart
 async function loadSalesChart() {
     const ctx = document.getElementById('salesChart');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-            datasets: [{
-                label: 'المبيعات',
-                data: [12000, 19000, 15000, 25000, 22000, 30000],
-                borderColor: 'rgb(42, 82, 152)',
-                backgroundColor: 'rgba(42, 82, 152, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: getComputedStyle(document.documentElement)
-                            .getPropertyValue('--text-color')
+
+    try {
+        // جلب بيانات المبيعات
+        const data = await app.apiRequest('/api/sales/');
+
+        // تجميع المبيعات حسب الشهر
+        const salesByMonth = {};
+        const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+
+        // تهيئة الأشهر الستة الأخيرة
+        const now = new Date();
+        const labels = [];
+        const salesData = [];
+
+        for (let i = 5; i >= 0; i--) {
+            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            labels.push(monthNames[date.getMonth()]);
+            salesByMonth[monthKey] = 0;
+        }
+
+        // حساب المبيعات لكل شهر
+        if (data && data.results) {
+            data.results.forEach(sale => {
+                if (sale.status === 'COMPLETED') {
+                    const saleDate = new Date(sale.created_at);
+                    const monthKey = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
+                    if (salesByMonth.hasOwnProperty(monthKey)) {
+                        salesByMonth[monthKey] += parseFloat(sale.total_amount || 0);
                     }
                 }
+            });
+        }
+
+        // تحويل البيانات إلى مصفوفة
+        Object.keys(salesByMonth).forEach(key => {
+            salesData.push(salesByMonth[key]);
+        });
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'المبيعات',
+                    data: salesData,
+                    borderColor: 'rgb(42, 82, 152)',
+                    backgroundColor: 'rgba(42, 82, 152, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: getComputedStyle(document.documentElement)
-                            .getPropertyValue('--text-secondary')
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--text-color')
+                        }
                     },
-                    grid: {
-                        color: getComputedStyle(document.documentElement)
-                            .getPropertyValue('--border-color')
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+                                return `المبيعات: ${context.parsed.y.toFixed(2)} ${currencySymbol}`;
+                            }
+                        }
                     }
                 },
-                x: {
-                    ticks: {
-                        color: getComputedStyle(document.documentElement)
-                            .getPropertyValue('--text-secondary')
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--text-secondary'),
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--border-color')
+                        }
                     },
-                    grid: {
-                        color: getComputedStyle(document.documentElement)
-                            .getPropertyValue('--border-color')
+                    x: {
+                        ticks: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--text-secondary')
+                        },
+                        grid: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--border-color')
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error loading sales chart:', error);
+        // عرض رسم بياني فارغ في حالة الخطأ
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                datasets: [{
+                    label: 'المبيعات',
+                    data: [0, 0, 0, 0, 0, 0],
+                    borderColor: 'rgb(42, 82, 152)',
+                    backgroundColor: 'rgba(42, 82, 152, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: getComputedStyle(document.documentElement)
+                                .getPropertyValue('--text-color')
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 // تحميل البيانات عند تحميل الصفحة

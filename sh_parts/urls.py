@@ -35,7 +35,9 @@ urlpatterns = [
     path('', dashboard, name='dashboard'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
-    
+    # Django i18n (language switching)
+    path('i18n/', include('django.conf.urls.i18n')),
+
     # صفحات النظام
     path('vehicles/', vehicles_list, name='vehicles'),
     path('vehicles/dismantle/<int:vehicle_id>/', vehicle_dismantle_view, name='vehicle_dismantle'),

@@ -1,7 +1,7 @@
 {% extends 'base/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}تفكيك سيارة - {{ vehicle.make.name }} {{ vehicle.model.name }}{% endblock %}
+{% block title %}{% trans "تفكيك سيارة" %} - {{ vehicle.make.name }} {{ vehicle.model.name }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -278,6 +278,21 @@
         opacity: 0.9;
         transform: scale(1.05);
     }
+
+    /* القطع المفككة */
+    .part-item.dismantled {
+        opacity: 0.6;
+        background-color: #f8f9fa;
+    }
+
+    .part-item.dismantled .part-name {
+        text-decoration: line-through;
+        color: #6c757d;
+    }
+
+    .part-item.dismantled input[type="checkbox"]:disabled {
+        cursor: not-allowed;
+    }
 </style>
 {% endblock %}
 
@@ -368,17 +383,19 @@ class DismantleManager {
         this.selectedParts = new Map();
         this.standardParts = [];
         this.categories = [];
-        
+        this.dismantledParts = new Set(); // القطع المفككة بالفعل
+
         this.init();
     }
-    
+
     async init() {
         await this.loadStandardParts();
         await this.loadCategories();
+        await this.loadDismantledParts(); // تحميل القطع المفككة
         this.renderCategories();
         this.setupEventListeners();
     }
-    
+
     async loadStandardParts() {
         try {
             const response = await app.apiRequest('/api/cars-data/standard-parts/');
@@ -388,13 +405,34 @@ class DismantleManager {
             app.showAlert('فشل تحميل القطع القياسية', 'error');
         }
     }
-    
+
     async loadCategories() {
         try {
             const response = await app.apiRequest('/api/cars-data/part-categories/');
             this.categories = response.results;
         } catch (error) {
             console.error('Error loading categories:', error);
+        }
+    }
+
+    async loadDismantledParts() {
+        try {
+            // تحميل القطع المستخرجة من هذه السيارة
+            const response = await app.apiRequest(`/api/cars/vehicles/${this.vehicleId}/extracted_parts/`);
+            if (response && response.length > 0) {
+                // إضافة أسماء القطع المفككة إلى Set
+                response.forEach(item => {
+                    if (item.part_name_ar) {
+                        this.dismantledParts.add(item.part_name_ar);
+                    }
+                    if (item.part_name) {
+                        this.dismantledParts.add(item.part_name);
+                    }
+                });
+                console.log('Dismantled parts loaded:', this.dismantledParts);
+            }
+        } catch (error) {
+            console.error('Error loading dismantled parts:', error);
         }
     }
     
@@ -428,16 +466,24 @@ class DismantleManager {
     
     renderPartItem(part) {
         const id = `part-${part.category}-${part.name_en.replace(/\s+/g, '-')}`;
+        const isDismantled = this.dismantledParts.has(part.name_ar) || this.dismantledParts.has(part.name_en);
+        const disabledAttr = isDismantled ? 'disabled' : '';
+        const dismantledClass = isDismantled ? 'dismantled' : '';
+        const dismantledLabel = isDismantled ? '<span class="badge bg-success ms-2">تم التفكيك ✓</span>' : '';
+
         return `
-            <div class="part-item" id="${id}-container">
+            <div class="part-item ${dismantledClass}" id="${id}-container">
                 <div class="part-checkbox">
-                    <input type="checkbox" id="${id}" data-part='${JSON.stringify(part)}'>
-                    <label for="${id}" class="part-name">${part.name_ar}</label>
+                    <input type="checkbox" id="${id}" data-part='${JSON.stringify(part)}' ${disabledAttr}>
+                    <label for="${id}" class="part-name">
+                        ${part.name_ar || part.name_en || 'غير معروف'}
+                        ${dismantledLabel}
+                    </label>
                 </div>
                 <div class="part-details">
                     <div class="detail-row">
                         <label>الحالة:</label>
-                        <select id="${id}-condition">
+                        <select id="${id}-condition" ${disabledAttr}>
                             <option value="NEW">جديد</option>
                             <option value="USED_EXCELLENT">مستعمل - ممتاز</option>
                             <option value="USED_GOOD" selected>مستعمل - جيد</option>
@@ -447,7 +493,7 @@ class DismantleManager {
                     </div>
                     <div class="detail-row">
                         <label>السعر:</label>
-                        <input type="number" id="${id}-price" placeholder="0" min="0" step="1">
+                        <input type="number" id="${id}-price" placeholder="0" min="0" step="1" ${disabledAttr}>
                     </div>
                 </div>
             </div>

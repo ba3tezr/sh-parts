@@ -1,8 +1,8 @@
 {% extends 'base/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}الطلبات - SH Parts{% endblock %}
-{% block page_title %}<span data-translate="orders">الطلبات</span>{% endblock %}
+{% block title %}{% trans "الطلبات" %} - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="orders">{% trans "الطلبات" %}</span>{% endblock %}
 
 {% block content %}
 <!-- أزرار الإجراءات -->
@@ -11,11 +11,11 @@
         <div class="d-flex justify-content-between align-items-center">
             <h2>
                 <i class="bi bi-cart-check me-2"></i>
-                <span>الطلبات</span>
+                <span>{% trans "الطلبات" %}</span>
             </h2>
             <button class="btn btn-primary btn-lg" onclick="openNewOrderModal()">
                 <i class="bi bi-plus-circle me-2"></i>
-                طلب جديد
+                {% trans "طلب جديد" %}
             </button>
         </div>
     </div>
@@ -28,7 +28,7 @@
             <div class="card-header">
                 <h5 class="mb-0">
                     <i class="bi bi-list-ul me-2"></i>
-                    قائمة الطلبات
+                    {% trans "قائمة الطلبات" %}
                 </h5>
             </div>
             <div class="card-body">
@@ -36,14 +36,14 @@
                     <table class="table table-hover" id="salesTable">
                         <thead>
                             <tr>
-                                <th>رقم الطلب</th>
-                                <th>العميل</th>
-                                <th>نوع السيارة</th>
-                                <th>التاريخ</th>
-                                <th>الإجمالي</th>
-                                <th>الحالة</th>
-                                <th>حالة الدفع</th>
-                                <th>الإجراءات</th>
+                                <th>{% trans "رقم الطلب" %}</th>
+                                <th>{% trans "العميل" %}</th>
+                                <th>{% trans "نوع السيارة" %}</th>
+                                <th>{% trans "التاريخ" %}</th>
+                                <th>{% trans "الإجمالي" %}</th>
+                                <th>{% trans "الحالة" %}</th>
+                                <th>{% trans "حالة الدفع" %}</th>
+                                <th>{% trans "الإجراءات" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -60,23 +60,23 @@
                                     </td>
                                     <td>-</td>
                                     <td>{{ sale.created_at|date:"Y-m-d"|default:"-" }}</td>
-                                    <td><strong>{{ sale.total_amount }} EGP</strong></td>
+                                    <td><strong>{{ sale.total_amount }} {{ currency_symbol }}</strong></td>
                                     <td>
-                                        {% if sale.status == 'pending' %}
-                                            <span class="badge bg-warning">قيد الانتظار</span>
-                                        {% elif sale.status == 'completed' %}
-                                            <span class="badge bg-success">مكتمل</span>
+                                        {% if sale.status == 'DRAFT' %}
+                                            <span class="badge bg-warning">{% trans "قيد الانتظار" %}</span>
+                                        {% elif sale.status == 'COMPLETED' %}
+                                            <span class="badge bg-success">{% trans "مكتمل" %}</span>
                                         {% else %}
-                                            <span class="badge bg-danger">ملغي</span>
+                                            <span class="badge bg-danger">{% trans "ملغي" %}</span>
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if sale.payment_status == 'paid' %}
-                                            <span class="badge bg-success">مدفوع</span>
-                                        {% elif sale.payment_status == 'partial' %}
-                                            <span class="badge bg-warning">جزئي</span>
+                                        {% if sale.payment_status == 'PAID' %}
+                                            <span class="badge bg-success">{% trans "مدفوع" %}</span>
+                                        {% elif sale.payment_status == 'PARTIAL' %}
+                                            <span class="badge bg-warning">{% trans "جزئي" %}</span>
                                         {% else %}
-                                            <span class="badge bg-danger">غير مدفوع</span>
+                                            <span class="badge bg-danger">{% trans "غير مدفوع" %}</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -174,7 +174,7 @@ async function showCarModelSelection() {
                     required: true,
                     options: models.map(m => ({
                         value: m.id,
-                        label: `${m.make.name_ar} ${m.name_ar} (${m.year_start})`
+                        label: `${m.make_name_ar || m.make_name} ${m.name_ar || m.name} (${m.year_start})`
                     }))
                 }
             ],
@@ -196,14 +196,18 @@ async function showCarModelSelection() {
 
 // عرض القطع المتوفرة
 async function showAvailableParts() {
-    const loadingModal = actionModals.showLoadingModal('جاري تحميل القطع المتوفرة...');
-    
+    app.showLoading();
+
     try {
         // جلب القطع الخاصة بنوع السيارة المختار
-        const data = await app.apiRequest(`/api/inventory/items/?vehicle_source__model=${currentOrder.carModel}&status=AVAILABLE`);
-        
-        actionModals.hideLoadingModal();
-        
+        const url = `/api/inventory/items/?vehicle_source__model=${currentOrder.carModel}&status=AVAILABLE`;
+        console.log('Fetching parts from:', url);
+
+        const data = await app.apiRequest(url);
+        console.log('Parts data received:', data);
+
+        app.hideLoading();
+
         if (!data || !data.results || data.results.length === 0) {
             actionModals.showInfoModal({
                 title: 'لا توجد قطع',
@@ -213,15 +217,16 @@ async function showAvailableParts() {
             });
             return;
         }
-        
+
         // عرض نافذة اختيار القطع
         showPartsSelectionModal(data.results);
-        
+
     } catch (error) {
-        actionModals.hideLoadingModal();
+        console.error('Error loading parts:', error);
+        app.hideLoading();
         actionModals.showInfoModal({
             title: 'خطأ',
-            message: 'فشل تحميل القطع المتوفرة',
+            message: `فشل تحميل القطع المتوفرة: ${error.message || 'خطأ غير معروف'}`,
             type: 'error'
         });
     }
@@ -252,27 +257,30 @@ function showPartsSelectionModal(parts) {
     `;
     
     parts.forEach((part, index) => {
+        const partName = part.part_name_ar || part.part_name || 'غير معروف';
+        const partNameEscaped = partName.replace(/'/g, "\\'");
+
         partsHtml += `
             <tr>
                 <td>
-                    <strong>${part.part.name_ar || part.part.name}</strong><br>
+                    <strong>${partName}</strong><br>
                     <small class="text-muted">كود: ${part.sku}</small>
                 </td>
                 <td><span class="badge bg-info">${part.quantity}</span></td>
-                <td><strong class="text-success">${part.selling_price} EGP</strong></td>
+                <td><strong class="text-success">${part.selling_price} ${document.body.dataset.currencySymbol || '\ufdfc'}</strong></td>
                 <td>
-                    <input type="number" 
-                           class="form-control form-control-sm" 
-                           id="qty_${part.id}" 
-                           min="1" 
-                           max="${part.quantity}" 
-                           value="1" 
+                    <input type="number"
+                           class="form-control form-control-sm"
+                           id="qty_${part.id}"
+                           min="1"
+                           max="${part.quantity}"
+                           value="1"
                            style="width: 80px;">
                 </td>
                 <td>
-                    <button type="button" 
-                            class="btn btn-sm btn-primary" 
-                            onclick="addPartToOrder(${part.id}, '${part.part.name_ar}', ${part.selling_price}, ${part.quantity})">
+                    <button type="button"
+                            class="btn btn-sm btn-primary"
+                            onclick="addPartToOrder(${part.id}, '${partNameEscaped}', ${part.selling_price}, ${part.quantity})">
                         <i class="bi bi-plus-circle"></i>
                         إضافة
                     </button>
@@ -355,12 +363,8 @@ function addPartToOrder(partId, partName, price, maxQty) {
     
     // تحديث العرض
     updateAddedItemsList();
-    
-    actionModals.showInfoModal({
-        title: 'تمت الإضافة',
-        message: `تمت إضافة ${partName} بنجاح`,
-        type: 'success'
-    });
+
+    // إزالة رسالة التأكيد - تم الإضافة بنجاح بدون رسالة منبثقة
 }
 
 // تحديث قائمة القطع المضافة
@@ -383,10 +387,10 @@ function updateAddedItemsList() {
             <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded">
                 <div>
                     <strong>${item.partName}</strong><br>
-                    <small>الكمية: ${item.quantity} × ${item.price} EGP</small>
+                    <small>الكمية: ${item.quantity} × ${item.price} ${document.body.dataset.currencySymbol || '\ufdfc'}</small>
                 </div>
                 <div>
-                    <strong class="text-success">${item.total} EGP</strong>
+                    <strong class="text-success">${item.total} ${document.body.dataset.currencySymbol || '﷼'}</strong>
                     <button class="btn btn-sm btn-danger ms-2" onclick="removeItemFromOrder(${index})">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -420,74 +424,753 @@ async function finishOrder() {
         });
         return;
     }
-    
-    const loadingModal = actionModals.showLoadingModal('جاري حفظ الطلب...');
-    
+
+    app.showLoading('جاري حفظ الطلب...');
+
     try {
         // إعداد بيانات الطلب
+        const salesPersonId = parseInt(document.body.dataset.userId);
         const orderData = {
-            customer: currentOrder.customer,
-            status: 'pending',
-            payment_status: 'unpaid',
-            items: currentOrder.items.map(item => ({
-                inventory_item: item.partId,
-                quantity: item.quantity,
-                unit_price: item.price
-            }))
+            customer: parseInt(currentOrder.customer),
+            sales_person: salesPersonId,
+            discount_amount: 0,
+            tax_amount: 0,
+            notes: '',
+            items: currentOrder.items.map(item => {
+                const quantity = parseInt(item.quantity);
+                const unitPrice = parseFloat(item.price);
+                const totalPrice = quantity * unitPrice;
+
+                return {
+                    inventory_item: parseInt(item.partId),
+                    quantity: quantity,
+                    unit_price: unitPrice,
+                    discount_percent: 0,
+                    discount_amount: 0,
+                    total_price: totalPrice
+                };
+            })
         };
-        
+
+        console.log('Sending order data:', orderData);
+
         // حفظ الطلب
         const result = await app.apiRequest('/api/sales/', {
             method: 'POST',
             body: JSON.stringify(orderData)
         });
-        
-        actionModals.hideLoadingModal();
-        
+
+        console.log('Order created:', result);
+
+        app.hideLoading();
+
         // إغلاق النافذة
         const modal = document.getElementById('partsSelectionModal');
         if (modal) {
-            bootstrap.Modal.getInstance(modal).hide();
-            modal.remove();
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) bsModal.hide();
+            setTimeout(() => modal.remove(), 300);
         }
-        
+
         // إعادة تعيين البيانات
         currentOrder = { customer: null, carModel: null, items: [] };
-        
+
+        // ✅ عرض نافذة الدفع
+        showPaymentModal(result);
+
+    } catch (error) {
+        console.error('Error saving order:', error);
+        app.hideLoading();
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: `فشل حفظ الطلب: ${error.message || 'خطأ غير معروف'}`,
+            type: 'error'
+        });
+    }
+}
+
+// عرض نافذة الدفع
+function showPaymentModal(sale) {
+    const totalAmount = parseFloat(sale.total_amount || 0);
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+    const modalHtml = `
+        <div class="modal fade" id="paymentModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">💳 الدفع - ${sale.invoice_number}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle me-2"></i>
+                            تم إنشاء الطلب بنجاح!
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>المبلغ الإجمالي:</h6>
+                            <h3 class="text-primary">${totalAmount.toFixed(2)} ${currencySymbol}</h3>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">المبلغ المدفوع <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="paidAmount"
+                                   min="0" max="${totalAmount}" step="0.01"
+                                   value="${totalAmount}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">طريقة الدفع <span class="text-danger">*</span></label>
+                            <select class="form-select" id="paymentMethod" required>
+                                <option value="CASH">نقداً</option>
+                                <option value="CARD">بطاقة ائتمان</option>
+                                <option value="BANK_TRANSFER">تحويل بنكي</option>
+                                <option value="CHEQUE">شيك</option>
+                                <option value="CREDIT">آجل</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="referenceNumberDiv" style="display: none;">
+                            <label class="form-label">رقم المرجع</label>
+                            <input type="text" class="form-control" id="referenceNumber"
+                                   placeholder="رقم الشيك / رقم التحويل">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
+                        </div>
+
+                        <div id="balanceInfo" class="alert alert-info" style="display: none;">
+                            <strong>المتبقي:</strong> <span id="balanceAmount">0.00</span> ${currencySymbol}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            تخطي الدفع
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="processPayment(${sale.id}, ${totalAmount})">
+                            <i class="bi bi-check-circle me-2"></i>
+                            تأكيد الدفع
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // إضافة النافذة للصفحة
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHtml;
+    document.body.appendChild(modalContainer);
+
+    // عرض النافذة
+    const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+    modal.show();
+
+    // إزالة النافذة عند الإغلاق
+    document.getElementById('paymentModal').addEventListener('hidden.bs.modal', function() {
+        modalContainer.remove();
+        location.reload(); // إعادة تحميل الصفحة
+    });
+
+    // حساب المتبقي عند تغيير المبلغ المدفوع
+    document.getElementById('paidAmount').addEventListener('input', function() {
+        const paid = parseFloat(this.value) || 0;
+        const balance = totalAmount - paid;
+        const balanceInfo = document.getElementById('balanceInfo');
+        const balanceAmount = document.getElementById('balanceAmount');
+
+        if (balance > 0) {
+            balanceInfo.style.display = 'block';
+            balanceAmount.textContent = balance.toFixed(2);
+        } else {
+            balanceInfo.style.display = 'none';
+        }
+    });
+
+    // إظهار حقل رقم المرجع للطرق التي تحتاجه
+    document.getElementById('paymentMethod').addEventListener('change', function() {
+        const refDiv = document.getElementById('referenceNumberDiv');
+        if (['CARD', 'BANK_TRANSFER', 'CHEQUE'].includes(this.value)) {
+            refDiv.style.display = 'block';
+        } else {
+            refDiv.style.display = 'none';
+        }
+    });
+}
+
+// معالجة الدفع
+async function processPayment(saleId, totalAmount) {
+    const paidAmount = parseFloat(document.getElementById('paidAmount').value) || 0;
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const referenceNumber = document.getElementById('referenceNumber').value;
+    const notes = document.getElementById('paymentNotes').value;
+
+    if (paidAmount <= 0) {
+        actionModals.showInfoModal({
+            title: 'تحذير',
+            message: 'يرجى إدخال مبلغ صحيح',
+            type: 'warning'
+        });
+        return;
+    }
+
+    if (paidAmount > totalAmount) {
+        actionModals.showInfoModal({
+            title: 'تحذير',
+            message: 'المبلغ المدفوع أكبر من المبلغ الإجمالي',
+            type: 'warning'
+        });
+        return;
+    }
+
+    app.showLoading('جاري معالجة الدفع...');
+
+    try {
+        const paymentData = {
+            sale: saleId,
+            amount: paidAmount,
+            payment_method: paymentMethod,
+            reference_number: referenceNumber,
+            notes: notes
+        };
+
+        const result = await app.apiRequest('/api/sales/payments/', {
+            method: 'POST',
+            body: JSON.stringify(paymentData)
+        });
+
+        app.hideLoading();
+
+        // إغلاق نافذة الدفع
+        const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+        modal.hide();
+
         // عرض رسالة نجاح
         actionModals.showInfoModal({
-            title: 'تم الحفظ! ✅',
-            message: 'تم حفظ الطلب بنجاح',
+            title: 'تم الدفع! ✅',
+            message: `تم تسجيل الدفع بنجاح\nالمبلغ المدفوع: ${paidAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}`,
             type: 'success',
             onClose: () => location.reload()
         });
-        
+
     } catch (error) {
-        actionModals.hideLoadingModal();
+        console.error('Error processing payment:', error);
+        app.hideLoading();
         actionModals.showInfoModal({
             title: 'خطأ',
-            message: 'فشل حفظ الطلب',
+            message: `فشل معالجة الدفع: ${error.message || 'خطأ غير معروف'}`,
             type: 'error'
         });
     }
 }
 
 // عرض تفاصيل طلب
-function viewOrder(id) {
-    actionModals.showInfoModal({
-        title: 'تفاصيل الطلب',
-        message: `عرض تفاصيل الطلب رقم: ${id}\n\nهذه الميزة قيد التطوير...`,
-        type: 'info'
+async function viewOrder(id) {
+    app.showLoading('جاري تحميل تفاصيل الطلب...');
+
+    try {
+        const sale = await app.apiRequest(`/api/sales/${id}/`);
+        console.log('Sale details:', sale);
+
+        app.hideLoading();
+
+        // إنشاء HTML لتفاصيل الطلب
+        let itemsHtml = '';
+        let subtotal = 0;
+
+        if (sale.items && sale.items.length > 0) {
+            sale.items.forEach(item => {
+                const itemTotal = parseFloat(item.total_price);
+                subtotal += itemTotal;
+                itemsHtml += `
+                    <tr>
+                        <td>${item.part_name || item.inventory_item_details?.part?.name || 'غير معروف'}</td>
+                        <td class="text-center">${item.quantity}</td>
+                        <td class="text-end">${parseFloat(item.unit_price).toFixed(2)}</td>
+                        <td class="text-end"><strong>${itemTotal.toFixed(2)}</strong></td>
+                    </tr>
+                `;
+            });
+        }
+
+        const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+        const modalHtml = `
+            <div class="modal fade" id="viewOrderModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-receipt me-2"></i>
+                                تفاصيل الطلب - ${sale.invoice_number}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted">معلومات العميل</h6>
+                                    <p class="mb-1"><strong>الاسم:</strong> ${sale.customer_details?.first_name || ''} ${sale.customer_details?.last_name || ''}</p>
+                                    <p class="mb-1"><strong>الهاتف:</strong> ${sale.customer_details?.phone || '-'}</p>
+                                    <p class="mb-1"><strong>العنوان:</strong> ${sale.customer_details?.address || '-'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted">معلومات الطلب</h6>
+                                    <p class="mb-1"><strong>التاريخ:</strong> ${new Date(sale.created_at).toLocaleDateString('ar-EG')}</p>
+                                    <p class="mb-1"><strong>الحالة:</strong> <span class="badge bg-${sale.status === 'COMPLETED' ? 'success' : sale.status === 'DRAFT' ? 'warning' : 'secondary'}">${sale.status_display}</span></p>
+                                    <p class="mb-1"><strong>حالة الدفع:</strong> <span class="badge bg-${sale.payment_status === 'PAID' ? 'success' : sale.payment_status === 'PARTIAL' ? 'warning' : 'danger'}">${sale.payment_status_display}</span></p>
+                                    <p class="mb-1"><strong>البائع:</strong> ${sale.sales_person_name || '-'}</p>
+                                </div>
+                            </div>
+
+                            <h6 class="text-muted mb-3">القطع المباعة</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>القطعة</th>
+                                            <th class="text-center">الكمية</th>
+                                            <th class="text-end">السعر</th>
+                                            <th class="text-end">الإجمالي</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${itemsHtml}
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>المجموع الفرعي:</strong></td>
+                                            <td class="text-end"><strong>${parseFloat(sale.subtotal).toFixed(2)} ${currencySymbol}</strong></td>
+                                        </tr>
+                                        ${sale.discount_amount > 0 ? `
+                                        <tr>
+                                            <td colspan="3" class="text-end">الخصم:</td>
+                                            <td class="text-end text-danger">-${parseFloat(sale.discount_amount).toFixed(2)} ${currencySymbol}</td>
+                                        </tr>
+                                        ` : ''}
+                                        ${sale.tax_amount > 0 ? `
+                                        <tr>
+                                            <td colspan="3" class="text-end">الضريبة:</td>
+                                            <td class="text-end">+${parseFloat(sale.tax_amount).toFixed(2)} ${currencySymbol}</td>
+                                        </tr>
+                                        ` : ''}
+                                        <tr class="table-primary">
+                                            <td colspan="3" class="text-end"><strong>الإجمالي الكلي:</strong></td>
+                                            <td class="text-end"><strong>${parseFloat(sale.total_amount).toFixed(2)} ${currencySymbol}</strong></td>
+                                        </tr>
+                                        <tr class="table-success">
+                                            <td colspan="3" class="text-end">المدفوع:</td>
+                                            <td class="text-end">${parseFloat(sale.paid_amount).toFixed(2)} ${currencySymbol}</td>
+                                        </tr>
+                                        <tr class="table-warning">
+                                            <td colspan="3" class="text-end"><strong>المتبقي:</strong></td>
+                                            <td class="text-end"><strong>${parseFloat(sale.balance_due).toFixed(2)} ${currencySymbol}</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            ${sale.notes ? `
+                            <div class="mt-3">
+                                <h6 class="text-muted">ملاحظات</h6>
+                                <p class="border p-2 rounded">${sale.notes}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                            <button type="button" class="btn btn-success" onclick="printOrder(${id})">
+                                <i class="bi bi-printer me-2"></i>
+                                طباعة الفاتورة
+                            </button>
+                            ${sale.status === 'DRAFT' || sale.status === 'CONFIRMED' ? `
+                            <button type="button" class="btn btn-primary" onclick="completeOrder(${id})">
+                                <i class="bi bi-check-circle me-2"></i>
+                                إتمام الطلب
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="cancelOrder(${id})">
+                                <i class="bi bi-x-circle me-2"></i>
+                                إلغاء الطلب
+                            </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // إضافة وعرض النافذة
+        const container = document.getElementById('action-modal-container');
+        container.insertAdjacentHTML('beforeend', modalHtml);
+
+        const modal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
+        modal.show();
+
+        // حذف النافذة عند الإغلاق
+        document.getElementById('viewOrderModal').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+
+    } catch (error) {
+        console.error('Error loading order details:', error);
+        app.hideLoading();
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: `فشل تحميل تفاصيل الطلب: ${error.message || 'خطأ غير معروف'}`,
+            type: 'error'
+        });
+    }
+}
+
+// إتمام الطلب
+async function completeOrder(id) {
+    const confirmed = await actionModals.showConfirmModal({
+        title: 'تأكيد إتمام الطلب',
+        message: 'هل أنت متأكد من إتمام هذا الطلب؟ سيتم خصم الكميات من المخزون.',
+        confirmText: 'نعم، إتمام',
+        cancelText: 'إلغاء'
     });
+
+    if (!confirmed) return;
+
+    app.showLoading('جاري إتمام الطلب...');
+
+    try {
+        const result = await app.apiRequest(`/api/sales/${id}/complete/`, {
+            method: 'POST'
+        });
+
+        app.hideLoading();
+
+        actionModals.showInfoModal({
+            title: 'تم الإتمام! ✅',
+            message: 'تم إتمام الطلب بنجاح وخصم الكميات من المخزون',
+            type: 'success',
+            onClose: () => location.reload()
+        });
+
+    } catch (error) {
+        console.error('Error completing order:', error);
+        app.hideLoading();
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: `فشل إتمام الطلب: ${error.message || 'خطأ غير معروف'}`,
+            type: 'error'
+        });
+    }
+}
+
+// إلغاء الطلب
+async function cancelOrder(id) {
+    const confirmed = await actionModals.showConfirmModal({
+        title: 'تأكيد إلغاء الطلب',
+        message: 'هل أنت متأكد من إلغاء هذا الطلب؟ سيتم إلغاء حجز القطع وإعادتها للمخزون.',
+        confirmText: 'نعم، إلغاء الطلب',
+        cancelText: 'رجوع'
+    });
+
+    if (!confirmed) return;
+
+    app.showLoading('جاري إلغاء الطلب...');
+
+    try {
+        const result = await app.apiRequest(`/api/sales/${id}/cancel/`, {
+            method: 'POST'
+        });
+
+        app.hideLoading();
+
+        actionModals.showInfoModal({
+            title: 'تم الإلغاء ✅',
+            message: 'تم إلغاء الطلب بنجاح وإعادة القطع للمخزون',
+            type: 'success',
+            onClose: () => location.reload()
+        });
+
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        app.hideLoading();
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: `فشل إلغاء الطلب: ${error.message || 'خطأ غير معروف'}`,
+            type: 'error'
+        });
+    }
 }
 
 // طباعة طلب
-function printOrder(id) {
-    actionModals.showInfoModal({
-        title: 'طباعة',
-        message: 'جاري تحضير الطلب للطباعة...',
-        type: 'info'
-    });
+async function printOrder(id) {
+    app.showLoading('جاري تحضير الفاتورة للطباعة...');
+
+    try {
+        const sale = await app.apiRequest(`/api/sales/${id}/`);
+
+        app.hideLoading();
+
+        // إنشاء نافذة الطباعة
+        const printWindow = window.open('', '_blank', 'width=800,height=600');
+
+        let itemsHtml = '';
+        let subtotal = 0;
+
+        if (sale.items && sale.items.length > 0) {
+            sale.items.forEach((item, index) => {
+                const itemTotal = parseFloat(item.total_price);
+                subtotal += itemTotal;
+                itemsHtml += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.part_name || item.inventory_item_details?.part?.name || 'غير معروف'}</td>
+                        <td class="text-center">${item.quantity}</td>
+                        <td class="text-end">${parseFloat(item.unit_price).toFixed(2)}</td>
+                        <td class="text-end"><strong>${itemTotal.toFixed(2)}</strong></td>
+                    </tr>
+                `;
+            });
+        }
+
+        const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+        const currentDate = new Date().toLocaleDateString('ar-EG');
+
+        const printContent = `
+            <!DOCTYPE html>
+            <html dir="rtl" lang="ar">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>فاتورة - ${sale.invoice_number}</title>
+                <style>
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+                    body {
+                        font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                        padding: 20px;
+                        direction: rtl;
+                    }
+                    .invoice-header {
+                        text-align: center;
+                        margin-bottom: 30px;
+                        border-bottom: 3px solid #333;
+                        padding-bottom: 20px;
+                    }
+                    .invoice-header h1 {
+                        color: #2c3e50;
+                        margin-bottom: 10px;
+                    }
+                    .invoice-header p {
+                        color: #7f8c8d;
+                        font-size: 14px;
+                    }
+                    .invoice-info {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 30px;
+                    }
+                    .info-section {
+                        flex: 1;
+                    }
+                    .info-section h3 {
+                        color: #2c3e50;
+                        margin-bottom: 10px;
+                        font-size: 16px;
+                        border-bottom: 2px solid #3498db;
+                        padding-bottom: 5px;
+                    }
+                    .info-section p {
+                        margin: 5px 0;
+                        font-size: 14px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 20px;
+                    }
+                    th, td {
+                        border: 1px solid #ddd;
+                        padding: 12px;
+                        text-align: right;
+                    }
+                    th {
+                        background-color: #3498db;
+                        color: white;
+                        font-weight: bold;
+                    }
+                    .text-center {
+                        text-align: center;
+                    }
+                    .text-end {
+                        text-align: left;
+                    }
+                    .totals {
+                        margin-top: 20px;
+                        float: left;
+                        width: 300px;
+                    }
+                    .totals table {
+                        margin-bottom: 0;
+                    }
+                    .totals td {
+                        padding: 8px;
+                    }
+                    .total-row {
+                        background-color: #ecf0f1;
+                        font-weight: bold;
+                        font-size: 16px;
+                    }
+                    .footer {
+                        clear: both;
+                        margin-top: 50px;
+                        text-align: center;
+                        padding-top: 20px;
+                        border-top: 2px solid #333;
+                        color: #7f8c8d;
+                        font-size: 12px;
+                    }
+                    .badge {
+                        display: inline-block;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        font-weight: bold;
+                    }
+                    .badge-success {
+                        background-color: #27ae60;
+                        color: white;
+                    }
+                    .badge-warning {
+                        background-color: #f39c12;
+                        color: white;
+                    }
+                    .badge-danger {
+                        background-color: #e74c3c;
+                        color: white;
+                    }
+                    @media print {
+                        body {
+                            padding: 0;
+                        }
+                        .no-print {
+                            display: none;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="invoice-header">
+                    <h1>🚗 SH Parts - فاتورة مبيعات</h1>
+                    <p>نظام إدارة قطع غيار السيارات</p>
+                </div>
+
+                <div class="invoice-info">
+                    <div class="info-section">
+                        <h3>معلومات الفاتورة</h3>
+                        <p><strong>رقم الفاتورة:</strong> ${sale.invoice_number}</p>
+                        <p><strong>التاريخ:</strong> ${new Date(sale.created_at).toLocaleDateString('ar-EG')}</p>
+                        <p><strong>الحالة:</strong> <span class="badge badge-${sale.status === 'COMPLETED' ? 'success' : sale.status === 'DRAFT' ? 'warning' : 'secondary'}">${sale.status_display}</span></p>
+                        <p><strong>حالة الدفع:</strong> <span class="badge badge-${sale.payment_status === 'PAID' ? 'success' : sale.payment_status === 'PARTIAL' ? 'warning' : 'danger'}">${sale.payment_status_display}</span></p>
+                    </div>
+
+                    <div class="info-section">
+                        <h3>معلومات العميل</h3>
+                        <p><strong>الاسم:</strong> ${sale.customer_details?.first_name || ''} ${sale.customer_details?.last_name || ''}</p>
+                        <p><strong>الهاتف:</strong> ${sale.customer_details?.phone || '-'}</p>
+                        <p><strong>العنوان:</strong> ${sale.customer_details?.address || '-'}</p>
+                        <p><strong>البائع:</strong> ${sale.sales_person_name || '-'}</p>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 15px; color: #2c3e50;">تفاصيل القطع</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>اسم القطعة</th>
+                            <th class="text-center" style="width: 100px;">الكمية</th>
+                            <th class="text-end" style="width: 120px;">السعر</th>
+                            <th class="text-end" style="width: 120px;">الإجمالي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                </table>
+
+                <div class="totals">
+                    <table>
+                        <tr>
+                            <td><strong>المجموع الفرعي:</strong></td>
+                            <td class="text-end"><strong>${parseFloat(sale.subtotal).toFixed(2)} ${currencySymbol}</strong></td>
+                        </tr>
+                        ${sale.discount_amount > 0 ? `
+                        <tr>
+                            <td>الخصم:</td>
+                            <td class="text-end" style="color: #e74c3c;">-${parseFloat(sale.discount_amount).toFixed(2)} ${currencySymbol}</td>
+                        </tr>
+                        ` : ''}
+                        ${sale.tax_amount > 0 ? `
+                        <tr>
+                            <td>الضريبة:</td>
+                            <td class="text-end">+${parseFloat(sale.tax_amount).toFixed(2)} ${currencySymbol}</td>
+                        </tr>
+                        ` : ''}
+                        <tr class="total-row">
+                            <td><strong>الإجمالي الكلي:</strong></td>
+                            <td class="text-end"><strong>${parseFloat(sale.total_amount).toFixed(2)} ${currencySymbol}</strong></td>
+                        </tr>
+                        <tr style="background-color: #d5f4e6;">
+                            <td>المدفوع:</td>
+                            <td class="text-end">${parseFloat(sale.paid_amount).toFixed(2)} ${currencySymbol}</td>
+                        </tr>
+                        <tr style="background-color: #fff3cd;">
+                            <td><strong>المتبقي:</strong></td>
+                            <td class="text-end"><strong>${parseFloat(sale.balance_due).toFixed(2)} ${currencySymbol}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="footer">
+                    <p>شكراً لتعاملكم معنا</p>
+                    <p>تاريخ الطباعة: ${currentDate}</p>
+                    <p>SH Parts - نظام إدارة قطع غيار السيارات</p>
+                </div>
+
+                <div class="no-print" style="text-align: center; margin-top: 30px;">
+                    <button onclick="window.print()" style="padding: 10px 30px; font-size: 16px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        طباعة
+                    </button>
+                    <button onclick="window.close()" style="padding: 10px 30px; font-size: 16px; background-color: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+                        إغلاق
+                    </button>
+                </div>
+            </body>
+            </html>
+        `;
+
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+
+        // طباعة تلقائية بعد التحميل
+        printWindow.onload = function() {
+            setTimeout(() => {
+                printWindow.print();
+            }, 250);
+        };
+
+    } catch (error) {
+        console.error('Error printing order:', error);
+        app.hideLoading();
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: `فشل تحضير الفاتورة للطباعة: ${error.message || 'خطأ غير معروف'}`,
+            type: 'error'
+        });
+    }
 }
 </script>
 {% endblock %}

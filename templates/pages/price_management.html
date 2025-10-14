@@ -1,15 +1,15 @@
 {% extends 'base/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}إدارة الأسعار - SH Parts{% endblock %}
-{% block page_title %}إدارة الأسعار{% endblock %}
+{% block title %}{% trans "إدارة الأسعار" %} - SH Parts{% endblock %}
+{% block page_title %}{% trans "إدارة الأسعار" %}{% endblock %}
 
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
         <div class="alert alert-info">
             <i class="bi bi-info-circle me-2"></i>
-            <strong>ملاحظة:</strong> يمكنك تحديث أسعار جميع القطع في المخزون بنسبة معينة أو تحديث كل قطعة على حدة
+            <strong>{% trans "ملاحظة:" %}</strong> {% trans "يمكنك تحديث أسعار جميع القطع في المخزون بنسبة معينة أو تحديث كل قطعة على حدة" %}
         </div>
     </div>
 </div>
@@ -21,104 +21,104 @@
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
                     <i class="bi bi-percent me-2"></i>
-                    تحديث جماعي بالنسبة المئوية
+                    {% trans "تحديث جماعي بالنسبة المئوية" %}
                 </h5>
             </div>
             <div class="card-body">
                 <form id="bulkUpdateForm">
                     <div class="mb-3">
-                        <label class="form-label">نوع التحديث</label>
+                        <label class="form-label">{% trans "نوع التحديث" %}</label>
                         <select class="form-select" id="updateType">
-                            <option value="increase">زيادة الأسعار</option>
-                            <option value="decrease">تخفيض الأسعار</option>
+                            <option value="increase">{% trans "زيادة الأسعار" %}</option>
+                            <option value="decrease">{% trans "تخفيض الأسعار" %}</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label class="form-label">النسبة المئوية (%)</label>
-                        <input type="number" class="form-control" id="percentage" 
-                               min="0" max="100" step="0.1" required 
-                               placeholder="مثال: 10 لزيادة 10%">
+                        <label class="form-label">{% trans "النسبة المئوية (%)" %}</label>
+                        <input type="number" class="form-control" id="percentage"
+                               min="0" max="100" step="0.1" required
+                               placeholder="{% trans 'مثال: 10 لزيادة 10%' %}">
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label class="form-label">تطبيق على</label>
+                        <label class="form-label">{% trans "تطبيق على" %}</label>
                         <select class="form-select" id="applyTo">
-                            <option value="all">جميع القطع</option>
-                            <option value="category">فئة معينة</option>
-                            <option value="model">موديل سيارة معين</option>
+                            <option value="all">{% trans "جميع القطع" %}</option>
+                            <option value="category">{% trans "فئة معينة" %}</option>
+                            <option value="model">{% trans "موديل سيارة معين" %}</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-3" id="categorySection" style="display: none;">
-                        <label class="form-label">الفئة</label>
+                        <label class="form-label">{% trans "الفئة" %}</label>
                         <select class="form-select" id="category">
-                            <option value="">اختر الفئة...</option>
+                            <option value="">{% trans "اختر الفئة..." %}</option>
                         </select>
                     </div>
-                    
+
                     <div class="mb-3" id="modelSection" style="display: none;">
-                        <label class="form-label">موديل السيارة</label>
+                        <label class="form-label">{% trans "موديل السيارة" %}</label>
                         <select class="form-select" id="carModel">
-                            <option value="">اختر الموديل...</option>
+                            <option value="">{% trans "اختر الموديل..." %}</option>
                         </select>
                     </div>
-                    
+
                     <button type="button" class="btn btn-primary btn-lg w-100" onclick="performBulkUpdate()">
                         <i class="bi bi-lightning-charge me-2"></i>
-                        تطبيق التحديث الجماعي
+                        {% trans "تطبيق التحديث الجماعي" %}
                     </button>
                 </form>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-6">
         <div class="card border-success">
             <div class="card-header bg-success text-white">
                 <h5 class="mb-0">
                     <i class="bi bi-calculator me-2"></i>
-                    حاسبة الأسعار
+                    {% trans "حاسبة الأسعار" %}
                 </h5>
             </div>
             <div class="card-body">
                 <div class="mb-3">
-                    <label class="form-label">السعر الحالي</label>
-                    <input type="number" class="form-control" id="calcCurrentPrice" 
-                           step="0.01" placeholder="أدخل السعر الحالي">
+                    <label class="form-label">{% trans "السعر الحالي" %}</label>
+                    <input type="number" class="form-control" id="calcCurrentPrice"
+                           step="0.01" placeholder="{% trans 'أدخل السعر الحالي' %}">
                 </div>
-                
+
                 <div class="mb-3">
-                    <label class="form-label">نسبة التغيير (%)</label>
+                    <label class="form-label">{% trans "نسبة التغيير (%)" %}</label>
                     <div class="input-group">
-                        <input type="number" class="form-control" id="calcPercentage" 
-                               step="0.1" placeholder="مثال: 10">
+                        <input type="number" class="form-control" id="calcPercentage"
+                               step="0.1" placeholder="{% trans 'مثال: 10' %}">
                         <button class="btn btn-success" onclick="calculateNewPrice('increase')">
-                            <i class="bi bi-plus"></i> زيادة
+                            <i class="bi bi-plus"></i> {% trans "زيادة" %}
                         </button>
                         <button class="btn btn-danger" onclick="calculateNewPrice('decrease')">
-                            <i class="bi bi-dash"></i> تخفيض
+                            <i class="bi bi-dash"></i> {% trans "تخفيض" %}
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="alert alert-secondary">
-                    <h6>السعر الجديد:</h6>
+                    <h6>{% trans "السعر الجديد:" %}</h6>
                     <h3 class="mb-0" id="calcNewPrice">-</h3>
                 </div>
-                
+
                 <hr>
-                
-                <h6>أمثلة سريعة:</h6>
+
+                <h6>{% trans "أمثلة سريعة:" %}</h6>
                 <div class="d-grid gap-2">
                     <button class="btn btn-sm btn-outline-primary" onclick="quickCalc(10, 'increase')">
-                        زيادة 10%
+                        {% trans "زيادة 10%" %}
                     </button>
                     <button class="btn btn-sm btn-outline-primary" onclick="quickCalc(15, 'increase')">
-                        زيادة 15%
+                        {% trans "زيادة 15%" %}
                     </button>
                     <button class="btn btn-sm btn-outline-danger" onclick="quickCalc(10, 'decrease')">
-                        تخفيض 10%
+                        {% trans "تخفيض 10%" %}
                     </button>
                 </div>
             </div>
@@ -134,11 +134,11 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">
                         <i class="bi bi-list-ul me-2"></i>
-                        جميع القطع في المخزون
+                        {% trans "جميع القطع في المخزون" %}
                     </h5>
                     <div>
-                        <input type="text" class="form-control" id="searchParts" 
-                               placeholder="بحث..." style="width: 250px;">
+                        <input type="text" class="form-control" id="searchParts"
+                               placeholder="{% trans 'بحث...' %}" style="width: 250px;">
                     </div>
                 </div>
             </div>
@@ -147,14 +147,14 @@
                     <table class="table table-hover" id="partsTable">
                         <thead>
                             <tr>
-                                <th>كود القطعة</th>
-                                <th>اسم القطعة</th>
-                                <th>الفئة</th>
-                                <th>مصدر السيارة</th>
-                                <th>الكمية</th>
-                                <th>السعر الحالي</th>
-                                <th>سعر جديد</th>
-                                <th>إجراءات</th>
+                                <th>{% trans "كود القطعة" %}</th>
+                                <th>{% trans "اسم القطعة" %}</th>
+                                <th>{% trans "الفئة" %}</th>
+                                <th>{% trans "مصدر السيارة" %}</th>
+                                <th>{% trans "الكمية" %}</th>
+                                <th>{% trans "السعر الحالي" %}</th>
+                                <th>{% trans "سعر جديد" %}</th>
+                                <th>{% trans "إجراءات" %}</th>
                             </tr>
                         </thead>
                         <tbody id="partsTableBody">
@@ -162,7 +162,7 @@
                                 <td colspan="8" class="text-center">
                                     <button class="btn btn-primary" onclick="loadAllParts()">
                                         <i class="bi bi-download me-2"></i>
-                                        تحميل القطع
+                                        {% trans "تحميل القطع" %}
                                     </button>
                                 </td>
                             </tr>
@@ -188,21 +188,21 @@ document.getElementById('applyTo').addEventListener('change', function() {
 
 // تحميل جميع القطع
 async function loadAllParts() {
-    const loadingModal = actionModals.showLoadingModal('جاري تحميل القطع...');
-    
+    const loadingModal = actionModals.showLoadingModal('{% trans "جاري تحميل القطع..." %}');
+
     try {
         const data = await app.apiRequest('/api/inventory/items/?page_size=1000');
-        
+
         actionModals.hideLoadingModal();
-        
+
         if (data && data.results) {
             displayParts(data.results);
         }
     } catch (error) {
         actionModals.hideLoadingModal();
         actionModals.showInfoModal({
-            title: 'خطأ',
-            message: 'فشل تحميل القطع',
+            title: '{% trans "خطأ" %}',
+            message: '{% trans "فشل تحميل القطع" %}',
             type: 'error'
         });
     }
@@ -234,10 +234,10 @@ function displayParts(parts) {
                        step="0.01">
             </td>
             <td>
-                <button class="btn btn-sm btn-success" 
+                <button class="btn btn-sm btn-success"
                         onclick="updateSinglePrice(${part.id}, this)">
                     <i class="bi bi-check-circle"></i>
-                    تحديث
+                    {% trans "تحديث" %}
                 </button>
             </td>
         `;
@@ -249,49 +249,49 @@ function displayParts(parts) {
 async function updateSinglePrice(partId, button) {
     const input = button.closest('tr').querySelector('.new-price');
     const newPrice = parseFloat(input.value);
-    
+
     if (!newPrice || newPrice <= 0) {
         actionModals.showInfoModal({
-            title: 'تحذير',
-            message: 'يرجى إدخال سعر صحيح',
+            title: '{% trans "تحذير" %}',
+            message: '{% trans "يرجى إدخال سعر صحيح" %}',
             type: 'warning'
         });
         return;
     }
-    
+
     actionModals.showConfirmModal({
-        title: 'تأكيد التحديث',
-        message: `هل أنت متأكد من تحديث السعر إلى ${newPrice} EGP؟`,
-        confirmText: 'تحديث',
+        title: '{% trans "تأكيد التحديث" %}',
+        message: `{% trans "هل أنت متأكد من تحديث السعر إلى" %} ${newPrice} EGP؟`,
+        confirmText: '{% trans "تحديث" %}',
         confirmClass: 'btn-success',
         icon: 'check-circle',
         onConfirm: async () => {
-            const loadingModal = actionModals.showLoadingModal('جاري تحديث السعر...');
-            
+            const loadingModal = actionModals.showLoadingModal('{% trans "جاري تحديث السعر..." %}');
+
             try {
                 const result = await app.apiRequest(`/api/inventory/items/${partId}/`, {
                     method: 'PATCH',
                     body: JSON.stringify({ selling_price: newPrice })
                 });
-                
+
                 actionModals.hideLoadingModal();
-                
+
                 if (result) {
                     // تحديث السعر في الجدول
                     button.closest('tr').querySelector('.current-price strong').textContent = `${newPrice} EGP`;
                     input.value = '';
-                    
+
                     actionModals.showInfoModal({
-                        title: 'نجح!',
-                        message: 'تم تحديث السعر بنجاح',
+                        title: '{% trans "نجح!" %}',
+                        message: '{% trans "تم تحديث السعر بنجاح" %}',
                         type: 'success'
                     });
                 }
             } catch (error) {
                 actionModals.hideLoadingModal();
                 actionModals.showInfoModal({
-                    title: 'خطأ',
-                    message: 'فشل تحديث السعر',
+                    title: '{% trans "خطأ" %}',
+                    message: '{% trans "فشل تحديث السعر" %}',
                     type: 'error'
                 });
             }
@@ -304,74 +304,74 @@ async function performBulkUpdate() {
     const updateType = document.getElementById('updateType').value;
     const percentage = parseFloat(document.getElementById('percentage').value);
     const applyTo = document.getElementById('applyTo').value;
-    
+
     if (!percentage || percentage <= 0) {
         actionModals.showInfoModal({
-            title: 'تحذير',
-            message: 'يرجى إدخال نسبة صحيحة',
+            title: '{% trans "تحذير" %}',
+            message: '{% trans "يرجى إدخال نسبة صحيحة" %}',
             type: 'warning'
         });
         return;
     }
-    
-    const message = updateType === 'increase' 
-        ? `زيادة الأسعار بنسبة ${percentage}%`
-        : `تخفيض الأسعار بنسبة ${percentage}%`;
-    
+
+    const message = updateType === 'increase'
+        ? `{% trans "زيادة الأسعار بنسبة" %} ${percentage}%`
+        : `{% trans "تخفيض الأسعار بنسبة" %} ${percentage}%`;
+
     actionModals.showConfirmModal({
-        title: 'تأكيد التحديث الجماعي',
-        message: `هل أنت متأكد من ${message}؟`,
-        details: 'سيتم تطبيق التحديث على جميع القطع المحددة. لا يمكن التراجع عن هذا الإجراء.',
-        confirmText: 'تطبيق',
+        title: '{% trans "تأكيد التحديث الجماعي" %}',
+        message: `{% trans "هل أنت متأكد من" %} ${message}؟`,
+        details: '{% trans "سيتم تطبيق التحديث على جميع القطع المحددة. لا يمكن التراجع عن هذا الإجراء." %}',
+        confirmText: '{% trans "تطبيق" %}',
         confirmClass: 'btn-warning',
         icon: 'exclamation-triangle',
         onConfirm: async () => {
-            const loadingModal = actionModals.showLoadingModal('جاري تطبيق التحديث الجماعي...');
-            
+            const loadingModal = actionModals.showLoadingModal('{% trans "جاري تطبيق التحديث الجماعي..." %}');
+
             try {
                 // جلب جميع القطع
                 const data = await app.apiRequest('/api/inventory/items/?page_size=1000');
-                
+
                 if (!data || !data.results) {
-                    throw new Error('فشل تحميل القطع');
+                    throw new Error('{% trans "فشل تحميل القطع" %}');
                 }
-                
+
                 // تطبيق التحديث على كل قطعة
                 let updatedCount = 0;
                 for (const part of data.results) {
                     const currentPrice = part.selling_price;
                     let newPrice;
-                    
+
                     if (updateType === 'increase') {
                         newPrice = currentPrice * (1 + percentage / 100);
                     } else {
                         newPrice = currentPrice * (1 - percentage / 100);
                     }
-                    
+
                     newPrice = Math.round(newPrice * 100) / 100; // تقريب لرقمين عشريين
-                    
+
                     await app.apiRequest(`/api/inventory/items/${part.id}/`, {
                         method: 'PATCH',
                         body: JSON.stringify({ selling_price: newPrice })
                     });
-                    
+
                     updatedCount++;
                 }
-                
+
                 actionModals.hideLoadingModal();
-                
+
                 actionModals.showInfoModal({
-                    title: 'نجح! ✅',
-                    message: `تم تحديث ${updatedCount} قطعة بنجاح`,
+                    title: '{% trans "نجح! ✅" %}',
+                    message: `{% trans "تم تحديث" %} ${updatedCount} {% trans "قطعة بنجاح" %}`,
                     type: 'success',
                     onClose: () => loadAllParts()
                 });
-                
+
             } catch (error) {
                 actionModals.hideLoadingModal();
                 actionModals.showInfoModal({
-                    title: 'خطأ',
-                    message: 'فشل التحديث الجماعي',
+                    title: '{% trans "خطأ" %}',
+                    message: '{% trans "فشل التحديث الجماعي" %}',
                     type: 'error'
                 });
             }

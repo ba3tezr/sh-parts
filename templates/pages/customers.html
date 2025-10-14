@@ -1,8 +1,8 @@
 {% extends 'base/base.html' %}
-{% load static %}
+{% load static i18n %}
 
-{% block title %}العملاء - SH Parts{% endblock %}
-{% block page_title %}<span data-translate="customers">العملاء</span>{% endblock %}
+{% block title %}{% trans "العملاء" %} - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="customers">{% trans "العملاء" %}</span>{% endblock %}
 
 {% block content %}
 <!-- إحصائيات سريعة -->
@@ -285,23 +285,33 @@ document.getElementById('customer_type')?.addEventListener('change', function() 
 // حفظ عميل جديد
 async function saveCustomer() {
     const customerType = document.getElementById('customer_type').value;
+    const userId = parseInt(document.body.dataset.userId);
     const formData = {
         customer_type: customerType,
         phone: document.getElementById('phone').value,
         email: document.getElementById('email').value || '',
-        address: document.getElementById('address').value || '',
+        address_line1: document.getElementById('address').value || '',
+        address_line2: '',
         city: document.getElementById('city').value || '',
-        country: document.getElementById('country').value || 'مصر',
+        state: '',
+        postal_code: '',
+        country: document.getElementById('country').value || 'Saudi Arabia',
+        tax_id: document.getElementById('tax_number')?.value || '',
         credit_limit: document.getElementById('credit_limit').value || 0,
-        created_by: 1
+        notes: '',
+        created_by: userId
     };
     
     if (customerType === 'INDIVIDUAL') {
         formData.first_name = document.getElementById('first_name').value;
         formData.last_name = document.getElementById('last_name').value;
+        formData.business_name = '';
     } else {
-        formData.business_name = document.getElementById('business_name').value;
-        formData.tax_number = document.getElementById('tax_number').value || '';
+        const bname = document.getElementById('business_name').value;
+        formData.business_name = bname;
+        // حقول مطلوبة في الموديل حتى لو عميل شركة
+        formData.first_name = bname || 'Business';
+        formData.last_name = '.';
     }
     
     try {
@@ -337,17 +347,17 @@ async function saveCustomer() {
 
 // عرض تفاصيل عميل
 function viewCustomer(id) {
-    alert(`عرض تفاصيل العميل رقم: ${id}`);
+    actionModals.showInfoModal({ title: 'تفاصيل العميل', message: `عرض تفاصيل العميل رقم: ${id}`, type: 'info' });
 }
 
 // تعديل عميل
 function editCustomer(id) {
-    alert(`تعديل العميل رقم: ${id}`);
+    actionModals.showInfoModal({ title: 'تعديل', message: `تعديل العميل رقم: ${id}`, type: 'warning' });
 }
 
 // عرض مشتريات عميل
 function viewPurchases(id) {
-    alert(`عرض مشتريات العميل رقم: ${id}`);
+    actionModals.showInfoModal({ title: 'المشتريات', message: `عرض مشتريات العميل رقم: ${id}` });
 }
 
 // البحث

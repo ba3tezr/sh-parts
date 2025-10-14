@@ -47,18 +47,41 @@ class SaleDetailSerializer(serializers.ModelSerializer):
 
 class SaleCreateSerializer(serializers.ModelSerializer):
     items = SaleItemSerializer(many=True)
-    
+    invoice_number = serializers.CharField(read_only=True)
+
     class Meta:
         model = Sale
-        fields = ['customer', 'discount_amount', 'tax_amount', 'notes', 'sales_person', 'items']
-    
+        fields = ['id', 'invoice_number', 'customer', 'discount_amount', 'tax_amount', 'notes', 'sales_person', 'items']
+        read_only_fields = ['id', 'invoice_number']
+
     def create(self, validated_data):
+        from django.db import transaction
+
         items_data = validated_data.pop('items')
-        sale = Sale.objects.create(**validated_data)
-        
-        for item_data in items_data:
-            SaleItem.objects.create(sale=sale, **item_data)
-        
+
+        with transaction.atomic():
+            # إنشاء الطلب
+            sale = Sale.objects.create(**validated_data)
+
+            # إنشاء عناصر الطلب وحجز القطع
+            for item_data in items_data:
+                # إنشاء عنصر الطلب
+                sale_item = SaleItem.objects.create(sale=sale, **item_data)
+
+                # حجز القطعة في المخزون (تغيير الحالة إلى RESERVED)
+                inventory_item = sale_item.inventory_item
+
+                # التحقق من توفر الكمية
+                if inventory_item.quantity < sale_item.quantity:
+                    raise serializers.ValidationError({
+                        'items': f'الكمية المطلوبة ({sale_item.quantity}) أكبر من المتوفر ({inventory_item.quantity}) للقطعة {inventory_item.part.name_ar}'
+                    })
+
+                # تغيير حالة القطعة إلى RESERVED
+                if inventory_item.status == 'AVAILABLE':
+                    inventory_item.status = 'RESERVED'
+                    inventory_item.save()
+
         return sale
 
 

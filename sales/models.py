@@ -70,6 +70,12 @@ class Sale(models.Model):
         return f"INV-{timestamp}"
 
     def calculate_totals(self):
+        # If the Sale is not saved yet, related items manager can't be used
+        if not self.pk:
+            # Keep current totals (likely zero) until items are added
+            self.subtotal = self.subtotal or 0
+            self.total_amount = (self.subtotal - self.discount_amount + self.tax_amount)
+            return
         items = self.items.all()
         self.subtotal = sum(item.total_price for item in items)
         self.total_amount = self.subtotal - self.discount_amount + self.tax_amount
