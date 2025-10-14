@@ -566,29 +566,48 @@ class DismantleManager {
     
     async saveDismantling() {
         if (this.selectedParts.size === 0) {
-            app.showAlert('الرجاء تحديد قطعة واحدة على الأقل', 'warning');
+            actionModals.showInfoModal({
+                title: 'تحذير',
+                message: 'الرجاء تحديد قطعة واحدة على الأقل',
+                type: 'warning'
+            });
             return;
         }
-        
-        const parts = [];
-        this.selectedParts.forEach((part, id) => {
-            const condition = document.getElementById(id + '-condition').value;
-            const price = document.getElementById(id + '-price').value;
-            
-            if (!price || parseFloat(price) <= 0) {
-                throw new Error(`الرجاء إدخال سعر صحيح لـ ${part.name_ar}`);
-            }
-            
-            parts.push({
-                name_ar: part.name_ar,
-                name_en: part.name_en,
-                category: part.category,
-                condition: condition,
-                price: parseFloat(price)
-            });
-        });
-        
+
         try {
+            const parts = [];
+            let hasError = false;
+            let errorMessage = '';
+
+            this.selectedParts.forEach((part, id) => {
+                const condition = document.getElementById(id + '-condition').value;
+                const priceInput = document.getElementById(id + '-price');
+                const price = priceInput ? priceInput.value : '';
+
+                if (!price || parseFloat(price) <= 0) {
+                    hasError = true;
+                    errorMessage = `الرجاء إدخال سعر صحيح لـ ${part.name_ar || part.name_en || 'القطعة'}`;
+                    return;
+                }
+
+                parts.push({
+                    name_ar: part.name_ar || part.name_en || 'غير معروف',
+                    name_en: part.name_en || part.name_ar || 'Unknown',
+                    category: part.category,
+                    condition: condition,
+                    price: parseFloat(price)
+                });
+            });
+
+            if (hasError) {
+                actionModals.showInfoModal({
+                    title: 'خطأ',
+                    message: errorMessage,
+                    type: 'error'
+                });
+                return;
+            }
+
             document.getElementById('loadingOverlay').classList.add('active');
             
             const response = await fetch('/api/save-dismantling/', {
@@ -608,28 +627,30 @@ class DismantleManager {
             document.getElementById('loadingOverlay').classList.remove('active');
             
             if (data.success) {
-                showInfoModal(
-                    'نجاح التفكيك',
-                    `<div style="text-align: center;">
-                        <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #28a745;"></i>
-                        <h3>${data.message}</h3>
-                        <p>تم إضافة ${data.items.length} قطعة إلى المخزون</p>
-                    </div>`,
-                    'success'
-                );
-                
-                // الانتقال إلى صفحة المخزون بعد 2 ثانية
-                setTimeout(() => {
-                    window.location.href = '/inventory/';
-                }, 2000);
+                actionModals.showInfoModal({
+                    title: 'نجاح التفكيك ✅',
+                    message: `${data.message}\nتم إضافة ${data.items.length} قطعة إلى المخزون`,
+                    type: 'success',
+                    onClose: () => {
+                        window.location.href = '/inventory/';
+                    }
+                });
             } else {
-                app.showAlert(data.message, 'error');
+                actionModals.showInfoModal({
+                    title: 'خطأ',
+                    message: data.message || 'حدث خطأ أثناء التفكيك',
+                    type: 'error'
+                });
             }
-            
+
         } catch (error) {
             document.getElementById('loadingOverlay').classList.remove('active');
             console.error('Error:', error);
-            app.showAlert(error.message || 'حدث خطأ أثناء الحفظ', 'error');
+            actionModals.showInfoModal({
+                title: 'خطأ',
+                message: error.message || 'حدث خطأ أثناء الحفظ',
+                type: 'error'
+            });
         }
     }
 }
