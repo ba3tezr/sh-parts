@@ -307,6 +307,9 @@
             <a href="{% url 'profitability_report' %}" class="btn btn-warning">
                 <i class="bi bi-graph-up me-2"></i>تقرير الربحية
             </a>
+            <a href="{% url 'stock_movements' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-right me-2"></i>الحركات
+            </a>
             <a href="{% url 'inventory_count' %}" class="btn btn-primary">
                 <i class="bi bi-clipboard-check me-2"></i>الجرد
             </a>
@@ -936,7 +939,7 @@ async function quickEdit(id) {
 
         // ملء النموذج
         document.getElementById('editItemId').value = item.id;
-        document.getElementById('editPartName').value = item.part_name_ar || item.part_name;
+        document.getElementById('editPartName').value = item.part_details?.name_ar || item.part_details?.name || '';
         document.getElementById('editSKU').value = item.sku;
         document.getElementById('editCostPrice').value = item.cost_price || '';
         document.getElementById('editSellingPrice').value = item.selling_price || '';

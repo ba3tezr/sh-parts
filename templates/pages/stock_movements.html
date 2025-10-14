@@ -1,0 +1,455 @@
+{% extends 'base/base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "تقرير حركات المخزون" %} - SH Parts{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.movement-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-card);
+}
+
+.movement-card h5 {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent-color) 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card .stat-icon {
+    font-size: 2rem;
+    opacity: 0.8;
+    margin-bottom: 10px;
+}
+
+.stat-card .stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.stat-card .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.movement-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.movement-badge.in {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.movement-badge.out {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.movement-badge.adjustment {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    color: white;
+}
+
+.movement-badge.return {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
+.movement-badge.transfer {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+    color: white;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--primary);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 3px solid var(--card-bg);
+}
+
+.timeline-content {
+    background: var(--bg);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .movement-card {
+        break-inside: avoid;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <h2><i class="bi bi-arrow-left-right me-2"></i>{% trans "تقرير حركات المخزون" %}</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "الرئيسية" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'inventory' %}">{% trans "المخزون" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "حركات المخزون" %}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel me-2"></i>{% trans "تصدير Excel" %}
+            </button>
+            <button class="btn btn-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>{% trans "طباعة" %}
+            </button>
+            <a href="{% url 'inventory' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right me-2"></i>{% trans "رجوع" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-arrow-down-circle"></i></div>
+                <div class="stat-value" id="totalIn">0</div>
+                <div class="stat-label">{% trans "إجمالي الوارد" %}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-arrow-up-circle"></i></div>
+                <div class="stat-value" id="totalOut">0</div>
+                <div class="stat-label">{% trans "إجمالي الصادر" %}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-arrow-repeat"></i></div>
+                <div class="stat-value" id="totalTransfer">0</div>
+                <div class="stat-label">{% trans "التحويلات" %}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="bi bi-list-check"></i></div>
+                <div class="stat-value" id="totalMovements">0</div>
+                <div class="stat-label">{% trans "إجمالي الحركات" %}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="movement-card no-print">
+        <h5><i class="bi bi-funnel me-2"></i>{% trans "الفلاتر" %}</h5>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">{% trans "نوع الحركة" %}</label>
+                <select class="form-select" id="filterType">
+                    <option value="">{% trans "الكل" %}</option>
+                    <option value="IN">{% trans "وارد" %}</option>
+                    <option value="OUT">{% trans "صادر" %}</option>
+                    <option value="ADJUSTMENT">{% trans "تعديل" %}</option>
+                    <option value="RETURN">{% trans "إرجاع" %}</option>
+                    <option value="TRANSFER">{% trans "تحويل" %}</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% trans "من تاريخ" %}</label>
+                <input type="date" class="form-control" id="filterFromDate">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% trans "إلى تاريخ" %}</label>
+                <input type="date" class="form-control" id="filterToDate">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% trans "بحث" %}</label>
+                <input type="text" class="form-control" id="filterSearch" placeholder="{% trans 'SKU, قطعة, مستخدم...' %}">
+            </div>
+        </div>
+        <div class="mt-3">
+            <button class="btn btn-primary" onclick="applyFilters()">
+                <i class="bi bi-search me-2"></i>{% trans "تطبيق" %}
+            </button>
+            <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                <i class="bi bi-x-circle me-2"></i>{% trans "مسح" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Movements Timeline -->
+    <div class="movement-card">
+        <h5><i class="bi bi-clock-history me-2"></i>{% trans "سجل الحركات" %}</h5>
+        <div id="movementsTimeline">
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">{% trans "جاري التحميل..." %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allMovements = [];
+let filteredMovements = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadMovements();
+});
+
+async function loadMovements() {
+    try {
+        showLoading();
+
+        // تحميل الحركات من API
+        allMovements = await app.apiRequest('/api/inventory/movements/');
+        filteredMovements = [...allMovements];
+
+        displayStatistics();
+        displayMovements();
+
+    } catch (error) {
+        console.error('Error loading movements:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل تحميل البيانات: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+function displayStatistics() {
+    let totalIn = 0;
+    let totalOut = 0;
+    let totalTransfer = 0;
+
+    filteredMovements.forEach(movement => {
+        if (movement.movement_type === 'IN') totalIn++;
+        else if (movement.movement_type === 'OUT') totalOut++;
+        else if (movement.movement_type === 'TRANSFER') totalTransfer++;
+    });
+
+    document.getElementById('totalIn').textContent = totalIn;
+    document.getElementById('totalOut').textContent = totalOut;
+    document.getElementById('totalTransfer').textContent = totalTransfer;
+    document.getElementById('totalMovements').textContent = filteredMovements.length;
+}
+
+function displayMovements() {
+    const container = document.getElementById('movementsTimeline');
+
+    if (filteredMovements.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <p class="mt-3 text-muted">لا توجد حركات</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="timeline">';
+
+    filteredMovements.forEach(movement => {
+        const badge = getMovementBadge(movement.movement_type);
+        const icon = getMovementIcon(movement.movement_type);
+        const date = new Date(movement.performed_at).toLocaleString('ar-EG');
+
+        html += `
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <strong>${icon} ${badge}</strong>
+                            <br>
+                            <small class="text-muted">${date}</small>
+                        </div>
+                        <span class="badge bg-secondary">${movement.quantity} وحدة</span>
+                    </div>
+                    <div class="mt-2">
+                        <strong>القطعة:</strong> ${movement.item_sku || '-'}<br>
+                        ${movement.from_location_name ? `<strong>من:</strong> ${movement.from_location_name}<br>` : ''}
+                        ${movement.to_location_name ? `<strong>إلى:</strong> ${movement.to_location_name}<br>` : ''}
+                        <strong>بواسطة:</strong> ${movement.performed_by_name || '-'}<br>
+                        ${movement.reason ? `<strong>السبب:</strong> ${movement.reason}<br>` : ''}
+                        ${movement.reference ? `<strong>المرجع:</strong> ${movement.reference}` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function getMovementBadge(type) {
+    const badges = {
+        'IN': '<span class="movement-badge in">وارد</span>',
+        'OUT': '<span class="movement-badge out">صادر</span>',
+        'ADJUSTMENT': '<span class="movement-badge adjustment">تعديل</span>',
+        'RETURN': '<span class="movement-badge return">إرجاع</span>',
+        'TRANSFER': '<span class="movement-badge transfer">تحويل</span>'
+    };
+    return badges[type] || `<span class="movement-badge">${type}</span>`;
+}
+
+function getMovementIcon(type) {
+    const icons = {
+        'IN': '<i class="bi bi-arrow-down-circle text-success"></i>',
+        'OUT': '<i class="bi bi-arrow-up-circle text-danger"></i>',
+        'ADJUSTMENT': '<i class="bi bi-pencil-square text-warning"></i>',
+        'RETURN': '<i class="bi bi-arrow-return-left text-info"></i>',
+        'TRANSFER': '<i class="bi bi-arrow-left-right text-primary"></i>'
+    };
+    return icons[type] || '<i class="bi bi-circle"></i>';
+}
+
+function applyFilters() {
+    const type = document.getElementById('filterType').value;
+    const fromDate = document.getElementById('filterFromDate').value;
+    const toDate = document.getElementById('filterToDate').value;
+    const search = document.getElementById('filterSearch').value.toLowerCase();
+
+    filteredMovements = allMovements.filter(movement => {
+        // فلتر النوع
+        if (type && movement.movement_type !== type) return false;
+
+        // فلتر التاريخ
+        const movementDate = new Date(movement.performed_at);
+        if (fromDate && movementDate < new Date(fromDate)) return false;
+        if (toDate && movementDate > new Date(toDate + 'T23:59:59')) return false;
+
+        // فلتر البحث
+        if (search) {
+            const searchText = `${movement.item_sku} ${movement.performed_by_name} ${movement.reason} ${movement.reference}`.toLowerCase();
+            if (!searchText.includes(search)) return false;
+        }
+
+        return true;
+    });
+
+    displayStatistics();
+    displayMovements();
+}
+
+function clearFilters() {
+    document.getElementById('filterType').value = '';
+    document.getElementById('filterFromDate').value = '';
+    document.getElementById('filterToDate').value = '';
+    document.getElementById('filterSearch').value = '';
+
+    filteredMovements = [...allMovements];
+    displayStatistics();
+    displayMovements();
+}
+
+function exportToExcel() {
+    const data = filteredMovements.map(movement => ({
+        'التاريخ': new Date(movement.performed_at).toLocaleString('ar-EG'),
+        'النوع': getMovementTypeArabic(movement.movement_type),
+        'القطعة': movement.item_sku || '-',
+        'الكمية': movement.quantity,
+        'من موقع': movement.from_location_name || '-',
+        'إلى موقع': movement.to_location_name || '-',
+        'المستخدم': movement.performed_by_name || '-',
+        'السبب': movement.reason || '-',
+        'المرجع': movement.reference || '-'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'حركات المخزون');
+
+    const fileName = `stock_movements_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+}
+
+function getMovementTypeArabic(type) {
+    const types = {
+        'IN': 'وارد',
+        'OUT': 'صادر',
+        'ADJUSTMENT': 'تعديل',
+        'RETURN': 'إرجاع',
+        'TRANSFER': 'تحويل'
+    };
+    return types[type] || type;
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+</script>
+{% endblock %}
+

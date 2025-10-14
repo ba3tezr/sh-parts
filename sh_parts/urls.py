@@ -22,7 +22,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.views import (
     dashboard, login_view, logout_view,
     vehicles_list, inventory_list, inventory_enhanced, inventory_item_details,
-    profitability_report, inventory_count, inventory_dashboard,
+    profitability_report, inventory_count, inventory_dashboard, stock_movements,
     sales_list, customers_list, reports_view, price_management_view,
     vehicle_dismantle_view, save_dismantling
 )
@@ -47,6 +47,7 @@ urlpatterns = [
     path('inventory/profitability/', profitability_report, name='profitability_report'),
     path('inventory/count/', inventory_count, name='inventory_count'),
     path('inventory/dashboard/', inventory_dashboard, name='inventory_dashboard'),
+    path('inventory/movements/', stock_movements, name='stock_movements'),
     path('sales/', sales_list, name='sales'),
     path('customers/', customers_list, name='customers'),
     path('reports/', reports_view, name='reports'),

@@ -2,7 +2,7 @@
 
 _Updated: 14 Oct 2025_
 
-This guide captures the shared design language for SH Parts so every page stays readable, consistent, and adaptable across light/dark/high-contrast modes.
+This guide captures the shared design language for SH Parts so every page stays readable, consistent, and adaptable across dark, light, day-blue, camel-dune, and olive-sage modes.
 
 ---
 
@@ -10,20 +10,20 @@ This guide captures the shared design language for SH Parts so every page stays 
 
 All colors are exposed as CSS custom properties inside `static/css/style.css` and switch automatically per theme.
 
-| Token | Default (Dark) | Light Theme | High Contrast | Purpose |
-|-------|----------------|-------------|---------------|---------|
-| `--bg` | `#0f172a` | `#f8fafc` | `#000000` | App background |
-| `--card-bg` | `#111c2f` | `#ffffff` | `#000000` | Cards, panels, modals |
-| `--text` | `#f8fbff` | `#0f172a` | `#ffffff` | Primary text |
-| `--text-secondary` | `#99aabb` | `#475569` | `#e5e7eb` | Secondary text |
-| `--border-color` | `rgba(148, 163, 184, 0.25)` | `rgba(15, 23, 42, 0.12)` | `#ffffff` | Dividers, table lines |
-| `--primary` | `#3b82f6` | `#2563eb` | `#ffcc00` | Buttons & highlights |
-| `--primary-600` | `#2563eb` | `#1d4ed8` | `#e6b800` | Hover/active state |
-| `--accent-color` | `#22d3ee` | `#0ea5e9` | `#ffcc00` | Emphasis elements |
-| `--success` | `#22c55e` | `#16a34a` | `#00ff7f` | Positive states |
-| `--warning` | `#f97316` | `#ea580c` | `#ffd60a` | Warnings |
-| `--danger` | `#ef4444` | `#dc2626` | `#ff4d4f` | Errors |
-| `--info` | `#0ea5e9` | `#0284c7` | `#00b4d8` | Informational |
+| Token | Dark Blue | Light | Day Blue | Camel Dune | Olive Sage | Purpose |
+|-------|-----------|-------|----------|------------|------------|---------|
+| `--bg` | `#0f172a` | `#f8fafc` | `#e9f2ff` | `#f2e2c4` | `#f5f5dc` | App background |
+| `--card-bg` | `#111c2f` | `#ffffff` | `#ffffff` | `#fbf1dc` | `#fafaf5` | Cards, panels, modals |
+| `--text` | `#f8fbff` | `#0f172a` | `#10203e` | `#3f2f1c` | `#2d3319` | Primary text |
+| `--text-secondary` | `#9aa6bf` | `#475569` | `#536480` | `#8c6f4a` | `#6b7c59` | Secondary text |
+| `--border-color` | `rgba(148, 163, 184, 0.25)` | `rgba(15, 23, 42, 0.12)` | `rgba(16, 32, 62, 0.16)` | `rgba(114, 89, 58, 0.18)` | `rgba(45, 51, 25, 0.16)` | Dividers, table lines |
+| `--primary` | `#3b82f6` | `#2563eb` | `#2563eb` | `#c08457` | `#6b8e23` | Buttons & highlights |
+| `--primary-600` | `#2563eb` | `#1d4ed8` | `#1e40af` | `#a5663d` | `#556b2f` | Hover/active state |
+| `--accent-color` | `#22d3ee` | `#0ea5e9` | `#1b4ed4` | `#d8a368` | `#9acd32` | Accent elements |
+| `--success` | `#22c55e` | `#16a34a` | `#15803d` | `#3f7f4c` | `#4d7c0f` | Positive states |
+| `--warning` | `#f97316` | `#ea580c` | `#c2410c` | `#c9772d` | `#d97706` | Warnings |
+| `--danger` | `#ef4444` | `#dc2626` | `#b91c1c` | `#b94a37` | `#b91c1c` | Errors |
+| `--info` | `#0ea5e9` | `#0284c7` | `#0369a1` | `#0f5f66` | `#0f766e` | Informational |
 
 > ✅ Don’t hard-code colors in templates. Always use the CSS variables or utility classes that reference them.
 
@@ -39,8 +39,8 @@ Supporting surface tokens:
 |-----------|----------|---------|------------|-------|
 | `dark-blue` | Default immersive dashboard | `#3b82f6` | `#0f172a` | High-contrast dark shell |
 | `light` | Bright neutral UI | `#2563eb` | `#f8fafc` | Matches standard Bootstrap light mode |
-| `day-blue` | **New.** Daytime blue accented palette with deep navy highlights | `#2563eb` | `#e9f2ff` | Keeps cards white while typography remains navy for readability |
-| `high-contrast` | Accessibility mode | `#ffcc00` | `#000000` | Maximum contrast, minimal shadows |
+| `day-blue` | Daytime blue accented palette with deep navy highlights | `#2563eb` | `#e9f2ff` | Keeps cards white while typography remains navy for readability |
+| `camel-dune` | Desert-inspired warm tone with gentle motion | `#c08457` | `#f2e2c4` | Animated sand gradient; honors `prefers-reduced-motion` |
 | `olive-sage` | Alternative earthy tone | `#6b8e23` | `#f5f5dc` | Subtle muted palette |
 
 ### Elevation
@@ -113,6 +113,7 @@ Supporting surface tokens:
 - **Focus states**: All interactive elements must have visible focus (CSS already provides focus ring via tokens).
 - **RTL/LTR**: Layout is direction-aware; prefer logical properties (`margin-inline-end`) when adding CSS.
 - **Motion**: Transitions capped at 200ms; avoid large movement animations that could trigger motion sickness.
+- **Camel Dune motion**: Animated sand gradient loops every 28–40s and pauses when `prefers-reduced-motion` is enabled.
 
 ---
 

@@ -77,6 +77,11 @@ def inventory_dashboard(request):
     """لوحة تحكم المخزون - Inventory Dashboard"""
     return render(request, 'pages/inventory_dashboard.html')
 
+@login_required
+def stock_movements(request):
+    """تقرير حركات المخزون - Stock Movements Report"""
+    return render(request, 'pages/stock_movements.html')
+
 
 @login_required
 def sales_list(request):

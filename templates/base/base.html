@@ -49,6 +49,7 @@
     <link rel="stylesheet" href="{% static 'css/color-improvements.css' %}">
     <link rel="stylesheet" href="{% static 'css/action-modals.css' %}">
 
+    {% block extra_head %}{% endblock %}
     {% block extra_css %}{% endblock %}
 </head>
 <body data-user-id="{{ request.user.id }}" data-currency-symbol="{{ currency_symbol }}">
@@ -166,12 +167,12 @@
             <button class="theme-btn day-blue"
                 data-theme="day-blue"
                 title="الثيم الأزرق النهاري / Day Blue Theme"></button>
-                    <button class="theme-btn high-contrast"
-                            data-theme="high-contrast"
-                            title="التباين العالي / High Contrast"></button>
-                        <button class="theme-btn olive-sage"
-                                data-theme="olive-sage"
-                                title="الثيم الزيتي / Olive Sage Theme"></button>
+            <button class="theme-btn camel-dune"
+                data-theme="camel-dune"
+                title="ثيم الرمال الذهبية / Camel Dune Theme"></button>
+            <button class="theme-btn olive-sage"
+                data-theme="olive-sage"
+                title="الثيم الزيتي / Olive Sage Theme"></button>
                 </div>
 
                 <!-- Language Switcher -->

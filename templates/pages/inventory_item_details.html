@@ -389,15 +389,15 @@ function displayBasicInfo() {
         </div>
         <div class="detail-row">
             <span class="detail-label">اسم القطعة (عربي):</span>
-            <span class="detail-value"><strong>${itemData.part_name_ar || '-'}</strong></span>
+            <span class="detail-value"><strong>${itemData.part_details?.name_ar || '-'}</strong></span>
         </div>
         <div class="detail-row">
             <span class="detail-label">اسم القطعة (إنجليزي):</span>
-            <span class="detail-value">${itemData.part_name || '-'}</span>
+            <span class="detail-value">${itemData.part_details?.name || '-'}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">الفئة:</span>
-            <span class="detail-value">${itemData.part_details?.category?.name_ar || '-'}</span>
+            <span class="detail-value">${itemData.part_details?.category_name_ar || '-'}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">الحالة (Status):</span>
@@ -500,27 +500,27 @@ function displayStockInfo() {
 }
 
 function displayVehicleInfo() {
-    if (itemData.vehicle_source) {
+    if (itemData.vehicle_source_details) {
         document.getElementById('vehicleSection').style.display = 'block';
         document.getElementById('vehicleInfo').innerHTML = `
             <div class="detail-row">
                 <span class="detail-label">الماركة:</span>
-                <span class="detail-value">${itemData.vehicle_source.make_name_ar || '-'}</span>
+                <span class="detail-value">${itemData.vehicle_source_details.make_name || '-'}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">الموديل:</span>
-                <span class="detail-value">${itemData.vehicle_source.model_name_ar || '-'}</span>
+                <span class="detail-value">${itemData.vehicle_source_details.model_name || '-'}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">السنة:</span>
-                <span class="detail-value">${itemData.vehicle_source.year || '-'}</span>
+                <span class="detail-value">${itemData.vehicle_source_details.year || '-'}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">VIN:</span>
-                <span class="detail-value"><code>${itemData.vehicle_source.vin || '-'}</code></span>
+                <span class="detail-value"><code>${itemData.vehicle_source_details.vin || '-'}</code></span>
             </div>
             <div class="mt-3">
-                <a href="/vehicles/?vin=${itemData.vehicle_source.vin}" class="btn btn-sm btn-outline-primary">
+                <a href="/vehicles/?vin=${itemData.vehicle_source_details.vin}" class="btn btn-sm btn-outline-primary">
                     <i class="bi bi-eye me-2"></i>عرض السيارة
                 </a>
             </div>
@@ -531,7 +531,7 @@ function displayVehicleInfo() {
 function displayQRCode() {
     if (itemData.qr_code) {
         document.getElementById('qrCodeContainer').innerHTML = `
-            <img src="${itemData.qr_code}" alt="QR Code" class="img-fluid">
+            <img src="${itemData.qr_code}" alt="QR Code" class="img-fluid" onerror="this.parentElement.innerHTML='<p class=\\'text-danger\\'>فشل تحميل QR Code</p>'">
             <p class="mt-2 mb-0"><small>${itemData.sku}</small></p>
         `;
     } else {
@@ -621,6 +621,7 @@ function editItem() {
 
 function printQR() {
     const printWindow = window.open('', '_blank');
+    const partName = itemData.part_details?.name_ar || itemData.part_details?.name || itemData.sku;
     printWindow.document.write(`
         <html>
         <head>
@@ -631,11 +632,11 @@ function printQR() {
             </style>
         </head>
         <body>
-            <h2>${itemData.part_name_ar || itemData.part_name}</h2>
+            <h2>${partName}</h2>
             <img src="${itemData.qr_code}" alt="QR Code">
             <p><strong>${itemData.sku}</strong></p>
             <p>${itemData.selling_price} ${document.body.dataset.currencySymbol || 'EGP'}</p>
-            <script>window.print(); window.close();</script>
+            <script>window.print(); window.close();<\/script>
         </body>
         </html>
     `);
