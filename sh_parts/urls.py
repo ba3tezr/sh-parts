@@ -25,7 +25,8 @@ from core.views import (
     profitability_report, inventory_count, inventory_dashboard, stock_movements,
     slow_moving_report, low_stock_report, location_transfer, barcode_system,
     warehouse_management, category_management, smart_alerts,
-    sales_list, customers_list, reports_view, price_management_view,
+    sales_list, customers_list, customers_enhanced, customer_details, customers_dashboard,
+    customers_reports, reports_view, price_management_view,
     vehicle_dismantle_view, save_dismantling
 )
 from core.views_api import get_system_settings
@@ -59,6 +60,10 @@ urlpatterns = [
     path('inventory/alerts/', smart_alerts, name='smart_alerts'),
     path('sales/', sales_list, name='sales'),
     path('customers/', customers_list, name='customers'),
+    path('customers/enhanced/', customers_enhanced, name='customers_enhanced'),
+    path('customers/details/', customer_details, name='customer_details'),
+    path('customers/dashboard/', customers_dashboard, name='customers_dashboard'),
+    path('customers/reports/', customers_reports, name='customers_reports'),
     path('reports/', reports_view, name='reports'),
     path('price-management/', price_management_view, name='price_management'),
     

@@ -130,12 +130,32 @@ def sales_list(request):
 
 @login_required
 def customers_list(request):
-    """قائمة العملاء - Customers List"""
-    customers = Customer.objects.filter(is_active=True).order_by('-id')
-    context = {
-        'customers': customers,
-    }
-    return render(request, 'pages/customers.html', context)
+    """قائمة العملاء - Customers List (Enhanced)"""
+    return render(request, 'pages/customers_enhanced.html')
+
+
+@login_required
+def customer_details(request):
+    """تفاصيل العميل - Customer Details"""
+    return render(request, 'pages/customer_details.html')
+
+
+@login_required
+def customers_dashboard(request):
+    """لوحة تحكم العملاء - Customers Dashboard"""
+    return render(request, 'pages/customers_dashboard.html')
+
+
+@login_required
+def customers_reports(request):
+    """تقارير العملاء - Customers Reports"""
+    return render(request, 'pages/customers_reports.html')
+
+
+@login_required
+def customers_enhanced(request):
+    """صفحة العملاء المحسّنة - Enhanced Customers Page"""
+    return render(request, 'pages/customers_enhanced.html')
 
 
 @login_required

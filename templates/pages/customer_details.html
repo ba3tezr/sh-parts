@@ -1,0 +1,1084 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "تفاصيل العميل" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    .detail-card .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px 12px 0 0 !important;
+        padding: 15px 20px;
+        font-weight: 600;
+    }
+    .info-row {
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        font-weight: 600;
+        color: #666;
+        margin-bottom: 4px;
+    }
+    .info-value {
+        color: #333;
+        font-size: 15px;
+    }
+    .customer-avatar-large {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 48px;
+        font-weight: bold;
+        margin: 0 auto 20px;
+    }
+    .stat-box {
+        text-align: center;
+        padding: 20px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        margin-bottom: 15px;
+    }
+    .stat-box h3 {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 0;
+        color: #667eea;
+    }
+    .stat-box p {
+        margin: 5px 0 0;
+        color: #666;
+        font-size: 14px;
+    }
+    .badge-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+    }
+    .timeline-item {
+        padding: 15px;
+        border-left: 3px solid #667eea;
+        margin-bottom: 15px;
+        background: #f8f9fa;
+        border-radius: 0 8px 8px 0;
+    }
+    .note-card {
+        padding: 15px;
+        border-radius: 8px;
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        margin-bottom: 10px;
+    }
+    .note-card.important {
+        background: #f8d7da;
+        border-left-color: #dc3545;
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 20px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-person-circle"></i>
+                {% trans "تفاصيل العميل" %}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">{% trans "الرئيسية" %}</a></li>
+                    <li class="breadcrumb-item"><a href="/customers/">{% trans "العملاء" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "التفاصيل" %}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <button class="btn btn-primary" onclick="editCustomer()">
+                <i class="bi bi-pencil"></i> {% trans "تعديل" %}
+            </button>
+            <button class="btn btn-success" onclick="createSale()">
+                <i class="bi bi-cart-plus"></i> {% trans "بيع جديد" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{% trans "جاري التحميل..." %}</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" style="display: none;">
+        <div class="row">
+            <!-- Left Column -->
+            <div class="col-lg-4">
+                <!-- Section 1: Basic Information -->
+                <div class="detail-card card">
+                    <div class="card-header">
+                        <i class="bi bi-person-badge"></i> {% trans "المعلومات الأساسية" %}
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="customer-avatar-large" id="customerAvatar"></div>
+                        <h4 id="customerName" class="mb-2"></h4>
+                        <p class="text-muted mb-2" id="customerCode"></p>
+                        <span id="customerStatus" class="badge-status"></span>
+                        <span id="customerType" class="badge bg-info ms-2"></span>
+                        <hr>
+                        <div class="text-start">
+                            <div class="info-row">
+                                <div class="info-label">{% trans "تاريخ التسجيل" %}</div>
+                                <div class="info-value" id="registrationDate"></div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">{% trans "أضيف بواسطة" %}</div>
+                                <div class="info-value" id="createdBy"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Contact Information -->
+                <div class="detail-card card">
+                    <div class="card-header">
+                        <i class="bi bi-telephone"></i> {% trans "معلومات الاتصال" %}
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <div class="info-label"><i class="bi bi-telephone-fill text-primary"></i> {% trans "الهاتف" %}</div>
+                            <div class="info-value" id="phone"></div>
+                        </div>
+                        <div class="info-row" id="phoneSecondaryRow" style="display: none;">
+                            <div class="info-label"><i class="bi bi-telephone text-primary"></i> {% trans "هاتف ثانوي" %}</div>
+                            <div class="info-value" id="phoneSecondary"></div>
+                        </div>
+                        <div class="info-row" id="emailRow" style="display: none;">
+                            <div class="info-label"><i class="bi bi-envelope-fill text-primary"></i> {% trans "البريد الإلكتروني" %}</div>
+                            <div class="info-value" id="email"></div>
+                        </div>
+                        <div class="info-row" id="addressRow" style="display: none;">
+                            <div class="info-label"><i class="bi bi-geo-alt-fill text-primary"></i> {% trans "العنوان" %}</div>
+                            <div class="info-value" id="address"></div>
+                        </div>
+                        <div id="mapContainer" style="display: none;">
+                            <hr>
+                            <a href="#" id="mapLink" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="bi bi-map"></i> {% trans "عرض على الخريطة" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Financial Summary -->
+                <div class="detail-card card">
+                    <div class="card-header">
+                        <i class="bi bi-cash-stack"></i> {% trans "الملخص المالي" %}
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-box">
+                            <h3 id="totalPurchases">0</h3>
+                            <p>{% trans "إجمالي المشتريات" %}</p>
+                        </div>
+                        <div class="stat-box">
+                            <h3 id="outstandingBalance" class="text-danger">0</h3>
+                            <p>{% trans "الرصيد المستحق" %}</p>
+                        </div>
+                        <div class="stat-box">
+                            <h3 id="creditLimit">0</h3>
+                            <p>{% trans "حد الائتمان" %}</p>
+                        </div>
+                        <div class="stat-box">
+                            <h3 id="availableCredit" class="text-success">0</h3>
+                            <p>{% trans "الائتمان المتاح" %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="col-lg-8">
+                <!-- Tabs -->
+                <ul class="nav nav-tabs mb-3" id="customerTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="purchases-tab" data-bs-toggle="tab" data-bs-target="#purchases" type="button">
+                            <i class="bi bi-cart"></i> {% trans "سجل المشتريات" %}
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button">
+                            <i class="bi bi-credit-card"></i> {% trans "المدفوعات" %}
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="credits-tab" data-bs-toggle="tab" data-bs-target="#credits" type="button">
+                            <i class="bi bi-gift"></i> {% trans "الأرصدة" %}
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="notes-tab" data-bs-toggle="tab" data-bs-target="#notes" type="button">
+                            <i class="bi bi-sticky"></i> {% trans "الملاحظات" %}
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button">
+                            <i class="bi bi-graph-up"></i> {% trans "التحليلات" %}
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="customerTabContent">
+                    <!-- Section 4: Purchase History -->
+                    <div class="tab-pane fade show active" id="purchases" role="tabpanel">
+                        <div class="detail-card card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-cart"></i> {% trans "سجل المشتريات" %}</span>
+                                <span class="badge bg-light text-dark" id="purchaseCount">0</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>{% trans "رقم الفاتورة" %}</th>
+                                                <th>{% trans "التاريخ" %}</th>
+                                                <th>{% trans "المبلغ" %}</th>
+                                                <th>{% trans "المدفوع" %}</th>
+                                                <th>{% trans "الحالة" %}</th>
+                                                <th>{% trans "إجراءات" %}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="purchasesTable"></tbody>
+                                    </table>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="purchasesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Payments -->
+                    <div class="tab-pane fade" id="payments" role="tabpanel">
+                        <div class="detail-card card">
+                            <div class="card-header">
+                                <i class="bi bi-credit-card"></i> {% trans "سجل المدفوعات" %}
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>{% trans "رقم الدفعة" %}</th>
+                                                <th>{% trans "الفاتورة" %}</th>
+                                                <th>{% trans "التاريخ" %}</th>
+                                                <th>{% trans "المبلغ" %}</th>
+                                                <th>{% trans "الطريقة" %}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="paymentsTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 6: Credits -->
+                    <div class="tab-pane fade" id="credits" role="tabpanel">
+                        <div class="detail-card card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-gift"></i> {% trans "الأرصدة والمكافآت" %}</span>
+                                <button class="btn btn-sm btn-light" onclick="addCredit()">
+                                    <i class="bi bi-plus"></i> {% trans "إضافة رصيد" %}
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>{% trans "المبلغ" %}</th>
+                                                <th>{% trans "السبب" %}</th>
+                                                <th>{% trans "التاريخ" %}</th>
+                                                <th>{% trans "الحالة" %}</th>
+                                                <th>{% trans "أضيف بواسطة" %}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="creditsTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 7: Notes -->
+                    <div class="tab-pane fade" id="notes" role="tabpanel">
+                        <div class="detail-card card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-sticky"></i> {% trans "الملاحظات" %}</span>
+                                <button class="btn btn-sm btn-light" onclick="addNote()">
+                                    <i class="bi bi-plus"></i> {% trans "إضافة ملاحظة" %}
+                                </button>
+                            </div>
+                            <div class="card-body" id="notesContainer"></div>
+                        </div>
+                    </div>
+
+                    <!-- Section 8: Analytics -->
+                    <div class="tab-pane fade" id="analytics" role="tabpanel">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="detail-card card">
+                                    <div class="card-header">
+                                        <i class="bi bi-graph-up"></i> {% trans "معدل الشراء" %}
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="purchaseRateChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="detail-card card">
+                                    <div class="card-header">
+                                        <i class="bi bi-pie-chart"></i> {% trans "القطع المفضلة" %}
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="favoritePartsChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="detail-card card mt-3">
+                            <div class="card-header">
+                                <i class="bi bi-clock-history"></i> {% trans "أوقات الشراء المفضلة" %}
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="purchaseTimesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "إضافة ملاحظة" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="noteForm">
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "الملاحظة" %}</label>
+                        <textarea class="form-control" name="note" rows="4" required></textarea>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_important" id="isImportant">
+                        <label class="form-check-label" for="isImportant">
+                            {% trans "ملاحظة مهمة" %}
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "إلغاء" %}</button>
+                <button type="button" class="btn btn-primary" onclick="saveNote()">{% trans "حفظ" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Credit Modal -->
+<div class="modal fade" id="addCreditModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "إضافة رصيد" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="creditForm">
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "المبلغ" %}</label>
+                        <input type="number" class="form-control" name="credit_amount" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "السبب" %}</label>
+                        <textarea class="form-control" name="reason" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% trans "المرجع" %}</label>
+                        <input type="text" class="form-control" name="reference">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "إلغاء" %}</button>
+                <button type="button" class="btn btn-primary" onclick="saveCredit()">{% trans "حفظ" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let customerId = null;
+let customerData = null;
+let purchasesData = [];
+let paymentsData = [];
+let creditsData = [];
+let notesData = [];
+
+// Get customer ID from URL
+document.addEventListener('DOMContentLoaded', async function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    customerId = urlParams.get('id');
+
+    if (!customerId) {
+        alert('{% trans "معرف العميل غير موجود" %}');
+        window.location.href = '/customers/';
+        return;
+    }
+
+    await loadCustomerData();
+});
+
+async function loadCustomerData() {
+    try {
+        // Load customer details
+        const customerResponse = await fetch(`/api/customers/${customerId}/`);
+        if (!customerResponse.ok) throw new Error('Failed to load customer');
+        customerData = await customerResponse.json();
+
+        // Load related data
+        await Promise.all([
+            loadPurchases(),
+            loadPayments(),
+            loadCredits(),
+            loadNotes()
+        ]);
+
+        displayCustomerInfo();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+
+    } catch (error) {
+        console.error('Error loading customer data:', error);
+        alert('{% trans "خطأ في تحميل بيانات العميل" %}');
+    }
+}
+
+async function loadPurchases() {
+    try {
+        const response = await fetch(`/api/customers/${customerId}/purchase_history/`);
+        if (!response.ok) throw new Error('Failed to load purchases');
+        purchasesData = await response.json();
+        displayPurchases();
+        createPurchasesChart();
+    } catch (error) {
+        console.error('Error loading purchases:', error);
+    }
+}
+
+async function loadPayments() {
+    try {
+        // Get all payments for customer's sales
+        const payments = [];
+        for (const sale of purchasesData) {
+            const response = await fetch(`/api/sales/${sale.id}/payments/`);
+            if (response.ok) {
+                const salePayments = await response.json();
+                payments.push(...salePayments.map(p => ({...p, invoice_number: sale.invoice_number})));
+            }
+        }
+        paymentsData = payments;
+        displayPayments();
+    } catch (error) {
+        console.error('Error loading payments:', error);
+    }
+}
+
+async function loadCredits() {
+    try {
+        const response = await fetch(`/api/customers/${customerId}/credits/`);
+        if (!response.ok) throw new Error('Failed to load credits');
+        creditsData = await response.json();
+        displayCredits();
+    } catch (error) {
+        console.error('Error loading credits:', error);
+    }
+}
+
+async function loadNotes() {
+    try {
+        const response = await fetch(`/api/customers/${customerId}/notes/`);
+        if (!response.ok) throw new Error('Failed to load notes');
+        notesData = await response.json();
+        displayNotes();
+    } catch (error) {
+        console.error('Error loading notes:', error);
+    }
+}
+
+function displayCustomerInfo() {
+    const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+
+    // Avatar
+    const initials = getInitials(customerData.full_name || customerData.business_name);
+    document.getElementById('customerAvatar').textContent = initials;
+
+    // Basic info
+    document.getElementById('customerName').textContent = customerData.full_name || customerData.business_name;
+    document.getElementById('customerCode').textContent = customerData.customer_code;
+    document.getElementById('customerStatus').textContent = customerData.is_active ? 'نشط' : 'غير نشط';
+    document.getElementById('customerStatus').className = `badge-status ${customerData.is_active ? 'bg-success' : 'bg-secondary'}`;
+    document.getElementById('customerType').textContent = customerData.customer_type_display;
+    document.getElementById('registrationDate').textContent = formatDate(customerData.created_at);
+    document.getElementById('createdBy').textContent = customerData.created_by_name || '-';
+
+    // Contact info
+    document.getElementById('phone').textContent = customerData.phone || '-';
+
+    if (customerData.phone_secondary) {
+        document.getElementById('phoneSecondary').textContent = customerData.phone_secondary;
+        document.getElementById('phoneSecondaryRow').style.display = 'block';
+    }
+
+    if (customerData.email) {
+        document.getElementById('email').textContent = customerData.email;
+        document.getElementById('emailRow').style.display = 'block';
+    }
+
+    // Address
+    const addressParts = [
+        customerData.address_line1,
+        customerData.address_line2,
+        customerData.city,
+        customerData.state,
+        customerData.postal_code,
+        customerData.country
+    ].filter(Boolean);
+
+    if (addressParts.length > 0) {
+        const fullAddress = addressParts.join(', ');
+        document.getElementById('address').textContent = fullAddress;
+        document.getElementById('addressRow').style.display = 'block';
+
+        // Google Maps link
+        if (customerData.city) {
+            const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`;
+            document.getElementById('mapLink').href = mapUrl;
+            document.getElementById('mapContainer').style.display = 'block';
+        }
+    }
+
+    // Financial info
+    document.getElementById('totalPurchases').textContent = formatCurrency(customerData.total_purchases || 0);
+    document.getElementById('outstandingBalance').textContent = formatCurrency(customerData.outstanding_balance || 0);
+    document.getElementById('creditLimit').textContent = formatCurrency(customerData.credit_limit || 0);
+
+    const availableCredit = parseFloat(customerData.credit_limit || 0) - parseFloat(customerData.outstanding_balance || 0);
+    document.getElementById('availableCredit').textContent = formatCurrency(Math.max(0, availableCredit));
+}
+
+function displayPurchases() {
+    const tbody = document.getElementById('purchasesTable');
+    document.getElementById('purchaseCount').textContent = formatNumber(purchasesData.length);
+
+    if (purchasesData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">{% trans "لا توجد مشتريات" %}</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = purchasesData.map(sale => `
+        <tr>
+            <td><strong>${sale.invoice_number}</strong></td>
+            <td>${formatDate(sale.created_at)}</td>
+            <td>${formatCurrency(sale.total_amount)}</td>
+            <td>${formatCurrency(sale.paid_amount)}</td>
+            <td><span class="badge ${getPaymentStatusClass(sale.payment_status)}">${getPaymentStatusText(sale.payment_status)}</span></td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewInvoice(${sale.id})">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function displayPayments() {
+    const tbody = document.getElementById('paymentsTable');
+
+    if (paymentsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">{% trans "لا توجد مدفوعات" %}</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = paymentsData.map(payment => `
+        <tr>
+            <td><strong>${payment.payment_number}</strong></td>
+            <td>${payment.invoice_number}</td>
+            <td>${formatDate(payment.payment_date)}</td>
+            <td>${formatCurrency(payment.amount)}</td>
+            <td><span class="badge bg-info">${getPaymentMethodText(payment.payment_method)}</span></td>
+        </tr>
+    `).join('');
+}
+
+function displayCredits() {
+    const tbody = document.getElementById('creditsTable');
+
+    if (creditsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">{% trans "لا توجد أرصدة" %}</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = creditsData.map(credit => `
+        <tr>
+            <td><strong>${formatCurrency(credit.credit_amount)}</strong></td>
+            <td>${credit.reason}</td>
+            <td>${formatDate(credit.issued_at)}</td>
+            <td><span class="badge ${credit.is_used ? 'bg-secondary' : 'bg-success'}">${credit.is_used ? 'مستخدم' : 'متاح'}</span></td>
+            <td>${credit.issued_by_name}</td>
+        </tr>
+    `).join('');
+}
+
+function displayNotes() {
+    const container = document.getElementById('notesContainer');
+
+    if (notesData.length === 0) {
+        container.innerHTML = '<p class="text-center text-muted">{% trans "لا توجد ملاحظات" %}</p>';
+        return;
+    }
+
+    container.innerHTML = notesData.map(note => `
+        <div class="note-card ${note.is_important ? 'important' : ''}">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <strong>${note.is_important ? '<i class="bi bi-exclamation-triangle-fill text-danger"></i> ' : ''}${note.created_by_name}</strong>
+                <small class="text-muted">${formatDate(note.created_at)}</small>
+            </div>
+            <p class="mb-0">${note.note}</p>
+        </div>
+    `).join('');
+}
+
+// Charts
+function createPurchasesChart() {
+    if (purchasesData.length === 0) return;
+
+    // Group by month
+    const monthlyData = {};
+    purchasesData.forEach(sale => {
+        const month = new Date(sale.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+        monthlyData[month] = (monthlyData[month] || 0) + parseFloat(sale.total_amount);
+    });
+
+    const ctx = document.getElementById('purchasesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Object.keys(monthlyData),
+            datasets: [{
+                label: '{% trans "المبيعات الشهرية" %}',
+                data: Object.values(monthlyData),
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+// Helper Functions
+function formatCurrency(amount) {
+    const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+    const formattedNumber = parseFloat(amount).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    return `${formattedNumber} ${currencySymbol}`;
+}
+
+function formatNumber(num) {
+    return parseFloat(num).toLocaleString('en-US');
+}
+
+function formatDate(dateString) {
+    // Format date in Gregorian calendar with English digits
+    if (!dateString) return '-';
+
+    const date = new Date(dateString);
+
+    // Format: DD/MM/YYYY with English digits
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+}
+
+function formatDateTime(dateString) {
+    // Format date and time in Gregorian calendar with English digits
+    if (!dateString) return '-';
+
+    const date = new Date(dateString);
+
+    // Format: DD/MM/YYYY HH:MM with English digits
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+}
+
+function getPaymentStatusClass(status) {
+    const classes = {
+        'PAID': 'bg-success',
+        'PARTIAL': 'bg-warning',
+        'UNPAID': 'bg-danger'
+    };
+    return classes[status] || 'bg-secondary';
+}
+
+function getPaymentStatusText(status) {
+    const texts = {
+        'PAID': 'مدفوع',
+        'PARTIAL': 'مدفوع جزئياً',
+        'UNPAID': 'غير مدفوع'
+    };
+    return texts[status] || status;
+}
+
+function getPaymentMethodText(method) {
+    const texts = {
+        'CASH': 'نقدي',
+        'CARD': 'بطاقة',
+        'BANK_TRANSFER': 'تحويل بنكي',
+        'CHEQUE': 'شيك',
+        'CREDIT': 'رصيد'
+    };
+    return texts[method] || method;
+}
+
+// Actions
+function editCustomer() {
+    window.location.href = `/customers/?edit=${customerId}`;
+}
+
+function createSale() {
+    window.location.href = `/sales/?customer=${customerId}`;
+}
+
+function addNote() {
+    const modal = new bootstrap.Modal(document.getElementById('addNoteModal'));
+    document.getElementById('noteForm').reset();
+    modal.show();
+}
+
+async function saveNote() {
+    const form = document.getElementById('noteForm');
+    const formData = new FormData(form);
+
+    const data = {
+        customer: customerId,
+        note: formData.get('note'),
+        is_important: formData.get('is_important') === 'on',
+        created_by: {{ request.user.id|default:1 }}
+    };
+
+    try {
+        const response = await fetch(`/api/customers/${customerId}/add_note/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) throw new Error('Failed to save note');
+
+        bootstrap.Modal.getInstance(document.getElementById('addNoteModal')).hide();
+        await loadNotes();
+        alert('{% trans "تم حفظ الملاحظة بنجاح" %}');
+    } catch (error) {
+        console.error('Error saving note:', error);
+        alert('{% trans "خطأ في حفظ الملاحظة" %}');
+    }
+}
+
+function addCredit() {
+    const modal = new bootstrap.Modal(document.getElementById('addCreditModal'));
+    document.getElementById('creditForm').reset();
+    modal.show();
+}
+
+async function saveCredit() {
+    const form = document.getElementById('creditForm');
+    const formData = new FormData(form);
+
+    const data = {
+        customer: customerId,
+        credit_amount: formData.get('credit_amount'),
+        reason: formData.get('reason'),
+        reference: formData.get('reference') || '',
+        issued_by: {{ request.user.id|default:1 }}
+    };
+
+    try {
+        const response = await fetch(`/api/customers/${customerId}/add_credit/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) throw new Error('Failed to save credit');
+
+        bootstrap.Modal.getInstance(document.getElementById('addCreditModal')).hide();
+        await loadCredits();
+        await loadCustomerData();
+        alert('{% trans "تم إضافة الرصيد بنجاح" %}');
+    } catch (error) {
+        console.error('Error saving credit:', error);
+        alert('{% trans "خطأ في إضافة الرصيد" %}');
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// View invoice details in modal
+async function viewInvoice(saleId) {
+    try {
+        // Show loading
+        const loadingDiv = document.createElement('div');
+        loadingDiv.innerHTML = `
+            <div class="modal fade show" style="display: block; background: rgba(0,0,0,0.5);">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-body text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">{% trans "جاري التحميل..." %}</span>
+                            </div>
+                            <p class="mt-3">{% trans "جاري تحميل تفاصيل الفاتورة..." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(loadingDiv);
+
+        // Fetch sale details
+        const response = await fetch(`/api/sales/${saleId}/`);
+        if (!response.ok) throw new Error('Failed to fetch sale details');
+
+        const sale = await response.json();
+
+        // Remove loading
+        document.body.removeChild(loadingDiv);
+
+        // Build items HTML
+        let itemsHtml = '';
+        let subtotal = 0;
+
+        if (sale.items && sale.items.length > 0) {
+            sale.items.forEach(item => {
+                const itemTotal = parseFloat(item.total_price);
+                subtotal += itemTotal;
+                itemsHtml += `
+                    <tr>
+                        <td>${item.part_name || item.inventory_item_details?.part?.name || '{% trans "غير معروف" %}'}</td>
+                        <td class="text-center">${formatNumber(item.quantity)}</td>
+                        <td class="text-end">${formatCurrency(item.unit_price)}</td>
+                        <td class="text-end"><strong>${formatCurrency(itemTotal)}</strong></td>
+                    </tr>
+                `;
+            });
+        }
+
+        const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+
+        // Create modal HTML
+        const modalHtml = `
+            <div class="modal fade" id="viewInvoiceModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-receipt me-2"></i>
+                                {% trans "تفاصيل الفاتورة" %} - ${sale.invoice_number}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted">{% trans "معلومات العميل" %}</h6>
+                                    <p class="mb-1"><strong>{% trans "الاسم" %}:</strong> ${sale.customer_details?.first_name || ''} ${sale.customer_details?.last_name || ''}</p>
+                                    <p class="mb-1"><strong>{% trans "الهاتف" %}:</strong> ${sale.customer_details?.phone || '-'}</p>
+                                    <p class="mb-1"><strong>{% trans "العنوان" %}:</strong> ${sale.customer_details?.address || '-'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted">{% trans "معلومات الفاتورة" %}</h6>
+                                    <p class="mb-1"><strong>{% trans "التاريخ" %}:</strong> ${formatDate(sale.created_at)}</p>
+                                    <p class="mb-1"><strong>{% trans "الحالة" %}:</strong> <span class="badge bg-${sale.status === 'COMPLETED' ? 'success' : sale.status === 'DRAFT' ? 'warning' : 'secondary'}">${sale.status_display}</span></p>
+                                    <p class="mb-1"><strong>{% trans "حالة الدفع" %}:</strong> <span class="badge bg-${sale.payment_status === 'PAID' ? 'success' : sale.payment_status === 'PARTIAL' ? 'warning' : 'danger'}">${sale.payment_status_display}</span></p>
+                                    <p class="mb-1"><strong>{% trans "البائع" %}:</strong> ${sale.sales_person_name || '-'}</p>
+                                </div>
+                            </div>
+
+                            <h6 class="text-muted mb-3">{% trans "القطع المباعة" %}</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>{% trans "القطعة" %}</th>
+                                            <th class="text-center">{% trans "الكمية" %}</th>
+                                            <th class="text-end">{% trans "السعر" %}</th>
+                                            <th class="text-end">{% trans "الإجمالي" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${itemsHtml}
+                                    </tbody>
+                                    <tfoot class="table-light">
+                                        <tr>
+                                            <td colspan="3" class="text-end"><strong>{% trans "المجموع الفرعي" %}:</strong></td>
+                                            <td class="text-end"><strong>${formatCurrency(sale.subtotal)}</strong></td>
+                                        </tr>
+                                        ${parseFloat(sale.discount_amount) > 0 ? `
+                                        <tr>
+                                            <td colspan="3" class="text-end">{% trans "الخصم" %}:</td>
+                                            <td class="text-end text-danger">-${formatCurrency(sale.discount_amount)}</td>
+                                        </tr>
+                                        ` : ''}
+                                        ${parseFloat(sale.tax_amount) > 0 ? `
+                                        <tr>
+                                            <td colspan="3" class="text-end">{% trans "الضريبة" %}:</td>
+                                            <td class="text-end">+${formatCurrency(sale.tax_amount)}</td>
+                                        </tr>
+                                        ` : ''}
+                                        <tr class="table-primary">
+                                            <td colspan="3" class="text-end"><strong>{% trans "الإجمالي الكلي" %}:</strong></td>
+                                            <td class="text-end"><strong>${formatCurrency(sale.total_amount)}</strong></td>
+                                        </tr>
+                                        <tr class="table-success">
+                                            <td colspan="3" class="text-end">{% trans "المدفوع" %}:</td>
+                                            <td class="text-end">${formatCurrency(sale.paid_amount)}</td>
+                                        </tr>
+                                        <tr class="table-warning">
+                                            <td colspan="3" class="text-end"><strong>{% trans "المتبقي" %}:</strong></td>
+                                            <td class="text-end"><strong>${formatCurrency(sale.balance_due)}</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            ${sale.notes ? `
+                            <div class="mt-3">
+                                <h6 class="text-muted">{% trans "ملاحظات" %}</h6>
+                                <p class="border p-2 rounded">${sale.notes}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "إغلاق" %}</button>
+                            <a href="/sales/" class="btn btn-primary">{% trans "عرض في قسم المبيعات" %}</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if any
+        const existingModal = document.getElementById('viewInvoiceModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('viewInvoiceModal'));
+        modal.show();
+
+        // Remove modal from DOM when closed
+        document.getElementById('viewInvoiceModal').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
+
+    } catch (error) {
+        console.error('Error viewing invoice:', error);
+        alert('{% trans "خطأ في تحميل تفاصيل الفاتورة" %}');
+    }
+}
+</script>
+{% endblock %}
+

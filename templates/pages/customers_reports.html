@@ -1,0 +1,643 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "تقارير العملاء" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        height: 100%;
+    }
+    .report-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    .report-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin-bottom: 15px;
+    }
+    .chart-container {
+        position: relative;
+        height: 350px;
+        padding: 20px;
+    }
+    .table-container {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    .segment-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .segment-champions { background: #d4edda; color: #155724; }
+    .segment-loyal { background: #d1ecf1; color: #0c5460; }
+    .segment-potential { background: #fff3cd; color: #856404; }
+    .segment-atrisk { background: #f8d7da; color: #721c24; }
+    .segment-lost { background: #e2e3e5; color: #383d41; }
+    
+    .tier-platinum { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+    .tier-gold { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+    .tier-silver { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+    .tier-bronze { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-file-earmark-bar-graph"></i>
+                {% trans "تقارير العملاء" %}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">{% trans "الرئيسية" %}</a></li>
+                    <li class="breadcrumb-item"><a href="/customers/">{% trans "العملاء" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "التقارير" %}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a href="/customers/" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right"></i> {% trans "العودة" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Report Selection -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="report-card card" onclick="loadReport('analytics')">
+                <div class="card-body text-center">
+                    <div class="report-icon bg-primary bg-opacity-10 text-primary mx-auto">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h5>{% trans "تحليل العملاء" %}</h5>
+                    <p class="text-muted small mb-0">RFM, CLV, Retention</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="report-card card" onclick="loadReport('debt')">
+                <div class="card-body text-center">
+                    <div class="report-icon bg-danger bg-opacity-10 text-danger mx-auto">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <h5>{% trans "تقرير الديون" %}</h5>
+                    <p class="text-muted small mb-0">Aging, High Debt</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="report-card card" onclick="loadReport('sales')">
+                <div class="card-body text-center">
+                    <div class="report-icon bg-success bg-opacity-10 text-success mx-auto">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <h5>{% trans "تقرير المبيعات" %}</h5>
+                    <p class="text-muted small mb-0">Sales by Customer</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="report-card card" onclick="loadReport('loyalty')">
+                <div class="card-body text-center">
+                    <div class="report-icon bg-warning bg-opacity-10 text-warning mx-auto">
+                        <i class="bi bi-award"></i>
+                    </div>
+                    <h5>{% trans "تقرير الولاء" %}</h5>
+                    <p class="text-muted small mb-0">Points, Rewards, Tiers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="card mb-4" id="dateRangeCard" style="display: none;">
+        <div class="card-body">
+            <div class="row align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">{% trans "من تاريخ" %}</label>
+                    <input type="date" class="form-control" id="startDate">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">{% trans "إلى تاريخ" %}</label>
+                    <input type="date" class="form-control" id="endDate">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-primary" onclick="applyDateFilter()">
+                        <i class="bi bi-funnel"></i> {% trans "تطبيق" %}
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="resetDateFilter()">
+                        <i class="bi bi-x-circle"></i> {% trans "إعادة تعيين" %}
+                    </button>
+                </div>
+                <div class="col-md-3 text-end">
+                    <button class="btn btn-success" onclick="exportCurrentReport()">
+                        <i class="bi bi-download"></i> {% trans "تصدير Excel" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{% trans "جاري التحميل..." %}</span>
+        </div>
+    </div>
+
+    <!-- Analytics Report -->
+    <div id="analyticsReport" style="display: none;">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">{% trans "إجمالي العملاء" %}</h6>
+                        <h3 id="analyticsTotal">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">{% trans "معدل الاحتفاظ" %}</h6>
+                        <h3 id="retentionRate">0%</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">{% trans "Champions" %}</h6>
+                        <h3 id="championsCount">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">{% trans "At Risk" %}</h6>
+                        <h3 id="atRiskCount">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">{% trans "توزيع الشرائح" %}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="segmentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">{% trans "تحليل RFM" %}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="rfmScatterChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">{% trans "تفاصيل التحليل" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{% trans "رمز العميل" %}</th>
+                                <th>{% trans "الاسم" %}</th>
+                                <th>{% trans "الحداثة" %}</th>
+                                <th>{% trans "التكرار" %}</th>
+                                <th>{% trans "القيمة المالية" %}</th>
+                                <th>{% trans "RFM Score" %}</th>
+                                <th>{% trans "الشريحة" %}</th>
+                                <th>{% trans "CLV" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analyticsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debt Report -->
+    <div id="debtReport" style="display: none;">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">{% trans "إجمالي الديون" %}</h6>
+                        <h3 id="totalDebt">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">{% trans "عملاء بديون" %}</h6>
+                        <h3 id="debtCustomersCount">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">{% trans "عملاء عالي المخاطر" %}</h6>
+                        <h3 id="highRiskCount">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">{% trans "ديون 90+ يوم" %}</h6>
+                        <h3 id="debt90Plus">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">{% trans "تحليل الأعمار" %}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="agingChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">{% trans "تفاصيل الديون" %}</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{% trans "رمز العميل" %}</th>
+                                <th>{% trans "الاسم" %}</th>
+                                <th>{% trans "الرصيد المستحق" %}</th>
+                                <th>{% trans "أيام التأخير" %}</th>
+                                <th>{% trans "الفئة العمرية" %}</th>
+                                <th>{% trans "الهاتف" %}</th>
+                                <th>{% trans "إجراءات" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="debtTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Report -->
+    <div id="salesReport" style="display: none;"></div>
+
+    <!-- Loyalty Report -->
+    <div id="loyaltyReport" style="display: none;"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+let currentReport = null;
+let reportData = null;
+let charts = {};
+
+// Set default dates (last year)
+document.addEventListener('DOMContentLoaded', function() {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setFullYear(startDate.getFullYear() - 1);
+    
+    document.getElementById('endDate').valueAsDate = endDate;
+    document.getElementById('startDate').valueAsDate = startDate;
+});
+
+async function loadReport(reportType) {
+    currentReport = reportType;
+    
+    // Hide all reports
+    document.getElementById('analyticsReport').style.display = 'none';
+    document.getElementById('debtReport').style.display = 'none';
+    document.getElementById('salesReport').style.display = 'none';
+    document.getElementById('loyaltyReport').style.display = 'none';
+    
+    // Show date range for applicable reports
+    if (['analytics', 'sales'].includes(reportType)) {
+        document.getElementById('dateRangeCard').style.display = 'block';
+    } else {
+        document.getElementById('dateRangeCard').style.display = 'none';
+    }
+    
+    // Show loading
+    document.getElementById('loading').style.display = 'block';
+    
+    try {
+        let url = `/api/customers/notes/${reportType}_report/`;
+        
+        // Add date range if applicable
+        if (['analytics', 'sales'].includes(reportType)) {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            if (startDate && endDate) {
+                url += `?start_date=${startDate}&end_date=${endDate}`;
+            }
+        }
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to load report');
+        
+        reportData = await response.json();
+        
+        // Display the appropriate report
+        if (reportType === 'analytics') {
+            displayAnalyticsReport();
+        } else if (reportType === 'debt') {
+            displayDebtReport();
+        } else if (reportType === 'sales') {
+            displaySalesReport();
+        } else if (reportType === 'loyalty') {
+            displayLoyaltyReport();
+        }
+        
+    } catch (error) {
+        console.error('Error loading report:', error);
+        alert('{% trans "خطأ في تحميل التقرير" %}');
+    } finally {
+        document.getElementById('loading').style.display = 'none';
+    }
+}
+
+function displayAnalyticsReport() {
+    document.getElementById('analyticsReport').style.display = 'block';
+
+    // Display summary stats
+    document.getElementById('analyticsTotal').textContent = formatNumber(reportData.total_customers_analyzed);
+    document.getElementById('retentionRate').textContent = formatNumber(reportData.retention_rate) + '%';
+
+    // Count segments
+    const championsCount = reportData.rfm_analysis.filter(c => c.segment === 'Champions').length;
+    const atRiskCount = reportData.rfm_analysis.filter(c => c.segment === 'At Risk').length;
+
+    document.getElementById('championsCount').textContent = formatNumber(championsCount);
+    document.getElementById('atRiskCount').textContent = formatNumber(atRiskCount);
+
+    // Display table
+    const tbody = document.getElementById('analyticsTable');
+    tbody.innerHTML = reportData.rfm_analysis.map(item => `
+        <tr>
+            <td>${item.customer_code}</td>
+            <td>${item.customer_name}</td>
+            <td>${formatNumber(item.recency)} {% trans "يوم" %}</td>
+            <td>${formatNumber(item.frequency)}</td>
+            <td>${formatCurrency(item.monetary)}</td>
+            <td><strong>${formatNumber(item.rfm_score)}</strong></td>
+            <td><span class="segment-badge segment-${item.segment.toLowerCase().replace(' ', '')}">${item.segment}</span></td>
+            <td>${formatCurrency(item.clv)}</td>
+        </tr>
+    `).join('');
+
+    // Create segment distribution chart
+    const segmentLabels = Object.keys(reportData.segment_distribution);
+    const segmentCounts = segmentLabels.map(s => reportData.segment_distribution[s].count);
+
+    if (charts.segment) charts.segment.destroy();
+
+    const ctx1 = document.getElementById('segmentChart').getContext('2d');
+    charts.segment = new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+            labels: segmentLabels,
+            datasets: [{
+                data: segmentCounts,
+                backgroundColor: ['#28a745', '#17a2b8', '#ffc107', '#dc3545', '#6c757d']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+
+    // Create RFM scatter chart
+    if (charts.rfmScatter) charts.rfmScatter.destroy();
+
+    const ctx2 = document.getElementById('rfmScatterChart').getContext('2d');
+    charts.rfmScatter = new Chart(ctx2, {
+        type: 'bubble',
+        data: {
+            datasets: [{
+                label: 'Customers',
+                data: reportData.rfm_analysis.map(item => ({
+                    x: item.recency,
+                    y: item.monetary,
+                    r: item.frequency * 3
+                })),
+                backgroundColor: 'rgba(102, 126, 234, 0.6)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { title: { display: true, text: 'Recency (days)' } },
+                y: { title: { display: true, text: 'Monetary Value' }, beginAtZero: true }
+            }
+        }
+    });
+}
+
+function displayDebtReport() {
+    document.getElementById('debtReport').style.display = 'block';
+
+    // Display summary stats
+    document.getElementById('totalDebt').textContent = formatCurrency(reportData.total_debt);
+    document.getElementById('debtCustomersCount').textContent = formatNumber(reportData.customers_with_debt);
+    document.getElementById('highRiskCount').textContent = formatNumber(reportData.high_risk_customers);
+    document.getElementById('debt90Plus').textContent = formatCurrency(reportData.aging_analysis['90+'].amount);
+
+    // Display table
+    const tbody = document.getElementById('debtTable');
+    tbody.innerHTML = reportData.debt_details.map(item => `
+        <tr>
+            <td>${item.customer_code}</td>
+            <td>${item.customer_name}</td>
+            <td><strong>${formatCurrency(item.outstanding_balance)}</strong></td>
+            <td>${formatNumber(item.days_overdue)}</td>
+            <td><span class="badge bg-${item.aging_bucket === '90+' ? 'danger' : (item.aging_bucket === '61-90' ? 'warning' : 'info')}">${item.aging_bucket}</span></td>
+            <td>${item.phone}</td>
+            <td>
+                <a href="/customers/details/?id=${item.customer_id}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-eye"></i>
+                </a>
+            </td>
+        </tr>
+    `).join('');
+
+    // Create aging chart
+    if (charts.aging) charts.aging.destroy();
+
+    const ctx = document.getElementById('agingChart').getContext('2d');
+    charts.aging = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['0-30 days', '31-60 days', '61-90 days', '90+ days'],
+            datasets: [{
+                label: 'Amount',
+                data: [
+                    reportData.aging_analysis['0-30'].amount,
+                    reportData.aging_analysis['31-60'].amount,
+                    reportData.aging_analysis['61-90'].amount,
+                    reportData.aging_analysis['90+'].amount
+                ],
+                backgroundColor: ['#17a2b8', '#ffc107', '#fd7e14', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+function displaySalesReport() {
+    // Will be implemented
+    alert('Sales Report - Coming soon');
+}
+
+function displayLoyaltyReport() {
+    // Will be implemented
+    alert('Loyalty Report - Coming soon');
+}
+
+function applyDateFilter() {
+    if (currentReport) {
+        loadReport(currentReport);
+    }
+}
+
+function resetDateFilter() {
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setFullYear(startDate.getFullYear() - 1);
+
+    document.getElementById('endDate').valueAsDate = endDate;
+    document.getElementById('startDate').valueAsDate = startDate;
+
+    if (currentReport) {
+        loadReport(currentReport);
+    }
+}
+
+function exportCurrentReport() {
+    if (!reportData) {
+        alert('{% trans "لا توجد بيانات للتصدير" %}');
+        return;
+    }
+
+    let data = [];
+    let filename = '';
+
+    if (currentReport === 'analytics') {
+        data = reportData.rfm_analysis.map(item => ({
+            'Customer Code': item.customer_code,
+            'Customer Name': item.customer_name,
+            'Recency': item.recency,
+            'Frequency': item.frequency,
+            'Monetary': item.monetary,
+            'RFM Score': item.rfm_score,
+            'Segment': item.segment,
+            'CLV': item.clv
+        }));
+        filename = 'customer_analytics_report.xlsx';
+    } else if (currentReport === 'debt') {
+        data = reportData.debt_details.map(item => ({
+            'Customer Code': item.customer_code,
+            'Customer Name': item.customer_name,
+            'Outstanding Balance': item.outstanding_balance,
+            'Days Overdue': item.days_overdue,
+            'Aging Bucket': item.aging_bucket,
+            'Phone': item.phone,
+            'Email': item.email
+        }));
+        filename = 'debt_report.xlsx';
+    }
+
+    if (data.length === 0) {
+        alert('{% trans "لا توجد بيانات للتصدير" %}');
+        return;
+    }
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Report');
+    XLSX.writeFile(wb, filename);
+}
+
+// Helper Functions
+function formatCurrency(amount) {
+    const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+    const formattedNumber = parseFloat(amount).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    return `${formattedNumber} ${currencySymbol}`;
+}
+
+function formatNumber(num) {
+    return parseFloat(num).toLocaleString('en-US');
+}
+</script>
+{% endblock %}
+

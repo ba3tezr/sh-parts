@@ -1,0 +1,577 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "لوحة تحكم العملاء" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    .stat-card {
+        padding: 20px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-bottom: 20px;
+    }
+    .stat-card h3 {
+        font-size: 36px;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    .stat-card p {
+        margin: 0;
+        opacity: 0.9;
+    }
+    .stat-card.green {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+    .stat-card.orange {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .stat-card.blue {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    .stat-card.purple {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .stat-card.red {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    .stat-card.teal {
+        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+    }
+    .chart-container {
+        position: relative;
+        height: 350px;
+        padding: 20px;
+    }
+    .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .metric-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+    .metric-up {
+        background: #d4edda;
+        color: #155724;
+    }
+    .metric-down {
+        background: #f8d7da;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-speedometer2"></i>
+                {% trans "لوحة تحكم العملاء" %}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="/">{% trans "الرئيسية" %}</a></li>
+                    <li class="breadcrumb-item"><a href="/customers/">{% trans "العملاء" %}</a></li>
+                    <li class="breadcrumb-item active">{% trans "لوحة التحكم" %}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <button class="btn btn-primary" onclick="refreshData()">
+                <i class="bi bi-arrow-clockwise"></i> {% trans "تحديث" %}
+            </button>
+            <button class="btn btn-outline-primary" onclick="exportReport()">
+                <i class="bi bi-download"></i> {% trans "تصدير" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{% trans "جاري التحميل..." %}</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" style="display: none;">
+        <!-- Row 1: Key Metrics (6 cards) -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4 col-lg-2">
+                <div class="stat-card purple">
+                    <i class="bi bi-people fs-3"></i>
+                    <h3 id="totalCustomers">0</h3>
+                    <p>{% trans "إجمالي العملاء" %}</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div class="stat-card green">
+                    <i class="bi bi-person-check fs-3"></i>
+                    <h3 id="activeCustomers">0</h3>
+                    <p>{% trans "عملاء نشطون" %}</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div class="stat-card blue">
+                    <i class="bi bi-person-plus fs-3"></i>
+                    <h3 id="newThisMonth">0</h3>
+                    <p>{% trans "جدد هذا الشهر" %}</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div class="stat-card orange">
+                    <i class="bi bi-cash-stack fs-3"></i>
+                    <h3 id="avgCustomerValue">0</h3>
+                    <p>{% trans "متوسط قيمة العميل" %}</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div class="stat-card red">
+                    <i class="bi bi-exclamation-triangle fs-3"></i>
+                    <h3 id="customersWithDebt">0</h3>
+                    <p>{% trans "عملاء بديون" %}</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-2">
+                <div class="stat-card teal">
+                    <i class="bi bi-currency-dollar fs-3"></i>
+                    <h3 id="totalOutstanding">0</h3>
+                    <p>{% trans "إجمالي الديون" %}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Additional Metrics (6 cards) -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="dashboard-card card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person fs-1 text-primary"></i>
+                        <h4 class="mt-2" id="individualCustomers">0</h4>
+                        <p class="text-muted mb-0">{% trans "عملاء أفراد" %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-card card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-building fs-1 text-success"></i>
+                        <h4 class="mt-2" id="businessCustomers">0</h4>
+                        <p class="text-muted mb-0">{% trans "عملاء شركات" %}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-card card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-calendar-week fs-1 text-info"></i>
+                        <h4 class="mt-2" id="newThisWeek">0</h4>
+                        <p class="text-muted mb-0">{% trans "جدد هذا الأسبوع" %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: Charts -->
+        <div class="row g-3 mb-4">
+            <!-- Monthly Sales Trend -->
+            <div class="col-lg-6">
+                <div class="dashboard-card card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up"></i>
+                            {% trans "اتجاه المبيعات الشهرية" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="monthlySalesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Acquisition Trend -->
+            <div class="col-lg-6">
+                <div class="dashboard-card card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-people"></i>
+                            {% trans "اتجاه اكتساب العملاء" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="customerAcquisitionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 4: More Charts -->
+        <div class="row g-3 mb-4">
+            <!-- Customer Type Distribution -->
+            <div class="col-lg-4">
+                <div class="dashboard-card card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pie-chart"></i>
+                            {% trans "توزيع أنواع العملاء" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="customerTypeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Status Distribution -->
+            <div class="col-lg-4">
+                <div class="dashboard-card card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pie-chart-fill"></i>
+                            {% trans "توزيع حالة العملاء" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="customerStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RFM Scatter Plot -->
+            <div class="col-lg-4">
+                <div class="dashboard-card card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-scatter-chart"></i>
+                            {% trans "تحليل RFM" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="rfmChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 5: Top Customers Table -->
+        <div class="row g-3">
+            <div class="col-lg-12">
+                <div class="dashboard-card card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-trophy"></i>
+                            {% trans "أفضل 10 عملاء" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>{% trans "رمز العميل" %}</th>
+                                        <th>{% trans "الاسم" %}</th>
+                                        <th>{% trans "النوع" %}</th>
+                                        <th>{% trans "إجمالي المشتريات" %}</th>
+                                        <th>{% trans "إجراءات" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topCustomersTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let dashboardData = null;
+let charts = {};
+
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadDashboardData();
+});
+
+async function loadDashboardData() {
+    try {
+        const response = await fetch('/api/customers/dashboard_stats/');
+        if (!response.ok) throw new Error('Failed to load dashboard data');
+        
+        dashboardData = await response.json();
+        displayDashboard();
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+        alert('{% trans "خطأ في تحميل لوحة التحكم" %}');
+    }
+}
+
+function displayDashboard() {
+    // Display key metrics
+    document.getElementById('totalCustomers').textContent = formatNumber(dashboardData.total_customers);
+    document.getElementById('activeCustomers').textContent = formatNumber(dashboardData.active_customers);
+    document.getElementById('newThisMonth').textContent = formatNumber(dashboardData.new_this_month);
+    document.getElementById('avgCustomerValue').textContent = formatCurrency(dashboardData.avg_customer_value);
+    document.getElementById('customersWithDebt').textContent = formatNumber(dashboardData.customers_with_debt_count);
+    document.getElementById('totalOutstanding').textContent = formatCurrency(dashboardData.total_outstanding);
+    
+    // Display additional metrics
+    document.getElementById('individualCustomers').textContent = formatNumber(dashboardData.individual_customers);
+    document.getElementById('businessCustomers').textContent = formatNumber(dashboardData.business_customers);
+    document.getElementById('newThisWeek').textContent = formatNumber(dashboardData.new_this_week);
+    
+    // Display top customers table
+    displayTopCustomers();
+
+    // Create charts
+    createMonthlySalesChart();
+    createCustomerAcquisitionChart();
+    createCustomerTypeChart();
+    createCustomerStatusChart();
+    createRFMChart();
+}
+
+function displayTopCustomers() {
+    const tbody = document.getElementById('topCustomersTable');
+
+    if (!dashboardData.top_customers || dashboardData.top_customers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">{% trans "لا توجد بيانات" %}</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = dashboardData.top_customers.map((customer, index) => `
+        <tr>
+            <td><strong>${index + 1}</strong></td>
+            <td>${customer.customer_code}</td>
+            <td>${customer.first_name} ${customer.last_name}${customer.business_name ? ' - ' + customer.business_name : ''}</td>
+            <td><span class="badge ${customer.customer_type === 'INDIVIDUAL' ? 'bg-info' : 'bg-success'}">${customer.customer_type === 'INDIVIDUAL' ? 'فرد' : 'شركة'}</span></td>
+            <td><strong>${formatCurrency(customer.purchase_total)}</strong></td>
+            <td>
+                <a href="/customers/details/?id=${customer.id}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-eye"></i>
+                </a>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function createMonthlySalesChart() {
+    const ctx = document.getElementById('monthlySalesChart').getContext('2d');
+
+    if (charts.monthlySales) charts.monthlySales.destroy();
+
+    charts.monthlySales = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dashboardData.monthly_sales.map(d => d.month),
+            datasets: [{
+                label: '{% trans "المبيعات" %}',
+                data: dashboardData.monthly_sales.map(d => d.total),
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+function createCustomerAcquisitionChart() {
+    const ctx = document.getElementById('customerAcquisitionChart').getContext('2d');
+
+    if (charts.customerAcquisition) charts.customerAcquisition.destroy();
+
+    charts.customerAcquisition = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dashboardData.monthly_customers.map(d => d.month),
+            datasets: [{
+                label: '{% trans "عملاء جدد" %}',
+                data: dashboardData.monthly_customers.map(d => d.count),
+                backgroundColor: '#38ef7d',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+function createCustomerTypeChart() {
+    const ctx = document.getElementById('customerTypeChart').getContext('2d');
+
+    if (charts.customerType) charts.customerType.destroy();
+
+    charts.customerType = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['{% trans "أفراد" %}', '{% trans "شركات" %}'],
+            datasets: [{
+                data: [dashboardData.individual_customers, dashboardData.business_customers],
+                backgroundColor: ['#4facfe', '#00f2fe'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+}
+
+function createCustomerStatusChart() {
+    const ctx = document.getElementById('customerStatusChart').getContext('2d');
+
+    if (charts.customerStatus) charts.customerStatus.destroy();
+
+    charts.customerStatus = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['{% trans "نشط" %}', '{% trans "غير نشط" %}'],
+            datasets: [{
+                data: [dashboardData.active_customers, dashboardData.inactive_customers],
+                backgroundColor: ['#11998e', '#fa709a'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+}
+
+function createRFMChart() {
+    const ctx = document.getElementById('rfmChart').getContext('2d');
+
+    if (charts.rfm) charts.rfm.destroy();
+
+    // Prepare RFM data for scatter plot
+    const rfmPoints = dashboardData.rfm_data.map(d => ({
+        x: d.recency,
+        y: d.monetary,
+        r: d.frequency * 2 // Bubble size based on frequency
+    }));
+
+    charts.rfm = new Chart(ctx, {
+        type: 'bubble',
+        data: {
+            datasets: [{
+                label: '{% trans "العملاء" %}',
+                data: rfmPoints,
+                backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                borderColor: '#667eea',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Recency: ${context.parsed.x} days, Value: ${formatCurrency(context.parsed.y)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: '{% trans "الحداثة (أيام)" %}' }
+                },
+                y: {
+                    title: { display: true, text: '{% trans "القيمة المالية" %}' },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Helper Functions
+function formatCurrency(amount) {
+    const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+    const formattedNumber = parseFloat(amount).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    return `${formattedNumber} ${currencySymbol}`;
+}
+
+function formatNumber(num) {
+    return parseFloat(num).toLocaleString('en-US');
+}
+
+async function refreshData() {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('mainContent').style.display = 'none';
+    await loadDashboardData();
+}
+
+function exportReport() {
+    alert('{% trans "سيتم تصدير التقرير قريباً" %}');
+}
+</script>
+{% endblock %}
+

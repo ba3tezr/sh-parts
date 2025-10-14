@@ -1,0 +1,844 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "إدارة العملاء" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    .customer-card {
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    .customer-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        border-color: #0d6efd;
+    }
+    .customer-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+    }
+    .badge-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .view-toggle {
+        background: white;
+        border-radius: 8px;
+        padding: 4px;
+        display: inline-flex;
+        gap: 4px;
+    }
+    .view-toggle button {
+        border: none;
+        background: transparent;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+    .view-toggle button.active {
+        background: #0d6efd;
+        color: white;
+    }
+    .table-actions {
+        display: flex;
+        gap: 4px;
+    }
+    .table-actions .btn {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{% trans "إدارة العملاء" %}</h2>
+            <p class="text-muted mb-0">{% trans "إدارة شاملة لجميع العملاء والمبيعات" %}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/customers/dashboard/" class="btn btn-outline-info">
+                <i class="bi bi-graph-up"></i> {% trans "لوحة التحكم" %}
+            </a>
+            <a href="/customers/reports/" class="btn btn-outline-success">
+                <i class="bi bi-file-earmark-bar-graph"></i> {% trans "التقارير" %}
+            </a>
+            <button class="btn btn-outline-primary" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel"></i> {% trans "تصدير Excel" %}
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                <i class="bi bi-plus-lg"></i> {% trans "إضافة عميل" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 mb-4" id="statisticsCards">
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">{% trans "إجمالي العملاء" %}</p>
+                            <h3 class="mb-0" id="totalCustomers">-</h3>
+                            <small class="text-success" id="totalGrowth">-</small>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">{% trans "عملاء نشطون" %}</p>
+                            <h3 class="mb-0" id="activeCustomers">-</h3>
+                            <small class="text-muted" id="activePercentage">-</small>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-person-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">{% trans "عملاء جدد (شهر)" %}</p>
+                            <h3 class="mb-0" id="newCustomers">-</h3>
+                            <small class="text-info" id="newThisWeek">-</small>
+                        </div>
+                        <div class="stat-icon bg-info bg-opacity-10 text-info">
+                            <i class="bi bi-person-plus"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">{% trans "إجمالي الديون" %}</p>
+                            <h3 class="mb-0" id="totalDebt">-</h3>
+                            <small class="text-danger" id="debtCount">-</small>
+                        </div>
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">{% trans "متوسط قيمة العميل" %}</p>
+                            <h3 class="mb-0" id="avgCustomerValue">-</h3>
+                            <small class="text-muted">{% trans "CLV" %}</small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">{% trans "إجمالي المبيعات" %}</p>
+                            <h3 class="mb-0" id="totalSales">-</h3>
+                            <small class="text-muted" id="salesCount">-</small>
+                        </div>
+                        <div class="stat-icon bg-purple bg-opacity-10 text-purple">
+                            <i class="bi bi-cart3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">{% trans "عملاء معرضون للخطر" %}</p>
+                            <h3 class="mb-0" id="atRiskCustomers">-</h3>
+                            <small class="text-warning">{% trans "لا شراء 90+ يوم" %}</small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">{% trans "أفضل 5 عملاء" %}</p>
+                            <h3 class="mb-0" id="topCustomersValue">-</h3>
+                            <small class="text-success">{% trans "مبيعات" %}</small>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <input type="text" class="form-control" id="searchInput" 
+                       placeholder="{% trans 'بحث (كود، اسم، هاتف، بريد)' %}">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="typeFilter">
+                    <option value="">{% trans "جميع الأنواع" %}</option>
+                    <option value="INDIVIDUAL">{% trans "فرد" %}</option>
+                    <option value="BUSINESS">{% trans "شركة" %}</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="statusFilter">
+                    <option value="">{% trans "جميع الحالات" %}</option>
+                    <option value="true">{% trans "نشط" %}</option>
+                    <option value="false">{% trans "غير نشط" %}</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="cityFilter">
+                    <option value="">{% trans "جميع المدن" %}</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="sortFilter">
+                    <option value="-created_at">{% trans "الأحدث" %}</option>
+                    <option value="created_at">{% trans "الأقدم" %}</option>
+                    <option value="first_name">{% trans "الاسم (أ-ي)" %}</option>
+                    <option value="-first_name">{% trans "الاسم (ي-أ)" %}</option>
+                    <option value="customer_code">{% trans "الكود (تصاعدي)" %}</option>
+                    <option value="-customer_code">{% trans "الكود (تنازلي)" %}</option>
+                </select>
+            </div>
+        </div>
+        <div class="row g-3 mt-2">
+            <div class="col-md-12 d-flex justify-content-between align-items-center">
+                <div class="view-toggle">
+                    <button class="active" id="cardViewBtn" onclick="switchView('card')">
+                        <i class="fas fa-th"></i> {% trans "بطاقات" %}
+                    </button>
+                    <button id="tableViewBtn" onclick="switchView('table')">
+                        <i class="fas fa-list"></i> {% trans "جدول" %}
+                    </button>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" onclick="resetFilters()">
+                    <i class="fas fa-redo"></i> {% trans "إعادة تعيين" %}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card View -->
+    <div id="cardView" class="row g-3 mb-4">
+        <!-- Cards will be loaded here -->
+    </div>
+
+    <!-- Table View -->
+    <div id="tableView" class="card" style="display: none;">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>{% trans "الكود" %}</th>
+                            <th>{% trans "الاسم" %}</th>
+                            <th>{% trans "النوع" %}</th>
+                            <th>{% trans "الهاتف" %}</th>
+                            <th>{% trans "البريد" %}</th>
+                            <th>{% trans "المدينة" %}</th>
+                            <th>{% trans "الحالة" %}</th>
+                            <th>{% trans "الإجراءات" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody">
+                        <!-- Rows will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loadingSpinner" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">{% trans "جاري التحميل..." %}</span>
+        </div>
+    </div>
+
+    <!-- No Data -->
+    <div id="noData" class="text-center py-5" style="display: none;">
+        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+        <p class="text-muted">{% trans "لا توجد بيانات" %}</p>
+    </div>
+</div>
+
+<!-- Add Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "إضافة عميل جديد" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addCustomerForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "نوع العميل" %} *</label>
+                            <select class="form-select" name="customer_type" required>
+                                <option value="INDIVIDUAL">{% trans "فرد" %}</option>
+                                <option value="BUSINESS">{% trans "شركة" %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "الاسم الأول" %} *</label>
+                            <input type="text" class="form-control" name="first_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "الاسم الأخير" %} *</label>
+                            <input type="text" class="form-control" name="last_name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "اسم الشركة" %}</label>
+                            <input type="text" class="form-control" name="business_name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "الهاتف" %} *</label>
+                            <input type="tel" class="form-control" name="phone" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "هاتف ثانوي" %}</label>
+                            <input type="tel" class="form-control" name="phone_secondary">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "البريد الإلكتروني" %}</label>
+                            <input type="email" class="form-control" name="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "المدينة" %}</label>
+                            <input type="text" class="form-control" name="city">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">{% trans "العنوان" %}</label>
+                            <input type="text" class="form-control" name="address_line1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{% trans "حد الائتمان" %}</label>
+                            <input type="number" class="form-control" name="credit_limit" value="0" step="0.01">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">{% trans "ملاحظات" %}</label>
+                            <textarea class="form-control" name="notes" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "إلغاء" %}</button>
+                <button type="button" class="btn btn-primary" onclick="saveCustomer()">{% trans "حفظ" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+let allCustomers = [];
+let filteredCustomers = [];
+let currentView = 'card';
+let statistics = {};
+
+document.addEventListener('DOMContentLoaded', async function() {
+    await Promise.all([
+        loadStatistics(),
+        loadCities(),
+        loadCustomers()
+    ]);
+
+    // Setup event listeners
+    setupEventListeners();
+});
+
+async function loadStatistics() {
+    try {
+        const response = await fetch('/api/customers/statistics/');
+        if (!response.ok) throw new Error('Failed to load statistics');
+
+        statistics = await response.json();
+        displayStatistics();
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+    }
+}
+
+function displayStatistics() {
+    document.getElementById('totalCustomers').textContent = formatNumber(statistics.total_customers || 0);
+    document.getElementById('activeCustomers').textContent = formatNumber(statistics.active_customers || 0);
+    document.getElementById('newCustomers').textContent = formatNumber(statistics.new_this_month || 0);
+    document.getElementById('totalDebt').textContent = formatCurrency(statistics.outstanding_balance || 0);
+    document.getElementById('avgCustomerValue').textContent = formatCurrency(statistics.avg_customer_value || 0);
+    document.getElementById('totalSales').textContent = formatCurrency(statistics.total_sales_amount || 0);
+    document.getElementById('atRiskCustomers').textContent = formatNumber(statistics.at_risk_customers || 0);
+
+    // Calculate percentages and additional info
+    const activePercentage = statistics.total_customers > 0
+        ? ((statistics.active_customers / statistics.total_customers) * 100).toFixed(1)
+        : 0;
+    document.getElementById('activePercentage').textContent = `${activePercentage}% {% trans "من الإجمالي" %}`;
+
+    document.getElementById('newThisWeek').textContent = `${formatNumber(statistics.new_this_week || 0)} {% trans "هذا الأسبوع" %}`;
+    document.getElementById('salesCount').textContent = `${formatNumber(statistics.total_sales_count || 0)} {% trans "عملية" %}`;
+
+    // Top 5 customers value
+    const top5Value = (statistics.top_customers || []).slice(0, 5).reduce((sum, c) => sum + parseFloat(c.total_purchases || 0), 0);
+    document.getElementById('topCustomersValue').textContent = formatCurrency(top5Value);
+}
+
+async function loadCities() {
+    try {
+        const response = await fetch('/api/customers/cities/');
+        if (!response.ok) throw new Error('Failed to load cities');
+
+        const cities = await response.json();
+        const cityFilter = document.getElementById('cityFilter');
+
+        cities.forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            cityFilter.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading cities:', error);
+    }
+}
+
+async function loadCustomers() {
+    showLoading();
+    try {
+        const response = await fetch('/api/customers/');
+        if (!response.ok) throw new Error('Failed to load customers');
+
+        const data = await response.json();
+        // Handle both array and paginated response
+        allCustomers = Array.isArray(data) ? data : (data.results || []);
+        filteredCustomers = [...allCustomers];
+        displayCustomers();
+    } catch (error) {
+        console.error('Error loading customers:', error);
+        showNoData();
+    }
+}
+
+function showLoading() {
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('cardView').style.display = 'none';
+    document.getElementById('tableView').style.display = 'none';
+    document.getElementById('noData').style.display = 'none';
+}
+
+function hideLoading() {
+    document.getElementById('loadingSpinner').style.display = 'none';
+}
+
+function showNoData() {
+    hideLoading();
+    document.getElementById('noData').style.display = 'block';
+    document.getElementById('cardView').style.display = 'none';
+    document.getElementById('tableView').style.display = 'none';
+}
+
+function displayCustomers() {
+    hideLoading();
+
+    if (filteredCustomers.length === 0) {
+        showNoData();
+        return;
+    }
+
+    if (currentView === 'card') {
+        displayCardView();
+    } else {
+        displayTableView();
+    }
+}
+
+function displayCardView() {
+    const container = document.getElementById('cardView');
+    container.style.display = 'flex';
+    document.getElementById('tableView').style.display = 'none';
+
+    container.innerHTML = filteredCustomers.map(customer => `
+        <div class="col-md-4 col-lg-3">
+            <div class="card customer-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="customer-avatar me-3">
+                            ${getInitials(customer.full_name || customer.business_name)}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">${customer.full_name || customer.business_name}</h6>
+                            <small class="text-muted">${customer.customer_code}</small>
+                        </div>
+                        <span class="badge-status ${customer.is_active ? 'bg-success' : 'bg-secondary'}">
+                            ${customer.is_active ? '{% trans "نشط" %}' : '{% trans "غير نشط" %}'}
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">
+                            <i class="bi bi-tag"></i> ${customer.customer_type_display}
+                        </small>
+                        <small class="text-muted d-block">
+                            <i class="bi bi-telephone"></i> ${customer.phone || '-'}
+                        </small>
+                        <small class="text-muted d-block">
+                            <i class="bi bi-envelope"></i> ${customer.email || '-'}
+                        </small>
+                        <small class="text-muted d-block">
+                            <i class="bi bi-geo-alt"></i> ${customer.city || '-'}
+                        </small>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-sm btn-primary flex-grow-1" onclick="viewCustomer(${customer.id})">
+                            <i class="bi bi-eye"></i> {% trans "عرض" %}
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editCustomer(${customer.id})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function displayTableView() {
+    const tbody = document.getElementById('customersTableBody');
+    document.getElementById('cardView').style.display = 'none';
+    document.getElementById('tableView').style.display = 'block';
+
+    tbody.innerHTML = filteredCustomers.map(customer => `
+        <tr>
+            <td>${customer.customer_code}</td>
+            <td>${customer.full_name || customer.business_name}</td>
+            <td>${customer.customer_type_display}</td>
+            <td>${customer.phone || '-'}</td>
+            <td>${customer.email || '-'}</td>
+            <td>${customer.city || '-'}</td>
+            <td>
+                <span class="badge ${customer.is_active ? 'bg-success' : 'bg-secondary'}">
+                    ${customer.is_active ? '{% trans "نشط" %}' : '{% trans "غير نشط" %}'}
+                </span>
+            </td>
+            <td>
+                <div class="table-actions">
+                    <button class="btn btn-sm btn-primary" onclick="viewCustomer(${customer.id})">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="editCustomer(${customer.id})">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" onclick="viewPurchases(${customer.id})">
+                        <i class="bi bi-cart3"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="addNote(${customer.id})">
+                        <i class="bi bi-sticky"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function setupEventListeners() {
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('typeFilter').addEventListener('change', applyFilters);
+    document.getElementById('statusFilter').addEventListener('change', applyFilters);
+    document.getElementById('cityFilter').addEventListener('change', applyFilters);
+    document.getElementById('sortFilter').addEventListener('change', applyFilters);
+}
+
+function applyFilters() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const type = document.getElementById('typeFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    const city = document.getElementById('cityFilter').value;
+    const sort = document.getElementById('sortFilter').value;
+
+    filteredCustomers = allCustomers.filter(customer => {
+        const matchSearch = !search ||
+            customer.customer_code.toLowerCase().includes(search) ||
+            (customer.full_name && customer.full_name.toLowerCase().includes(search)) ||
+            (customer.business_name && customer.business_name.toLowerCase().includes(search)) ||
+            (customer.phone && customer.phone.includes(search)) ||
+            (customer.email && customer.email.toLowerCase().includes(search));
+
+        const matchType = !type || customer.customer_type === type;
+        const matchStatus = !status || customer.is_active.toString() === status;
+        const matchCity = !city || customer.city === city;
+
+        return matchSearch && matchType && matchStatus && matchCity;
+    });
+
+    // Apply sorting
+    filteredCustomers.sort((a, b) => {
+        const field = sort.replace('-', '');
+        const desc = sort.startsWith('-');
+
+        let aVal = a[field];
+        let bVal = b[field];
+
+        if (field === 'first_name') {
+            aVal = a.full_name || a.business_name;
+            bVal = b.full_name || b.business_name;
+        }
+
+        if (aVal < bVal) return desc ? 1 : -1;
+        if (aVal > bVal) return desc ? -1 : 1;
+        return 0;
+    });
+
+    displayCustomers();
+}
+
+function switchView(view) {
+    currentView = view;
+    document.getElementById('cardViewBtn').classList.toggle('active', view === 'card');
+    document.getElementById('tableViewBtn').classList.toggle('active', view === 'table');
+    displayCustomers();
+}
+
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('typeFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('cityFilter').value = '';
+    document.getElementById('sortFilter').value = '-created_at';
+    applyFilters();
+}
+
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+        return parts[0][0] + parts[1][0];
+    }
+    return name.substring(0, 2).toUpperCase();
+}
+
+function formatCurrency(amount) {
+    // Get currency symbol from body data attribute (set by Django)
+    const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+
+    // Format number with English digits and 2 decimal places
+    const formattedNumber = parseFloat(amount).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    return `${formattedNumber} ${currencySymbol}`;
+}
+
+function formatNumber(num) {
+    // Always format numbers in English
+    return parseFloat(num).toLocaleString('en-US');
+}
+
+function formatDate(dateString) {
+    // Format date in Gregorian calendar with English digits
+    if (!dateString) return '-';
+
+    const date = new Date(dateString);
+
+    // Format: DD/MM/YYYY with English digits
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+}
+
+function formatDateTime(dateString) {
+    // Format date and time in Gregorian calendar with English digits
+    if (!dateString) return '-';
+
+    const date = new Date(dateString);
+
+    // Format: DD/MM/YYYY HH:MM with English digits
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
+function viewCustomer(id) {
+    window.location.href = `/customers/details/?id=${id}`;
+}
+
+function editCustomer(id) {
+    // Redirect to customer details page for editing
+    window.location.href = `/customers/details/?id=${id}`;
+}
+
+function viewPurchases(id) {
+    // Redirect to customer details page with purchases tab
+    window.location.href = `/customers/details/?id=${id}#purchases`;
+}
+
+function addNote(id) {
+    // Redirect to customer details page with notes tab
+    window.location.href = `/customers/details/?id=${id}#notes`;
+}
+
+async function exportToExcel() {
+    const data = filteredCustomers.map(c => ({
+        'الكود': c.customer_code,
+        'الاسم': c.full_name || c.business_name,
+        'النوع': c.customer_type_display,
+        'الهاتف': c.phone || '',
+        'البريد': c.email || '',
+        'المدينة': c.city || '',
+        'الحالة': c.is_active ? 'نشط' : 'غير نشط',
+        'تاريخ التسجيل': new Date(c.created_at).toLocaleDateString('ar-SA')
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
+    XLSX.writeFile(wb, `customers_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+async function saveCustomer() {
+    const form = document.getElementById('addCustomerForm');
+    const formData = new FormData(form);
+
+    const customerData = {
+        customer_type: formData.get('customer_type'),
+        first_name: formData.get('first_name'),
+        last_name: formData.get('last_name'),
+        business_name: formData.get('business_name') || '',
+        phone: formData.get('phone'),
+        phone_secondary: formData.get('phone_secondary') || '',
+        email: formData.get('email') || '',
+        city: formData.get('city') || '',
+        address_line1: formData.get('address_line1') || '',
+        credit_limit: parseFloat(formData.get('credit_limit')) || 0,
+        notes: formData.get('notes') || '',
+        created_by: {{ request.user.id|default:1 }}
+    };
+
+    try {
+        const response = await fetch('/api/customers/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(customerData)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(JSON.stringify(error));
+        }
+
+        const newCustomer = await response.json();
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addCustomerModal'));
+        modal.hide();
+
+        // Reset form
+        form.reset();
+
+        // Reload data
+        await Promise.all([loadStatistics(), loadCustomers()]);
+
+        // Show success message
+        alert('{% trans "تم إضافة العميل بنجاح" %}');
+    } catch (error) {
+        console.error('Error saving customer:', error);
+        alert('{% trans "حدث خطأ أثناء حفظ العميل" %}');
+    }
+}
+</script>
+{% endblock %}
+
