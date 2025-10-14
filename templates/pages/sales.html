@@ -491,15 +491,28 @@ async function finishOrder() {
 
 // عرض نافذة الدفع
 function showPaymentModal(sale) {
+    console.log('Payment modal - Sale data:', sale);
+
     const totalAmount = parseFloat(sale.total_amount || 0);
     const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+    console.log('Total amount:', totalAmount);
+
+    if (totalAmount <= 0) {
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'لا يمكن عرض نافذة الدفع: المبلغ الإجمالي غير صحيح',
+            type: 'error'
+        });
+        return;
+    }
 
     const modalHtml = `
         <div class="modal fade" id="paymentModal" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">💳 الدفع - ${sale.invoice_number}</h5>
+                        <h5 class="modal-title">💳 الدفع - ${sale.invoice_number || 'N/A'}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -508,10 +521,12 @@ function showPaymentModal(sale) {
                             تم إنشاء الطلب بنجاح!
                         </div>
 
-                        <div class="mb-3">
-                            <h6>المبلغ الإجمالي:</h6>
-                            <h3 class="text-primary">${totalAmount.toFixed(2)} ${currencySymbol}</h3>
+                        <div class="mb-3 text-center">
+                            <h6 class="text-muted">المبلغ الإجمالي الواجب دفعه:</h6>
+                            <h2 class="text-primary fw-bold">${totalAmount.toFixed(2)} ${currencySymbol}</h2>
                         </div>
+
+                        <hr>
 
                         <div class="mb-3">
                             <label class="form-label">المبلغ المدفوع <span class="text-danger">*</span></label>
@@ -630,14 +645,14 @@ async function processPayment(saleId, totalAmount) {
 
     try {
         const paymentData = {
-            sale: saleId,
             amount: paidAmount,
             payment_method: paymentMethod,
             reference_number: referenceNumber,
             notes: notes
         };
 
-        const result = await app.apiRequest('/api/sales/payments/', {
+        // ✅ استخدام endpoint الصحيح: /api/sales/{id}/add_payment/
+        const result = await app.apiRequest(`/api/sales/${saleId}/add_payment/`, {
             method: 'POST',
             body: JSON.stringify(paymentData)
         });
@@ -651,7 +666,7 @@ async function processPayment(saleId, totalAmount) {
         // عرض رسالة نجاح
         actionModals.showInfoModal({
             title: 'تم الدفع! ✅',
-            message: `تم تسجيل الدفع بنجاح\nالمبلغ المدفوع: ${paidAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}`,
+            message: `تم تسجيل الدفع بنجاح\nرقم الدفع: ${result.payment_number || 'N/A'}\nالمبلغ المدفوع: ${paidAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}`,
             type: 'success',
             onClose: () => location.reload()
         });
@@ -827,18 +842,46 @@ async function viewOrder(id) {
 
 // إتمام الطلب
 async function completeOrder(id) {
-    const confirmed = await actionModals.showConfirmModal({
-        title: 'تأكيد إتمام الطلب',
-        message: 'هل أنت متأكد من إتمام هذا الطلب؟ سيتم خصم الكميات من المخزون.',
-        confirmText: 'نعم، إتمام',
-        cancelText: 'إلغاء'
-    });
-
-    if (!confirmed) return;
-
-    app.showLoading('جاري إتمام الطلب...');
+    // ✅ التحقق من حالة الدفع أولاً
+    app.showLoading('جاري التحقق من الطلب...');
 
     try {
+        const sale = await app.apiRequest(`/api/sales/${id}/`);
+        app.hideLoading();
+
+        const totalAmount = parseFloat(sale.total_amount || 0);
+        const paidAmount = parseFloat(sale.paid_amount || 0);
+        const balanceDue = parseFloat(sale.balance_due || 0);
+        const paymentStatus = sale.payment_status;
+
+        // إذا كان الطلب غير مدفوع أو مدفوع جزئياً، اطلب الدفع
+        if (paymentStatus !== 'PAID' && balanceDue > 0) {
+            const shouldPay = await actionModals.showConfirmModal({
+                title: '⚠️ الطلب غير مدفوع',
+                message: `المبلغ الإجمالي: ${totalAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}\nالمدفوع: ${paidAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}\nالمتبقي: ${balanceDue.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}\n\nيجب دفع المبلغ المتبقي قبل إتمام الطلب.\nهل تريد إضافة دفعة الآن؟`,
+                confirmText: 'نعم، إضافة دفعة',
+                cancelText: 'إلغاء'
+            });
+
+            if (!shouldPay) return;
+
+            // عرض نافذة الدفع للمبلغ المتبقي
+            showPaymentModalForCompletion(sale, balanceDue);
+            return;
+        }
+
+        // إذا كان مدفوعاً بالكامل، تأكيد الإتمام
+        const confirmed = await actionModals.showConfirmModal({
+            title: 'تأكيد إتمام الطلب',
+            message: 'هل أنت متأكد من إتمام هذا الطلب؟ سيتم خصم الكميات من المخزون.',
+            confirmText: 'نعم، إتمام',
+            cancelText: 'إلغاء'
+        });
+
+        if (!confirmed) return;
+
+        app.showLoading('جاري إتمام الطلب...');
+
         const result = await app.apiRequest(`/api/sales/${id}/complete/`, {
             method: 'POST'
         });
@@ -858,6 +901,171 @@ async function completeOrder(id) {
         actionModals.showInfoModal({
             title: 'خطأ',
             message: `فشل إتمام الطلب: ${error.message || 'خطأ غير معروف'}`,
+            type: 'error'
+        });
+    }
+}
+
+// عرض نافذة الدفع عند محاولة إتمام طلب غير مدفوع
+function showPaymentModalForCompletion(sale, requiredAmount) {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+    const modalHtml = `
+        <div class="modal fade" id="completionPaymentModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">⚠️ دفع مطلوب - ${sale.invoice_number}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            يجب دفع المبلغ المتبقي قبل إتمام الطلب
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>المبلغ الإجمالي:</h6>
+                            <h4 class="text-primary">${parseFloat(sale.total_amount).toFixed(2)} ${currencySymbol}</h4>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>المدفوع سابقاً:</h6>
+                            <h5 class="text-success">${parseFloat(sale.paid_amount || 0).toFixed(2)} ${currencySymbol}</h5>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>المبلغ المطلوب:</h6>
+                            <h3 class="text-danger">${requiredAmount.toFixed(2)} ${currencySymbol}</h3>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <label class="form-label">المبلغ المدفوع <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="completionPaidAmount"
+                                   min="${requiredAmount}" max="${requiredAmount}" step="0.01"
+                                   value="${requiredAmount}" required>
+                            <small class="text-muted">يجب دفع المبلغ المتبقي بالكامل</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">طريقة الدفع <span class="text-danger">*</span></label>
+                            <select class="form-select" id="completionPaymentMethod" required>
+                                <option value="CASH">نقداً</option>
+                                <option value="CARD">بطاقة ائتمان</option>
+                                <option value="BANK_TRANSFER">تحويل بنكي</option>
+                                <option value="CHEQUE">شيك</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3" id="completionReferenceNumberDiv" style="display: none;">
+                            <label class="form-label">رقم المرجع</label>
+                            <input type="text" class="form-control" id="completionReferenceNumber"
+                                   placeholder="رقم الشيك / رقم التحويل">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="completionPaymentNotes" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            إلغاء
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="processCompletionPayment(${sale.id}, ${requiredAmount})">
+                            <i class="bi bi-check-circle me-2"></i>
+                            دفع وإتمام الطلب
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // إضافة النافذة للصفحة
+    const modalContainer = document.createElement('div');
+    modalContainer.innerHTML = modalHtml;
+    document.body.appendChild(modalContainer);
+
+    // عرض النافذة
+    const modal = new bootstrap.Modal(document.getElementById('completionPaymentModal'));
+    modal.show();
+
+    // إزالة النافذة عند الإغلاق
+    document.getElementById('completionPaymentModal').addEventListener('hidden.bs.modal', function() {
+        modalContainer.remove();
+    });
+
+    // إظهار حقل رقم المرجع للطرق التي تحتاجه
+    document.getElementById('completionPaymentMethod').addEventListener('change', function() {
+        const refDiv = document.getElementById('completionReferenceNumberDiv');
+        if (['CARD', 'BANK_TRANSFER', 'CHEQUE'].includes(this.value)) {
+            refDiv.style.display = 'block';
+        } else {
+            refDiv.style.display = 'none';
+        }
+    });
+}
+
+// معالجة الدفع وإتمام الطلب
+async function processCompletionPayment(saleId, requiredAmount) {
+    const paidAmount = parseFloat(document.getElementById('completionPaidAmount').value) || 0;
+    const paymentMethod = document.getElementById('completionPaymentMethod').value;
+    const referenceNumber = document.getElementById('completionReferenceNumber').value;
+    const notes = document.getElementById('completionPaymentNotes').value;
+
+    if (paidAmount < requiredAmount) {
+        actionModals.showInfoModal({
+            title: 'تحذير',
+            message: `يجب دفع المبلغ المتبقي بالكامل (${requiredAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'})`,
+            type: 'warning'
+        });
+        return;
+    }
+
+    app.showLoading('جاري معالجة الدفع وإتمام الطلب...');
+
+    try {
+        // 1. إضافة الدفعة
+        const paymentData = {
+            amount: paidAmount,
+            payment_method: paymentMethod,
+            reference_number: referenceNumber,
+            notes: notes
+        };
+
+        await app.apiRequest(`/api/sales/${saleId}/add_payment/`, {
+            method: 'POST',
+            body: JSON.stringify(paymentData)
+        });
+
+        // 2. إتمام الطلب
+        await app.apiRequest(`/api/sales/${saleId}/complete/`, {
+            method: 'POST'
+        });
+
+        app.hideLoading();
+
+        // إغلاق نافذة الدفع
+        const modal = bootstrap.Modal.getInstance(document.getElementById('completionPaymentModal'));
+        modal.hide();
+
+        // عرض رسالة نجاح
+        actionModals.showInfoModal({
+            title: 'تم بنجاح! ✅',
+            message: `تم تسجيل الدفع وإتمام الطلب بنجاح\nالمبلغ المدفوع: ${paidAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}`,
+            type: 'success',
+            onClose: () => location.reload()
+        });
+
+    } catch (error) {
+        console.error('Error processing completion payment:', error);
+        app.hideLoading();
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: `فشل معالجة الدفع: ${error.message || 'خطأ غير معروف'}`,
             type: 'error'
         });
     }

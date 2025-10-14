@@ -304,10 +304,13 @@ async function viewVehicleDetails(id) {
         ]);
         const partsRows = (parts && parts.results ? parts.results : parts || []).map(p => `
             <tr>
-                <td>${p.part && (p.part.name_ar || p.part.name) || '-'}</td>
+                <td>
+                    <strong>${p.part_name_ar || p.part_name || (p.part && (p.part.name_ar || p.part.name)) || 'غير معروف'}</strong><br>
+                    <small class="text-muted">${p.condition_display || p.condition || ''}</small>
+                </td>
                 <td><span class="badge bg-info">${p.quantity || 1}</span></td>
-                <td><strong class="text-success">${p.selling_price || 0} ${document.body.dataset.currencySymbol || '﷼'}</strong></td>
-                <td>${p.sku || '-'}</td>
+                <td><strong class="text-success">${parseFloat(p.selling_price || 0).toFixed(2)} ${document.body.dataset.currencySymbol || '﷼'}</strong></td>
+                <td><small class="text-muted">${p.sku || '-'}</small></td>
             </tr>
         `).join('') || `<tr><td colspan="4" class="text-center text-muted">{% trans "لا توجد قطع مستخرجة" %}</td></tr>`;
 

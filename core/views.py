@@ -126,9 +126,10 @@ def save_dismantling(request):
         data = json.loads(request.body)
         vehicle_id = data.get('vehicle_id')
         parts = data.get('parts', [])
-        
-        from inventory.models import Part, StockMovement, Location
-        
+
+        from inventory.models import InventoryItem, StockMovement, WarehouseLocation
+        from cars.models import Part
+
         vehicle = get_object_or_404(Vehicle, id=vehicle_id)
         
         # التأكد من عدم التفكيك المسبق
@@ -139,26 +140,43 @@ def save_dismantling(request):
             }, status=400)
         
         created_items = []
-        
+
         with transaction.atomic():
             # الحصول على الموقع الافتراضي أو إنشاؤه
-            default_location, _ = Location.objects.get_or_create(
-                name='مخزن التفكيك',
-                defaults={'location_type': 'WAREHOUSE'}
+            default_location, _ = WarehouseLocation.objects.get_or_create(
+                warehouse='مخزن التفكيك',
+                defaults={'description': 'موقع افتراضي للقطع المفككة'}
             )
-            
+
             # معالجة كل قطعة
             for part_data in parts:
+                # الحصول على الفئة
+                from cars.models import PartCategory
+                category_name = part_data.get('category', 'MISC')
+
+                # محاولة الحصول على الفئة أو إنشاء فئة افتراضية
+                try:
+                    category = PartCategory.objects.get(name=category_name)
+                except PartCategory.DoesNotExist:
+                    # إنشاء فئة "متنوعة" إذا لم تكن موجودة
+                    category, _ = PartCategory.objects.get_or_create(
+                        name='متنوعة',
+                        defaults={'name_ar': 'متنوعة', 'description': 'قطع متنوعة'}
+                    )
+
                 # إنشاء أو الحصول على القطعة
+                part_name_ar = part_data.get('name_ar', '')
+                part_name_en = part_data.get('name_en', part_name_ar)
+
                 part, created = Part.objects.get_or_create(
-                    name_ar=part_data['name_ar'],
+                    name_ar=part_name_ar,
+                    category=category,
                     defaults={
-                        'name_en': part_data.get('name_en', ''),
-                        'category': part_data.get('category', 'MISC'),
-                        'description': f"قطعة من {vehicle.make.name} {vehicle.model.name} {vehicle.year}"
+                        'name': part_name_en,
+                        'description': f"قطعة من {vehicle.make.name_ar} {vehicle.model.name_ar} {vehicle.year}"
                     }
                 )
-                
+
                 # إنشاء عنصر في المخزون
                 inventory_item = InventoryItem.objects.create(
                     part=part,
@@ -167,16 +185,17 @@ def save_dismantling(request):
                     quantity=1,
                     selling_price=Decimal(str(part_data.get('price', 0))),
                     location=default_location,
-                    status='AVAILABLE'
+                    status='AVAILABLE',
+                    added_by=request.user
                 )
-                
+
                 # إنشاء حركة مخزون
                 StockMovement.objects.create(
-                    inventory_item=inventory_item,
+                    item=inventory_item,
                     movement_type='IN',
                     quantity=1,
-                    reference_number=f'DISMANTLE-{vehicle.id}',
-                    notes=f'تفكيك سيارة: {vehicle.make.name} {vehicle.model.name} {vehicle.year}',
+                    reference=f'DISMANTLE-{vehicle.id}',
+                    reason=f'تفكيك سيارة: {vehicle.make.name_ar} {vehicle.model.name_ar} {vehicle.year}',
                     performed_by=request.user
                 )
                 

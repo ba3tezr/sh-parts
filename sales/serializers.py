@@ -48,11 +48,19 @@ class SaleDetailSerializer(serializers.ModelSerializer):
 class SaleCreateSerializer(serializers.ModelSerializer):
     items = SaleItemSerializer(many=True)
     invoice_number = serializers.CharField(read_only=True)
+    total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    paid_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    balance_due = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    payment_status = serializers.CharField(read_only=True)
 
     class Meta:
         model = Sale
-        fields = ['id', 'invoice_number', 'customer', 'discount_amount', 'tax_amount', 'notes', 'sales_person', 'items']
-        read_only_fields = ['id', 'invoice_number']
+        fields = ['id', 'invoice_number', 'customer', 'discount_amount', 'tax_amount', 'notes',
+                 'sales_person', 'items', 'total_amount', 'subtotal', 'paid_amount',
+                 'balance_due', 'payment_status']
+        read_only_fields = ['id', 'invoice_number', 'total_amount', 'subtotal', 'paid_amount',
+                           'balance_due', 'payment_status']
 
     def create(self, validated_data):
         from django.db import transaction
@@ -82,6 +90,10 @@ class SaleCreateSerializer(serializers.ModelSerializer):
                     inventory_item.status = 'RESERVED'
                     inventory_item.save()
 
+            # ✅ إعادة حساب الإجماليات بعد إضافة العناصر
+            sale.calculate_totals()
+            sale.save()
+
         return sale
 
 
@@ -89,12 +101,25 @@ class PaymentSerializer(serializers.ModelSerializer):
     sale_invoice = serializers.CharField(source='sale.invoice_number', read_only=True)
     received_by_name = serializers.CharField(source='received_by.get_full_name', read_only=True)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
-    
+
     class Meta:
         model = Payment
-        fields = ['id', 'payment_number', 'sale', 'sale_invoice', 'amount', 
-                 'payment_method', 'payment_method_display', 'reference_number', 
+        fields = ['id', 'payment_number', 'sale', 'sale_invoice', 'amount',
+                 'payment_method', 'payment_method_display', 'reference_number',
                  'notes', 'received_by', 'received_by_name', 'payment_date']
+
+    def create(self, validated_data):
+        # ✅ إضافة received_by تلقائياً من المستخدم الحالي
+        if 'received_by' not in validated_data:
+            validated_data['received_by'] = self.context['request'].user
+
+        payment = super().create(validated_data)
+
+        # ✅ تحديث حالة الدفع للطلب
+        payment.sale.update_payment_status()
+        payment.sale.save()
+
+        return payment
 
 
 class CartItemSerializer(serializers.ModelSerializer):
