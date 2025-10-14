@@ -1,0 +1,681 @@
+{% extends 'base/base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "تقرير الربحية" %} - SH Parts{% endblock %}
+
+{% block extra_css %}
+<style>
+.report-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-card);
+}
+
+.report-card h5 {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent-color) 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.stat-card .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.profit-table {
+    width: 100%;
+}
+
+.profit-table th {
+    background: var(--primary);
+    color: white;
+    padding: 12px;
+    text-align: right;
+}
+
+.profit-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profit-table tr:hover {
+    background: var(--bg);
+}
+
+.profit-positive {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.profit-negative {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 20px 0;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <h2><i class="bi bi-graph-up me-2"></i>{% trans "تقرير الربحية" %}</h2>
+            <p class="text-muted">تحليل شامل للربحية والأداء المالي</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel me-2"></i>تصدير Excel
+            </button>
+            <button class="btn btn-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>طباعة
+            </button>
+            <a href="{% url 'inventory' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right me-2"></i>رجوع
+            </a>
+        </div>
+    </div>
+
+    <!-- الفلاتر -->
+    <div class="report-card no-print">
+        <h5><i class="bi bi-funnel me-2"></i>الفلاتر</h5>
+        <div class="row">
+            <div class="col-md-3">
+                <label class="form-label">من تاريخ</label>
+                <input type="date" class="form-control" id="dateFrom">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">إلى تاريخ</label>
+                <input type="date" class="form-control" id="dateTo">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">الفئة</label>
+                <select class="form-select" id="filterCategory">
+                    <option value="">جميع الفئات</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-primary w-100" onclick="applyFilters()">
+                    <i class="bi bi-funnel-fill me-2"></i>تطبيق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- الإحصائيات الرئيسية -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">إجمالي الكلفة</div>
+                <div class="stat-value" id="totalCost">0</div>
+                <small id="totalCostCurrency">EGP</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">إجمالي البيع المتوقع</div>
+                <div class="stat-value" id="totalRevenue">0</div>
+                <small id="totalRevenueCurrency">EGP</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">إجمالي الربح المتوقع</div>
+                <div class="stat-value" id="totalProfit">0</div>
+                <small id="totalProfitCurrency">EGP</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">نسبة الربح</div>
+                <div class="stat-value" id="profitMargin">0%</div>
+                <small>من إجمالي الكلفة</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- الرسوم البيانية -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="report-card">
+                <h5><i class="bi bi-bar-chart me-2"></i>أعلى 10 قطع ربحاً</h5>
+                <div class="chart-container">
+                    <canvas id="topProfitChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="report-card">
+                <h5><i class="bi bi-pie-chart me-2"></i>توزيع الربح حسب الفئة</h5>
+                <div class="chart-container">
+                    <canvas id="categoryProfitChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تقرير الربح حسب القطعة -->
+    <div class="report-card">
+        <h5><i class="bi bi-table me-2"></i>تقرير الربح حسب القطعة</h5>
+        <div class="table-responsive">
+            <table class="profit-table">
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>القطعة</th>
+                        <th>الفئة</th>
+                        <th>الكمية</th>
+                        <th>سعر الكلفة</th>
+                        <th>سعر البيع</th>
+                        <th>الربح/الوحدة</th>
+                        <th>إجمالي الربح</th>
+                        <th>نسبة الربح</th>
+                    </tr>
+                </thead>
+                <tbody id="profitTableBody">
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- تقرير الربح حسب الفئة -->
+    <div class="report-card">
+        <h5><i class="bi bi-grid me-2"></i>تقرير الربح حسب الفئة</h5>
+        <div class="table-responsive">
+            <table class="profit-table">
+                <thead>
+                    <tr>
+                        <th>الفئة</th>
+                        <th>عدد القطع</th>
+                        <th>إجمالي الكلفة</th>
+                        <th>إجمالي البيع</th>
+                        <th>إجمالي الربح</th>
+                        <th>نسبة الربح</th>
+                    </tr>
+                </thead>
+                <tbody id="categoryTableBody">
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- تقرير الربح حسب السيارة المصدر -->
+    <div class="report-card">
+        <h5><i class="bi bi-car-front me-2"></i>تقرير الربح حسب السيارة المصدر</h5>
+        <div class="table-responsive">
+            <table class="profit-table">
+                <thead>
+                    <tr>
+                        <th>VIN</th>
+                        <th>الماركة</th>
+                        <th>الموديل</th>
+                        <th>السنة</th>
+                        <th>عدد القطع</th>
+                        <th>إجمالي الكلفة</th>
+                        <th>إجمالي البيع</th>
+                        <th>إجمالي الربح</th>
+                        <th>نسبة الربح</th>
+                    </tr>
+                </thead>
+                <tbody id="vehicleTableBody">
+                    <tr>
+                        <td colspan="9" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+let allItems = [];
+let categories = [];
+let topProfitChart = null;
+let categoryProfitChart = null;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    // تعيين التواريخ الافتراضية (آخر 30 يوم)
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+    
+    document.getElementById('dateTo').valueAsDate = today;
+    document.getElementById('dateFrom').valueAsDate = thirtyDaysAgo;
+    
+    await loadData();
+});
+
+async function loadData() {
+    try {
+        showLoading();
+        
+        // تحميل القطع
+        const itemsResponse = await app.apiRequest('/api/inventory/items/?limit=1000');
+        allItems = itemsResponse.results || itemsResponse;
+        
+        // تحميل الفئات
+        const categoriesResponse = await app.apiRequest('/api/cars/categories/');
+        categories = categoriesResponse.results || categoriesResponse;
+        
+        // ملء قائمة الفئات
+        const categorySelect = document.getElementById('filterCategory');
+        categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name_ar || cat.name;
+            categorySelect.appendChild(option);
+        });
+        
+        // تطبيق الفلاتر وعرض البيانات
+        applyFilters();
+
+    } catch (error) {
+        console.error('Error loading data:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل تحميل البيانات: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+function applyFilters() {
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    const selectedCategory = document.getElementById('filterCategory').value;
+
+    // تصفية القطع
+    let filteredItems = allItems.filter(item => {
+        // فلتر التاريخ
+        if (dateFrom && item.added_at < dateFrom) return false;
+        if (dateTo && item.added_at > dateTo) return false;
+
+        // فلتر الفئة
+        if (selectedCategory && item.part != selectedCategory) return false;
+
+        // فقط القطع التي لها سعر كلفة
+        if (!item.cost_price) return false;
+
+        return true;
+    });
+
+    // حساب الإحصائيات
+    calculateStats(filteredItems);
+
+    // عرض الجداول
+    displayItemsTable(filteredItems);
+    displayCategoryTable(filteredItems);
+    displayVehicleTable(filteredItems);
+
+    // عرض الرسوم البيانية
+    displayCharts(filteredItems);
+}
+
+function calculateStats(items) {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+    let totalCost = 0;
+    let totalRevenue = 0;
+
+    items.forEach(item => {
+        const cost = parseFloat(item.cost_price) || 0;
+        const selling = parseFloat(item.selling_price) || 0;
+        const qty = parseInt(item.quantity) || 0;
+
+        totalCost += cost * qty;
+        totalRevenue += selling * qty;
+    });
+
+    const totalProfit = totalRevenue - totalCost;
+    const profitMargin = totalCost > 0 ? ((totalProfit / totalCost) * 100).toFixed(1) : 0;
+
+    document.getElementById('totalCost').textContent = totalCost.toFixed(0);
+    document.getElementById('totalCostCurrency').textContent = currencySymbol;
+
+    document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(0);
+    document.getElementById('totalRevenueCurrency').textContent = currencySymbol;
+
+    document.getElementById('totalProfit').textContent = totalProfit.toFixed(0);
+    document.getElementById('totalProfitCurrency').textContent = currencySymbol;
+
+    document.getElementById('profitMargin').textContent = profitMargin + '%';
+}
+
+function displayItemsTable(items) {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const tbody = document.getElementById('profitTableBody');
+
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">لا توجد بيانات</td></tr>';
+        return;
+    }
+
+    // ترتيب حسب الربح (من الأعلى)
+    items.sort((a, b) => {
+        const profitA = (parseFloat(a.selling_price) - parseFloat(a.cost_price)) * parseInt(a.quantity);
+        const profitB = (parseFloat(b.selling_price) - parseFloat(b.cost_price)) * parseInt(b.quantity);
+        return profitB - profitA;
+    });
+
+    tbody.innerHTML = items.map(item => {
+        const cost = parseFloat(item.cost_price) || 0;
+        const selling = parseFloat(item.selling_price) || 0;
+        const qty = parseInt(item.quantity) || 0;
+        const profitPerUnit = selling - cost;
+        const totalProfit = profitPerUnit * qty;
+        const profitPercent = cost > 0 ? ((profitPerUnit / cost) * 100).toFixed(1) : 0;
+
+        return `
+            <tr>
+                <td><code>${item.sku}</code></td>
+                <td>${item.part_name_ar || item.part_name}</td>
+                <td>${item.part_details?.category?.name_ar || '-'}</td>
+                <td>${qty}</td>
+                <td>${cost.toFixed(2)} ${currencySymbol}</td>
+                <td>${selling.toFixed(2)} ${currencySymbol}</td>
+                <td class="${profitPerUnit >= 0 ? 'profit-positive' : 'profit-negative'}">
+                    ${profitPerUnit.toFixed(2)} ${currencySymbol}
+                </td>
+                <td class="${totalProfit >= 0 ? 'profit-positive' : 'profit-negative'}">
+                    ${totalProfit.toFixed(2)} ${currencySymbol}
+                </td>
+                <td>${profitPercent}%</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function displayCategoryTable(items) {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const tbody = document.getElementById('categoryTableBody');
+
+    // تجميع حسب الفئة
+    const categoryData = {};
+
+    items.forEach(item => {
+        const categoryName = item.part_details?.category?.name_ar || 'غير محدد';
+
+        if (!categoryData[categoryName]) {
+            categoryData[categoryName] = {
+                count: 0,
+                totalCost: 0,
+                totalRevenue: 0
+            };
+        }
+
+        const cost = parseFloat(item.cost_price) || 0;
+        const selling = parseFloat(item.selling_price) || 0;
+        const qty = parseInt(item.quantity) || 0;
+
+        categoryData[categoryName].count += qty;
+        categoryData[categoryName].totalCost += cost * qty;
+        categoryData[categoryName].totalRevenue += selling * qty;
+    });
+
+    if (Object.keys(categoryData).length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">لا توجد بيانات</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = Object.entries(categoryData).map(([category, data]) => {
+        const profit = data.totalRevenue - data.totalCost;
+        const profitPercent = data.totalCost > 0 ? ((profit / data.totalCost) * 100).toFixed(1) : 0;
+
+        return `
+            <tr>
+                <td><strong>${category}</strong></td>
+                <td>${data.count}</td>
+                <td>${data.totalCost.toFixed(2)} ${currencySymbol}</td>
+                <td>${data.totalRevenue.toFixed(2)} ${currencySymbol}</td>
+                <td class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}">
+                    ${profit.toFixed(2)} ${currencySymbol}
+                </td>
+                <td>${profitPercent}%</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function displayVehicleTable(items) {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const tbody = document.getElementById('vehicleTableBody');
+
+    // تجميع حسب السيارة
+    const vehicleData = {};
+
+    items.forEach(item => {
+        if (!item.vehicle_source) return;
+
+        const vin = item.vehicle_source.vin || 'غير محدد';
+
+        if (!vehicleData[vin]) {
+            vehicleData[vin] = {
+                make: item.vehicle_source.make_name_ar || '-',
+                model: item.vehicle_source.model_name_ar || '-',
+                year: item.vehicle_source.year || '-',
+                count: 0,
+                totalCost: 0,
+                totalRevenue: 0
+            };
+        }
+
+        const cost = parseFloat(item.cost_price) || 0;
+        const selling = parseFloat(item.selling_price) || 0;
+        const qty = parseInt(item.quantity) || 0;
+
+        vehicleData[vin].count += qty;
+        vehicleData[vin].totalCost += cost * qty;
+        vehicleData[vin].totalRevenue += selling * qty;
+    });
+
+    if (Object.keys(vehicleData).length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">لا توجد بيانات</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = Object.entries(vehicleData).map(([vin, data]) => {
+        const profit = data.totalRevenue - data.totalCost;
+        const profitPercent = data.totalCost > 0 ? ((profit / data.totalCost) * 100).toFixed(1) : 0;
+
+        return `
+            <tr>
+                <td><code>${vin}</code></td>
+                <td>${data.make}</td>
+                <td>${data.model}</td>
+                <td>${data.year}</td>
+                <td>${data.count}</td>
+                <td>${data.totalCost.toFixed(2)} ${currencySymbol}</td>
+                <td>${data.totalRevenue.toFixed(2)} ${currencySymbol}</td>
+                <td class="${profit >= 0 ? 'profit-positive' : 'profit-negative'}">
+                    ${profit.toFixed(2)} ${currencySymbol}
+                </td>
+                <td>${profitPercent}%</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function displayCharts(items) {
+    // أعلى 10 قطع ربحاً
+    const sortedItems = [...items].sort((a, b) => {
+        const profitA = (parseFloat(a.selling_price) - parseFloat(a.cost_price)) * parseInt(a.quantity);
+        const profitB = (parseFloat(b.selling_price) - parseFloat(b.cost_price)) * parseInt(b.quantity);
+        return profitB - profitA;
+    }).slice(0, 10);
+
+    const topProfitLabels = sortedItems.map(i => i.part_name_ar || i.part_name);
+    const topProfitData = sortedItems.map(i => {
+        const cost = parseFloat(i.cost_price) || 0;
+        const selling = parseFloat(i.selling_price) || 0;
+        const qty = parseInt(i.quantity) || 0;
+        return (selling - cost) * qty;
+    });
+
+    if (topProfitChart) topProfitChart.destroy();
+
+    const ctx1 = document.getElementById('topProfitChart').getContext('2d');
+    topProfitChart = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: topProfitLabels,
+            datasets: [{
+                label: 'الربح المتوقع',
+                data: topProfitData,
+                backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // توزيع الربح حسب الفئة
+    const categoryData = {};
+    items.forEach(item => {
+        const categoryName = item.part_details?.category?.name_ar || 'غير محدد';
+        const cost = parseFloat(item.cost_price) || 0;
+        const selling = parseFloat(item.selling_price) || 0;
+        const qty = parseInt(item.quantity) || 0;
+        const profit = (selling - cost) * qty;
+
+        if (!categoryData[categoryName]) categoryData[categoryName] = 0;
+        categoryData[categoryName] += profit;
+    });
+
+    const categoryLabels = Object.keys(categoryData);
+    const categoryProfits = Object.values(categoryData);
+
+    if (categoryProfitChart) categoryProfitChart.destroy();
+
+    const ctx2 = document.getElementById('categoryProfitChart').getContext('2d');
+    categoryProfitChart = new Chart(ctx2, {
+        type: 'pie',
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                data: categoryProfits,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function exportToExcel() {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+    // تجهيز البيانات
+    const data = allItems
+        .filter(i => i.cost_price)
+        .map(item => {
+            const cost = parseFloat(item.cost_price) || 0;
+            const selling = parseFloat(item.selling_price) || 0;
+            const qty = parseInt(item.quantity) || 0;
+            const profit = (selling - cost) * qty;
+            const profitPercent = cost > 0 ? ((selling - cost) / cost * 100).toFixed(1) : 0;
+
+            return {
+                'SKU': item.sku,
+                'القطعة': item.part_name_ar || item.part_name,
+                'الفئة': item.part_details?.category?.name_ar || '-',
+                'الكمية': qty,
+                'سعر الكلفة': cost,
+                'سعر البيع': selling,
+                'الربح/الوحدة': selling - cost,
+                'إجمالي الربح': profit,
+                'نسبة الربح %': profitPercent
+            };
+        });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'تقرير الربحية');
+
+    const fileName = `profitability_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+</script>
+{% endblock %}
+

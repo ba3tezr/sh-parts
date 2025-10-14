@@ -1,0 +1,1119 @@
+{% extends 'base/base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "المخزون المحسّن" %} - SH Parts{% endblock %}
+{% block page_title %}<span data-translate="inventory">{% trans "المخزون المحسّن" %}</span>{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-section {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: var(--shadow-card);
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--accent-color) 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: transform 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stats-card .icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+    
+    .stats-card .value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .stats-card .label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+    
+    .view-toggle {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .view-toggle .btn {
+        flex: 1;
+    }
+    
+    .item-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        box-shadow: var(--shadow-card);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .item-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        border-color: var(--primary);
+    }
+    
+    .item-card .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 15px;
+    }
+    
+    .item-card .item-sku {
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-family: monospace;
+    }
+    
+    .item-card .item-name {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: var(--text);
+        margin: 5px 0;
+    }
+    
+    .item-card .item-price {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: var(--success);
+    }
+    
+    .item-card .item-cost {
+        font-size: 0.9rem;
+        color: var(--muted);
+        text-decoration: line-through;
+    }
+    
+    .item-card .profit-badge {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+    
+    .filter-badge {
+        background: var(--primary);
+        color: white;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin: 5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .filter-badge .remove {
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    .quick-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .table-view {
+        display: none;
+    }
+    
+    .table-view.active {
+        display: block;
+    }
+    
+    .cards-view {
+        display: none;
+    }
+    
+    .cards-view.active {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        
+        .item-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- إحصائيات سريعة -->
+<div class="quick-stats">
+    <div class="stats-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+        <div class="icon"><i class="bi bi-box-seam"></i></div>
+        <div class="value" id="totalItems">0</div>
+        <div class="label">إجمالي القطع</div>
+    </div>
+    
+    <div class="stats-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+        <div class="icon"><i class="bi bi-check-circle"></i></div>
+        <div class="value" id="availableItems">0</div>
+        <div class="label">متوفر</div>
+    </div>
+    
+    <div class="stats-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+        <div class="icon"><i class="bi bi-exclamation-triangle"></i></div>
+        <div class="value" id="lowStockItems">0</div>
+        <div class="label">منخفض المخزون</div>
+    </div>
+    
+    <div class="stats-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+        <div class="icon"><i class="bi bi-currency-dollar"></i></div>
+        <div class="value" id="inventoryValue">0</div>
+        <div class="label">قيمة المخزون</div>
+    </div>
+    
+    <div class="stats-card" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
+        <div class="icon"><i class="bi bi-graph-up"></i></div>
+        <div class="value" id="expectedProfit">0</div>
+        <div class="label">الربح المتوقع</div>
+    </div>
+</div>
+
+<!-- أدوات البحث والتصفية المتقدمة -->
+<div class="filter-section no-print">
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label class="form-label"><i class="bi bi-search me-2"></i>بحث سريع</label>
+            <input type="text" class="form-control" id="quickSearch" 
+                   placeholder="ابحث برمز SKU، اسم القطعة، أو رقم الباركود...">
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-funnel me-2"></i>الحالة (Status)</label>
+            <select class="form-select" id="filterStatus" multiple>
+                <option value="AVAILABLE">متوفر</option>
+                <option value="RESERVED">محجوز</option>
+                <option value="SOLD">مباع</option>
+                <option value="DAMAGED">تالف</option>
+                <option value="RETURNED">مرتجع</option>
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-star me-2"></i>الحالة (Condition)</label>
+            <select class="form-select" id="filterCondition" multiple>
+                <option value="NEW">جديد</option>
+                <option value="USED_EXCELLENT">مستعمل ممتاز</option>
+                <option value="USED_GOOD">مستعمل جيد</option>
+                <option value="USED_FAIR">مستعمل مقبول</option>
+                <option value="REFURBISHED">مجدد</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-tag me-2"></i>الفئة</label>
+            <select class="form-select" id="filterCategory">
+                <option value="">كل الفئات</option>
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-geo-alt me-2"></i>الموقع</label>
+            <select class="form-select" id="filterLocation">
+                <option value="">كل المواقع</option>
+            </select>
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-cash me-2"></i>نطاق السعر (من)</label>
+            <input type="number" class="form-control" id="priceMin" placeholder="0" min="0" step="10">
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-cash me-2"></i>نطاق السعر (إلى)</label>
+            <input type="number" class="form-control" id="priceMax" placeholder="10000" min="0" step="10">
+        </div>
+    </div>
+    
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-calendar me-2"></i>من تاريخ</label>
+            <input type="date" class="form-control" id="dateFrom">
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-calendar me-2"></i>إلى تاريخ</label>
+            <input type="date" class="form-control" id="dateTo">
+        </div>
+        
+        <div class="col-md-3">
+            <label class="form-label"><i class="bi bi-sort-down me-2"></i>ترتيب حسب</label>
+            <select class="form-select" id="sortBy">
+                <option value="-added_at">الأحدث أولاً</option>
+                <option value="added_at">الأقدم أولاً</option>
+                <option value="selling_price">السعر (من الأقل)</option>
+                <option value="-selling_price">السعر (من الأعلى)</option>
+                <option value="part__name_ar">الاسم (أ-ي)</option>
+                <option value="-part__name_ar">الاسم (ي-أ)</option>
+                <option value="quantity">الكمية (من الأقل)</option>
+                <option value="-quantity">الكمية (من الأكثر)</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <button class="btn btn-danger w-100" onclick="clearFilters()">
+                <i class="bi bi-x-circle me-2"></i>مسح الفلاتر
+            </button>
+        </div>
+    </div>
+
+    <!-- الفلاتر النشطة -->
+    <div id="activeFilters" class="mb-2"></div>
+
+    <!-- أزرار الإجراءات -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="export-buttons">
+            <a href="{% url 'inventory_dashboard' %}" class="btn btn-info">
+                <i class="bi bi-speedometer2 me-2"></i>لوحة التحكم
+            </a>
+            <a href="{% url 'profitability_report' %}" class="btn btn-warning">
+                <i class="bi bi-graph-up me-2"></i>تقرير الربحية
+            </a>
+            <a href="{% url 'inventory_count' %}" class="btn btn-primary">
+                <i class="bi bi-clipboard-check me-2"></i>الجرد
+            </a>
+            <button class="btn btn-success" onclick="exportToExcel()">
+                <i class="bi bi-file-earmark-excel me-2"></i>تصدير Excel
+            </button>
+            <button class="btn btn-info" onclick="exportToPDF()">
+                <i class="bi bi-file-earmark-pdf me-2"></i>تصدير PDF
+            </button>
+            <button class="btn btn-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>طباعة
+            </button>
+        </div>
+
+        <div class="view-toggle">
+            <button class="btn btn-outline-primary active" id="cardsViewBtn" onclick="switchView('cards')">
+                <i class="bi bi-grid-3x3-gap me-2"></i>بطاقات
+            </button>
+            <button class="btn btn-outline-primary" id="tableViewBtn" onclick="switchView('table')">
+                <i class="bi bi-table me-2"></i>جدول
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- عرض البطاقات -->
+<div class="cards-view active" id="cardsView">
+    <!-- سيتم ملؤها بالـ JavaScript -->
+</div>
+
+<!-- عرض الجدول -->
+<div class="table-view" id="tableView">
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="inventoryTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>SKU</th>
+                            <th>القطعة</th>
+                            <th>الفئة</th>
+                            <th>الحالة</th>
+                            <th>الموقع</th>
+                            <th>الكمية</th>
+                            <th>سعر الكلفة</th>
+                            <th>سعر البيع</th>
+                            <th>الربح</th>
+                            <th>الحالة</th>
+                            <th class="no-print">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <!-- سيتم ملؤها بالـ JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div>
+</div>
+
+<!-- Quick Edit Modal -->
+<div class="modal fade" id="quickEditModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>تعديل سريع</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickEditForm">
+                    <input type="hidden" id="editItemId">
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">اسم القطعة</label>
+                            <input type="text" class="form-control" id="editPartName" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">SKU</label>
+                            <input type="text" class="form-control" id="editSKU" readonly>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">سعر الكلفة <small class="text-muted">(اختياري)</small></label>
+                            <input type="number" class="form-control" id="editCostPrice" min="0" step="0.01">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">سعر البيع <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="editSellingPrice" min="0" step="0.01" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">الكمية <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="editQuantity" min="0" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">الحد الأدنى</label>
+                            <input type="number" class="form-control" id="editMinQuantity" min="0">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">الحالة <span class="text-danger">*</span></label>
+                            <select class="form-select" id="editStatus" required>
+                                <option value="AVAILABLE">متوفر</option>
+                                <option value="RESERVED">محجوز</option>
+                                <option value="SOLD">مباع</option>
+                                <option value="DAMAGED">تالف</option>
+                                <option value="RETURNED">مرتجع</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">الحالة (Condition)</label>
+                            <select class="form-select" id="editCondition">
+                                <option value="NEW">جديد</option>
+                                <option value="USED_EXCELLENT">مستعمل ممتاز</option>
+                                <option value="USED_GOOD">مستعمل جيد</option>
+                                <option value="USED_FAIR">مستعمل مقبول</option>
+                                <option value="REFURBISHED">مجدد</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">الموقع</label>
+                            <select class="form-select" id="editLocation">
+                                <!-- سيتم ملؤها ديناميكياً -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">ملاحظات</label>
+                        <textarea class="form-control" id="editNotes" rows="3"></textarea>
+                    </div>
+
+                    <div class="alert alert-info" id="editProfitInfo" style="display: none;">
+                        <strong>الربح المتوقع:</strong> <span id="editProfitAmount"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuickEdit()">
+                    <i class="bi bi-save me-2"></i>حفظ التعديلات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+let allItems = [];
+let filteredItems = [];
+let categories = [];
+let locations = [];
+
+// تحميل البيانات عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadData();
+    setupEventListeners();
+});
+
+// تحميل البيانات
+async function loadData() {
+    showLoading();
+    try {
+        // تحميل القطع
+        const itemsResponse = await app.apiRequest('/api/inventory/items/?limit=1000');
+        allItems = itemsResponse.results || itemsResponse;
+
+        // تحميل الفئات
+        const categoriesResponse = await app.apiRequest('/api/cars/categories/');
+        categories = categoriesResponse.results || categoriesResponse;
+
+        // تحميل المواقع
+        const locationsResponse = await app.apiRequest('/api/inventory/locations/');
+        locations = locationsResponse.results || locationsResponse;
+
+        // ملء القوائم المنسدلة
+        populateFilters();
+
+        // عرض البيانات
+        filteredItems = [...allItems];
+        renderItems();
+        updateStats();
+    } catch (error) {
+        console.error('Error loading data:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل تحميل البيانات: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+// ملء الفلاتر
+function populateFilters() {
+    // ملء الفئات
+    const categorySelect = document.getElementById('filterCategory');
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.name_ar || cat.name;
+        categorySelect.appendChild(option);
+    });
+
+    // ملء المواقع
+    const locationSelect = document.getElementById('filterLocation');
+    locations.forEach(loc => {
+        const option = document.createElement('option');
+        option.value = loc.id;
+        option.textContent = `${loc.warehouse}-${loc.aisle}-${loc.shelf}`;
+        locationSelect.appendChild(option);
+    });
+}
+
+// إعداد مستمعي الأحداث
+function setupEventListeners() {
+    document.getElementById('quickSearch').addEventListener('input', applyFilters);
+    document.getElementById('filterStatus').addEventListener('change', applyFilters);
+    document.getElementById('filterCondition').addEventListener('change', applyFilters);
+    document.getElementById('filterCategory').addEventListener('change', applyFilters);
+    document.getElementById('filterLocation').addEventListener('change', applyFilters);
+    document.getElementById('priceMin').addEventListener('input', applyFilters);
+    document.getElementById('priceMax').addEventListener('input', applyFilters);
+    document.getElementById('dateFrom').addEventListener('change', applyFilters);
+    document.getElementById('dateTo').addEventListener('change', applyFilters);
+    document.getElementById('sortBy').addEventListener('change', applyFilters);
+}
+
+// تطبيق الفلاتر
+function applyFilters() {
+    const searchTerm = document.getElementById('quickSearch').value.toLowerCase();
+    const selectedStatuses = Array.from(document.getElementById('filterStatus').selectedOptions).map(o => o.value);
+    const selectedConditions = Array.from(document.getElementById('filterCondition').selectedOptions).map(o => o.value);
+    const selectedCategory = document.getElementById('filterCategory').value;
+    const selectedLocation = document.getElementById('filterLocation').value;
+    const priceMin = parseFloat(document.getElementById('priceMin').value) || 0;
+    const priceMax = parseFloat(document.getElementById('priceMax').value) || Infinity;
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    const sortBy = document.getElementById('sortBy').value;
+
+    // تصفية
+    filteredItems = allItems.filter(item => {
+        // بحث نصي
+        if (searchTerm) {
+            const matchesSearch =
+                (item.sku && item.sku.toLowerCase().includes(searchTerm)) ||
+                (item.part_name_ar && item.part_name_ar.toLowerCase().includes(searchTerm)) ||
+                (item.part_name && item.part_name.toLowerCase().includes(searchTerm)) ||
+                (item.barcode && item.barcode.toLowerCase().includes(searchTerm));
+            if (!matchesSearch) return false;
+        }
+
+        // الحالة
+        if (selectedStatuses.length > 0 && !selectedStatuses.includes(item.status)) return false;
+
+        // الحالة (Condition)
+        if (selectedConditions.length > 0 && !selectedConditions.includes(item.condition)) return false;
+
+        // الفئة
+        if (selectedCategory && item.part != selectedCategory) return false;
+
+        // الموقع
+        if (selectedLocation && item.location != selectedLocation) return false;
+
+        // نطاق السعر
+        const price = parseFloat(item.selling_price) || 0;
+        if (price < priceMin || price > priceMax) return false;
+
+        // نطاق التاريخ
+        if (dateFrom && item.added_at < dateFrom) return false;
+        if (dateTo && item.added_at > dateTo) return false;
+
+        return true;
+    });
+
+    // ترتيب
+    sortItems(sortBy);
+
+    // عرض
+    renderItems();
+    updateStats();
+    updateActiveFilters();
+}
+
+// ترتيب القطع
+function sortItems(sortBy) {
+    filteredItems.sort((a, b) => {
+        const desc = sortBy.startsWith('-');
+        const field = desc ? sortBy.substring(1) : sortBy;
+
+        let aVal, bVal;
+
+        if (field.includes('__')) {
+            // حقول متداخلة
+            const parts = field.split('__');
+            aVal = a[parts[0]]?.[parts[1]];
+            bVal = b[parts[0]]?.[parts[1]];
+        } else {
+            aVal = a[field];
+            bVal = b[field];
+        }
+
+        if (typeof aVal === 'string') {
+            return desc ? bVal.localeCompare(aVal, 'ar') : aVal.localeCompare(bVal, 'ar');
+        } else {
+            return desc ? bVal - aVal : aVal - bVal;
+        }
+    });
+}
+
+// عرض القطع
+function renderItems() {
+    const currentView = document.querySelector('.view-toggle .btn.active').id === 'cardsViewBtn' ? 'cards' : 'table';
+
+    if (currentView === 'cards') {
+        renderCardsView();
+    } else {
+        renderTableView();
+    }
+}
+
+// عرض البطاقات
+function renderCardsView() {
+    const container = document.getElementById('cardsView');
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+    if (filteredItems.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <p class="text-muted mt-3">لا توجد قطع تطابق معايير البحث</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = filteredItems.map(item => {
+        const cost = parseFloat(item.cost_price) || 0;
+        const selling = parseFloat(item.selling_price) || 0;
+        const profit = selling - cost;
+        const profitPercent = cost > 0 ? ((profit / cost) * 100).toFixed(1) : 0;
+
+        const statusBadge = getStatusBadge(item.status);
+        const conditionBadge = getConditionBadge(item.condition);
+
+        return `
+            <div class="item-card">
+                <div class="item-header">
+                    <div>
+                        <div class="item-sku">${item.sku}</div>
+                        <div class="item-name">${item.part_name_ar || item.part_name || 'غير معروف'}</div>
+                        ${conditionBadge}
+                    </div>
+                    <div class="text-end">
+                        ${statusBadge}
+                        ${cost > 0 ? `<div class="profit-badge mt-2">+${profitPercent}%</div>` : ''}
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <small class="text-muted d-block">الكمية</small>
+                        <span class="badge ${item.quantity <= item.min_quantity ? 'bg-danger' : 'bg-success'} fs-6">
+                            ${item.quantity}
+                        </span>
+                    </div>
+                    <div class="col-6 text-end">
+                        <small class="text-muted d-block">الموقع</small>
+                        <small>${item.location_name || '-'}</small>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-end">
+                    <div>
+                        ${cost > 0 ? `<div class="item-cost">${cost.toFixed(2)} ${currencySymbol}</div>` : ''}
+                        <div class="item-price">${selling.toFixed(2)} ${currencySymbol}</div>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-info" onclick="viewItemDetails(${item.id})" title="عرض">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-primary" onclick="quickEdit(${item.id})" title="تعديل">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// عرض الجدول
+function renderTableView() {
+    const tbody = document.getElementById('inventoryTableBody');
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+    if (filteredItems.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="11" class="text-center py-5">
+                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                    <p class="text-muted mt-3">لا توجد قطع تطابق معايير البحث</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = filteredItems.map(item => {
+        const cost = parseFloat(item.cost_price) || 0;
+        const selling = parseFloat(item.selling_price) || 0;
+        const profit = selling - cost;
+        const profitPercent = cost > 0 ? ((profit / cost) * 100).toFixed(1) : 0;
+
+        return `
+            <tr>
+                <td><code>${item.sku}</code></td>
+                <td><strong>${item.part_name_ar || item.part_name || 'غير معروف'}</strong></td>
+                <td>${item.part_details?.category?.name_ar || '-'}</td>
+                <td>${getConditionBadge(item.condition)}</td>
+                <td><small>${item.location_name || '-'}</small></td>
+                <td>
+                    <span class="badge ${item.quantity <= item.min_quantity ? 'bg-danger' : 'bg-success'}">
+                        ${item.quantity}
+                    </span>
+                </td>
+                <td>${cost > 0 ? `${cost.toFixed(2)} ${currencySymbol}` : '-'}</td>
+                <td><strong class="text-success">${selling.toFixed(2)} ${currencySymbol}</strong></td>
+                <td>
+                    ${cost > 0 ? `
+                        <span class="badge bg-success">
+                            +${profit.toFixed(2)} (${profitPercent}%)
+                        </span>
+                    ` : '-'}
+                </td>
+                <td>${getStatusBadge(item.status)}</td>
+                <td class="no-print">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-info" onclick="viewItemDetails(${item.id})" title="عرض">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-primary" onclick="quickEdit(${item.id})" title="تعديل">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// تحديث الإحصائيات
+function updateStats() {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+    // إجمالي القطع
+    document.getElementById('totalItems').textContent = filteredItems.length;
+
+    // المتوفر
+    const available = filteredItems.filter(i => i.status === 'AVAILABLE' && i.quantity > 0).length;
+    document.getElementById('availableItems').textContent = available;
+
+    // منخفض المخزون
+    const lowStock = filteredItems.filter(i => i.quantity <= i.min_quantity && i.status === 'AVAILABLE').length;
+    document.getElementById('lowStockItems').textContent = lowStock;
+
+    // قيمة المخزون
+    const inventoryValue = filteredItems
+        .filter(i => i.status === 'AVAILABLE')
+        .reduce((sum, i) => sum + (parseFloat(i.selling_price) || 0) * (parseInt(i.quantity) || 0), 0);
+    document.getElementById('inventoryValue').textContent = `${inventoryValue.toFixed(0)} ${currencySymbol}`;
+
+    // الربح المتوقع
+    const expectedProfit = filteredItems
+        .filter(i => i.status === 'AVAILABLE' && i.cost_price)
+        .reduce((sum, i) => {
+            const cost = parseFloat(i.cost_price) || 0;
+            const selling = parseFloat(i.selling_price) || 0;
+            const qty = parseInt(i.quantity) || 0;
+            return sum + ((selling - cost) * qty);
+        }, 0);
+    document.getElementById('expectedProfit').textContent = `${expectedProfit.toFixed(0)} ${currencySymbol}`;
+}
+
+// الحصول على badge الحالة
+function getStatusBadge(status) {
+    const badges = {
+        'AVAILABLE': '<span class="badge bg-success">متوفر</span>',
+        'RESERVED': '<span class="badge bg-warning">محجوز</span>',
+        'SOLD': '<span class="badge bg-secondary">مباع</span>',
+        'DAMAGED': '<span class="badge bg-danger">تالف</span>',
+        'RETURNED': '<span class="badge bg-info">مرتجع</span>'
+    };
+    return badges[status] || `<span class="badge bg-secondary">${status}</span>`;
+}
+
+// الحصول على badge الحالة (Condition)
+function getConditionBadge(condition) {
+    const badges = {
+        'NEW': '<span class="badge bg-success">جديد</span>',
+        'USED_EXCELLENT': '<span class="badge bg-info">مستعمل ممتاز</span>',
+        'USED_GOOD': '<span class="badge bg-primary">مستعمل جيد</span>',
+        'USED_FAIR': '<span class="badge bg-warning">مستعمل مقبول</span>',
+        'REFURBISHED': '<span class="badge bg-secondary">مجدد</span>'
+    };
+    return badges[condition] || `<span class="badge bg-secondary">${condition}</span>`;
+}
+
+// تحديث الفلاتر النشطة
+function updateActiveFilters() {
+    const container = document.getElementById('activeFilters');
+    const filters = [];
+
+    const searchTerm = document.getElementById('quickSearch').value;
+    if (searchTerm) filters.push({ label: `بحث: ${searchTerm}`, clear: () => document.getElementById('quickSearch').value = '' });
+
+    const selectedStatuses = Array.from(document.getElementById('filterStatus').selectedOptions);
+    selectedStatuses.forEach(opt => {
+        filters.push({
+            label: `الحالة: ${opt.textContent}`,
+            clear: () => { opt.selected = false; applyFilters(); }
+        });
+    });
+
+    const selectedConditions = Array.from(document.getElementById('filterCondition').selectedOptions);
+    selectedConditions.forEach(opt => {
+        filters.push({
+            label: `الحالة: ${opt.textContent}`,
+            clear: () => { opt.selected = false; applyFilters(); }
+        });
+    });
+
+    if (filters.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = filters.map((f, i) => `
+        <span class="filter-badge">
+            ${f.label}
+            <span class="remove" onclick="removeFilter(${i})">×</span>
+        </span>
+    `).join('');
+
+    // حفظ الفلاتر للوصول إليها لاحقاً
+    window.activeFilters = filters;
+}
+
+// إزالة فلتر
+function removeFilter(index) {
+    if (window.activeFilters && window.activeFilters[index]) {
+        window.activeFilters[index].clear();
+        applyFilters();
+    }
+}
+
+// مسح جميع الفلاتر
+function clearFilters() {
+    document.getElementById('quickSearch').value = '';
+    document.getElementById('filterStatus').selectedIndex = -1;
+    document.getElementById('filterCondition').selectedIndex = -1;
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterLocation').value = '';
+    document.getElementById('priceMin').value = '';
+    document.getElementById('priceMax').value = '';
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    document.getElementById('sortBy').value = '-added_at';
+    applyFilters();
+}
+
+// تبديل العرض
+function switchView(view) {
+    const cardsView = document.getElementById('cardsView');
+    const tableView = document.getElementById('tableView');
+    const cardsBtn = document.getElementById('cardsViewBtn');
+    const tableBtn = document.getElementById('tableViewBtn');
+
+    if (view === 'cards') {
+        cardsView.classList.add('active');
+        tableView.classList.remove('active');
+        cardsBtn.classList.add('active');
+        tableBtn.classList.remove('active');
+        renderCardsView();
+    } else {
+        cardsView.classList.remove('active');
+        tableView.classList.add('active');
+        cardsBtn.classList.remove('active');
+        tableBtn.classList.add('active');
+        renderTableView();
+    }
+}
+
+// عرض تفاصيل القطعة
+async function viewItemDetails(id) {
+    window.location.href = `/inventory/item/?id=${id}`;
+}
+
+// تعديل سريع
+async function quickEdit(id) {
+    try {
+        showLoading();
+
+        // الحصول على بيانات القطعة
+        const item = await app.apiRequest(`/api/inventory/items/${id}/`);
+
+        // ملء النموذج
+        document.getElementById('editItemId').value = item.id;
+        document.getElementById('editPartName').value = item.part_name_ar || item.part_name;
+        document.getElementById('editSKU').value = item.sku;
+        document.getElementById('editCostPrice').value = item.cost_price || '';
+        document.getElementById('editSellingPrice').value = item.selling_price || '';
+        document.getElementById('editQuantity').value = item.quantity || 0;
+        document.getElementById('editMinQuantity').value = item.min_quantity || 0;
+        document.getElementById('editStatus').value = item.status;
+        document.getElementById('editCondition').value = item.condition;
+        document.getElementById('editLocation').value = item.location || '';
+        document.getElementById('editNotes').value = item.notes || '';
+
+        // ملء قائمة المواقع
+        const locationSelect = document.getElementById('editLocation');
+        locationSelect.innerHTML = '<option value="">اختر موقع...</option>';
+        locations.forEach(loc => {
+            const option = document.createElement('option');
+            option.value = loc.id;
+            option.textContent = `${loc.warehouse}-${loc.aisle}-${loc.shelf}`;
+            if (loc.id === item.location) option.selected = true;
+            locationSelect.appendChild(option);
+        });
+
+        // حساب الربح
+        updateEditProfit();
+
+        // إضافة مستمعين للأحداث
+        document.getElementById('editCostPrice').addEventListener('input', updateEditProfit);
+        document.getElementById('editSellingPrice').addEventListener('input', updateEditProfit);
+        document.getElementById('editQuantity').addEventListener('input', updateEditProfit);
+
+        // عرض النافذة
+        const modal = new bootstrap.Modal(document.getElementById('quickEditModal'));
+        modal.show();
+
+    } catch (error) {
+        console.error('Error loading item for edit:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل تحميل بيانات القطعة: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+function updateEditProfit() {
+    const cost = parseFloat(document.getElementById('editCostPrice').value) || 0;
+    const selling = parseFloat(document.getElementById('editSellingPrice').value) || 0;
+    const qty = parseInt(document.getElementById('editQuantity').value) || 0;
+
+    if (cost > 0 && selling > 0) {
+        const profit = (selling - cost) * qty;
+        const profitPercent = ((selling - cost) / cost * 100).toFixed(1);
+        const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+        document.getElementById('editProfitInfo').style.display = 'block';
+        document.getElementById('editProfitAmount').textContent =
+            `${profit.toFixed(2)} ${currencySymbol} (${profitPercent}%)`;
+    } else {
+        document.getElementById('editProfitInfo').style.display = 'none';
+    }
+}
+
+async function saveQuickEdit() {
+    const id = document.getElementById('editItemId').value;
+    const data = {
+        cost_price: document.getElementById('editCostPrice').value || null,
+        selling_price: parseFloat(document.getElementById('editSellingPrice').value),
+        quantity: parseInt(document.getElementById('editQuantity').value),
+        min_quantity: parseInt(document.getElementById('editMinQuantity').value) || 0,
+        status: document.getElementById('editStatus').value,
+        condition: document.getElementById('editCondition').value,
+        location: document.getElementById('editLocation').value || null,
+        notes: document.getElementById('editNotes').value || ''
+    };
+
+    // التحقق من البيانات
+    if (!data.selling_price || data.selling_price <= 0) {
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'يرجى إدخال سعر بيع صحيح',
+            type: 'error'
+        });
+        return;
+    }
+
+    if (data.quantity < 0) {
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'الكمية لا يمكن أن تكون سالبة',
+            type: 'error'
+        });
+        return;
+    }
+
+    try {
+        showLoading();
+
+        // حفظ التعديلات
+        await app.apiRequest(`/api/inventory/items/${id}/`, {
+            method: 'PATCH',
+            body: JSON.stringify(data)
+        });
+
+        // إخفاء النافذة
+        const modal = bootstrap.Modal.getInstance(document.getElementById('quickEditModal'));
+        modal.hide();
+
+        // إعادة تحميل البيانات
+        await loadData();
+
+        actionModals.showInfoModal({
+            title: 'نجح',
+            message: 'تم حفظ التعديلات بنجاح',
+            type: 'success'
+        });
+
+    } catch (error) {
+        console.error('Error saving item:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل حفظ التعديلات: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+// تصدير إلى Excel
+function exportToExcel() {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+    const data = filteredItems.map(item => {
+        const cost = parseFloat(item.cost_price) || 0;
+        const selling = parseFloat(item.selling_price) || 0;
+        const profit = selling - cost;
+
+        return {
+            'SKU': item.sku,
+            'القطعة': item.part_name_ar || item.part_name,
+            'الحالة': item.condition_display,
+            'الموقع': item.location_name || '-',
+            'الكمية': item.quantity,
+            'سعر الكلفة': cost,
+            'سعر البيع': selling,
+            'الربح': profit,
+            'الحالة': item.status_display,
+            'تاريخ الإضافة': item.added_at
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'المخزون');
+
+    const fileName = `inventory_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+}
+
+// تصدير إلى PDF
+function exportToPDF() {
+    actionModals.showInfoModal({
+        title: 'قريباً',
+        message: 'تصدير PDF قيد التطوير',
+        type: 'info'
+    });
+}
+
+// عرض/إخفاء Loading
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+</script>
+{% endblock %}
+

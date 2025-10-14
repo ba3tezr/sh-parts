@@ -49,6 +49,36 @@ def inventory_list(request):
 
 
 @login_required
+def inventory_enhanced(request):
+    """قائمة المخزون المحسّنة - Enhanced Inventory List"""
+    return render(request, 'pages/inventory_enhanced.html')
+
+
+@login_required
+def inventory_item_details(request):
+    """تفاصيل القطعة - Item Details"""
+    return render(request, 'pages/inventory_item_details.html')
+
+
+@login_required
+def profitability_report(request):
+    """تقرير الربحية - Profitability Report"""
+    return render(request, 'pages/profitability_report.html')
+
+
+@login_required
+def inventory_count(request):
+    """نظام الجرد - Inventory Count"""
+    return render(request, 'pages/inventory_count.html')
+
+
+@login_required
+def inventory_dashboard(request):
+    """لوحة تحكم المخزون - Inventory Dashboard"""
+    return render(request, 'pages/inventory_dashboard.html')
+
+
+@login_required
 def sales_list(request):
     """قائمة المبيعات - Sales List"""
     sales = Sale.objects.all().select_related('customer').order_by('-created_at')
@@ -178,11 +208,13 @@ def save_dismantling(request):
                 )
 
                 # إنشاء عنصر في المخزون
+                cost_price = part_data.get('cost_price')
                 inventory_item = InventoryItem.objects.create(
                     part=part,
                     vehicle_source=vehicle,
                     condition=part_data.get('condition', 'USED_GOOD'),
                     quantity=1,
+                    cost_price=Decimal(str(cost_price)) if cost_price else None,
                     selling_price=Decimal(str(part_data.get('price', 0))),
                     location=default_location,
                     status='AVAILABLE',
@@ -202,8 +234,12 @@ def save_dismantling(request):
                 created_items.append({
                     'id': inventory_item.id,
                     'sku': inventory_item.sku,
-                    'part': part.name_ar,
-                    'price': str(inventory_item.selling_price)
+                    'part_name_ar': part.name_ar,
+                    'part_name': part.name,
+                    'cost_price': str(inventory_item.cost_price) if inventory_item.cost_price else None,
+                    'selling_price': str(inventory_item.selling_price),
+                    'condition': inventory_item.condition,
+                    'condition_display': inventory_item.get_condition_display()
                 })
             
             # تحديث حالة السيارة

@@ -34,9 +34,10 @@ class InventoryItemListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = InventoryItem
-        fields = ['id', 'sku', 'part', 'part_name', 'part_name_ar', 'condition', 
+        fields = ['id', 'sku', 'part', 'part_name', 'part_name_ar', 'condition',
                  'condition_display', 'status', 'status_display', 'quantity', 'min_quantity',
-                 'location', 'location_name', 'selling_price', 'qr_code', 'is_low_stock', 'added_at']
+                 'location', 'location_name', 'cost_price', 'selling_price', 'qr_code',
+                 'is_low_stock', 'added_at']
 
 
 class InventoryItemDetailSerializer(serializers.ModelSerializer):

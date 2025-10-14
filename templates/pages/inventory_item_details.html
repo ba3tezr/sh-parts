@@ -1,0 +1,683 @@
+{% extends 'base/base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "تفاصيل القطعة" %} - SH Parts{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-section {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-card);
+}
+
+.detail-section h5 {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.detail-value {
+    color: var(--text);
+    font-weight: 500;
+}
+
+.qr-code-container {
+    text-align: center;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+}
+
+.qr-code-container img {
+    max-width: 200px;
+    height: auto;
+}
+
+.image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.gallery-item {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover {
+    transform: scale(1.05);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.no-images {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--primary);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 20px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 3px solid var(--card-bg);
+}
+
+.timeline-content {
+    background: var(--bg);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+.timeline-date {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.timeline-text {
+    color: var(--text);
+}
+
+.stat-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.stat-badge.success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.stat-badge.warning {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    color: white;
+}
+
+.stat-badge.danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+}
+
+.stat-badge.info {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    flex: 1;
+    min-width: 150px;
+}
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .detail-section {
+        break-inside: avoid;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+        <div>
+            <h2><i class="bi bi-box-seam me-2"></i>{% trans "تفاصيل القطعة" %}</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">{% trans "الرئيسية" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'inventory' %}">{% trans "المخزون" %}</a></li>
+                    <li class="breadcrumb-item active" id="breadcrumbSKU">...</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="action-buttons no-print">
+            <button class="btn btn-primary" onclick="editItem()">
+                <i class="bi bi-pencil me-2"></i>{% trans "تعديل" %}
+            </button>
+            <button class="btn btn-info" onclick="printQR()">
+                <i class="bi bi-qr-code me-2"></i>{% trans "طباعة QR" %}
+            </button>
+            <button class="btn btn-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-2"></i>{% trans "طباعة" %}
+            </button>
+            <a href="{% url 'inventory' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right me-2"></i>{% trans "رجوع" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- المعلومات الأساسية -->
+        <div class="col-lg-8">
+            <div class="detail-section">
+                <h5><i class="bi bi-info-circle me-2"></i>{% trans "المعلومات الأساسية" %}</h5>
+                <div id="basicInfo">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- معلومات السعر -->
+            <div class="detail-section">
+                <h5><i class="bi bi-currency-dollar me-2"></i>{% trans "معلومات السعر والربح" %}</h5>
+                <div id="priceInfo">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- معلومات المخزون -->
+            <div class="detail-section">
+                <h5><i class="bi bi-boxes me-2"></i>{% trans "معلومات المخزون" %}</h5>
+                <div id="stockInfo">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- معلومات السيارة المصدر -->
+            <div class="detail-section" id="vehicleSection" style="display: none;">
+                <h5><i class="bi bi-car-front me-2"></i>{% trans "السيارة المصدر" %}</h5>
+                <div id="vehicleInfo"></div>
+            </div>
+
+            <!-- الصور -->
+            <div class="detail-section">
+                <h5><i class="bi bi-images me-2"></i>{% trans "صور القطعة" %}</h5>
+                <div id="imagesGallery">
+                    <div class="no-images">
+                        <i class="bi bi-image fs-1"></i>
+                        <p class="mt-2">{% trans "لا توجد صور" %}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تاريخ الحركات -->
+            <div class="detail-section">
+                <h5><i class="bi bi-clock-history me-2"></i>{% trans "تاريخ الحركات" %}</h5>
+                <div id="movementHistory">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-content">
+                                <div class="timeline-date">{% trans "جاري التحميل..." %}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- المبيعات السابقة -->
+            <div class="detail-section" id="salesSection" style="display: none;">
+                <h5><i class="bi bi-receipt me-2"></i>{% trans "المبيعات السابقة" %}</h5>
+                <div id="salesHistory"></div>
+            </div>
+        </div>
+
+        <!-- الشريط الجانبي -->
+        <div class="col-lg-4">
+            <!-- QR Code -->
+            <div class="detail-section">
+                <h5><i class="bi bi-qr-code me-2"></i>{% trans "رمز QR" %}</h5>
+                <div class="qr-code-container" id="qrCodeContainer">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+
+            <!-- الملاحظات -->
+            <div class="detail-section">
+                <h5><i class="bi bi-sticky me-2"></i>{% trans "الملاحظات" %}</h5>
+                <div id="notesSection">
+                    <textarea class="form-control" id="itemNotes" rows="5" placeholder="{% trans 'أضف ملاحظات...' %}"></textarea>
+                    <button class="btn btn-primary w-100 mt-2" onclick="saveNotes()">
+                        <i class="bi bi-save me-2"></i>{% trans "حفظ الملاحظات" %}
+                    </button>
+                </div>
+            </div>
+
+            <!-- سجل التعديلات -->
+            <div class="detail-section">
+                <h5><i class="bi bi-journal-text me-2"></i>{% trans "سجل التعديلات" %}</h5>
+                <div id="auditLog">
+                    <small class="text-muted">{% trans "لا توجد تعديلات مسجلة" %}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let itemId = null;
+let itemData = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // الحصول على ID من URL
+    const urlParams = new URLSearchParams(window.location.search);
+    itemId = urlParams.get('id');
+    
+    if (!itemId) {
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'لم يتم تحديد القطعة',
+            type: 'error'
+        });
+        setTimeout(() => window.location.href = '/inventory/', 2000);
+        return;
+    }
+    
+    loadItemDetails();
+});
+
+async function loadItemDetails() {
+    try {
+        showLoading();
+
+        // تحميل بيانات القطعة
+        itemData = await app.apiRequest(`/api/inventory/items/${itemId}/`);
+
+        // عرض البيانات
+        displayBasicInfo();
+        displayPriceInfo();
+        displayStockInfo();
+        displayVehicleInfo();
+        displayQRCode();
+        displayImages();
+        loadMovementHistory();
+        loadSalesHistory();
+        loadNotes();
+
+    } catch (error) {
+        console.error('Error loading item details:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل تحميل بيانات القطعة: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+function displayBasicInfo() {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    document.getElementById('breadcrumbSKU').textContent = itemData.sku;
+
+    const statusBadge = getStatusBadge(itemData.status);
+    const conditionBadge = getConditionBadge(itemData.condition);
+
+    document.getElementById('basicInfo').innerHTML = `
+        <div class="detail-row">
+            <span class="detail-label">SKU:</span>
+            <span class="detail-value"><code>${itemData.sku}</code></span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">اسم القطعة (عربي):</span>
+            <span class="detail-value"><strong>${itemData.part_name_ar || '-'}</strong></span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">اسم القطعة (إنجليزي):</span>
+            <span class="detail-value">${itemData.part_name || '-'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">الفئة:</span>
+            <span class="detail-value">${itemData.part_details?.category?.name_ar || '-'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">الحالة (Status):</span>
+            <span class="detail-value">${statusBadge}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">الحالة (Condition):</span>
+            <span class="detail-value">${conditionBadge}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">الباركود:</span>
+            <span class="detail-value">${itemData.barcode || '-'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">تاريخ الإضافة:</span>
+            <span class="detail-value">${new Date(itemData.added_at).toLocaleString('ar-EG')}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">أضيفت بواسطة:</span>
+            <span class="detail-value">${itemData.added_by_name || '-'}</span>
+        </div>
+    `;
+}
+
+function displayPriceInfo() {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const cost = parseFloat(itemData.cost_price) || 0;
+    const selling = parseFloat(itemData.selling_price) || 0;
+    const profit = selling - cost;
+    const profitPercent = cost > 0 ? ((profit / cost) * 100).toFixed(1) : 0;
+    const qty = parseInt(itemData.quantity) || 0;
+    const totalCost = cost * qty;
+    const totalSelling = selling * qty;
+    const totalProfit = profit * qty;
+
+    let profitBadgeClass = 'success';
+    if (profitPercent < 20) profitBadgeClass = 'warning';
+    if (profitPercent < 10) profitBadgeClass = 'danger';
+
+    document.getElementById('priceInfo').innerHTML = `
+        <div class="detail-row">
+            <span class="detail-label">سعر الكلفة (للوحدة):</span>
+            <span class="detail-value">${cost > 0 ? cost.toFixed(2) + ' ' + currencySymbol : '-'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">سعر البيع (للوحدة):</span>
+            <span class="detail-value"><strong class="text-success">${selling.toFixed(2)} ${currencySymbol}</strong></span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">الربح (للوحدة):</span>
+            <span class="detail-value">
+                ${cost > 0 ? `<span class="stat-badge ${profitBadgeClass}">+${profit.toFixed(2)} ${currencySymbol} (${profitPercent}%)</span>` : '-'}
+            </span>
+        </div>
+        <hr>
+        <div class="detail-row">
+            <span class="detail-label">إجمالي الكلفة (${qty} وحدة):</span>
+            <span class="detail-value">${cost > 0 ? totalCost.toFixed(2) + ' ' + currencySymbol : '-'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">إجمالي البيع المتوقع:</span>
+            <span class="detail-value"><strong class="text-success">${totalSelling.toFixed(2)} ${currencySymbol}</strong></span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">إجمالي الربح المتوقع:</span>
+            <span class="detail-value">
+                ${cost > 0 ? `<span class="stat-badge ${profitBadgeClass}">+${totalProfit.toFixed(2)} ${currencySymbol}</span>` : '-'}
+            </span>
+        </div>
+    `;
+}
+
+function displayStockInfo() {
+    const qty = parseInt(itemData.quantity) || 0;
+    const minQty = parseInt(itemData.min_quantity) || 0;
+    const isLowStock = qty <= minQty;
+
+    document.getElementById('stockInfo').innerHTML = `
+        <div class="detail-row">
+            <span class="detail-label">الكمية الحالية:</span>
+            <span class="detail-value">
+                <span class="stat-badge ${isLowStock ? 'danger' : 'success'}">${qty}</span>
+            </span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">الحد الأدنى:</span>
+            <span class="detail-value">${minQty}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">الموقع:</span>
+            <span class="detail-value">${itemData.location_name || '-'}</span>
+        </div>
+        ${isLowStock ? `
+        <div class="alert alert-warning mt-3 mb-0">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>تنبيه:</strong> الكمية منخفضة! يرجى إعادة الطلب.
+        </div>
+        ` : ''}
+    `;
+}
+
+function displayVehicleInfo() {
+    if (itemData.vehicle_source) {
+        document.getElementById('vehicleSection').style.display = 'block';
+        document.getElementById('vehicleInfo').innerHTML = `
+            <div class="detail-row">
+                <span class="detail-label">الماركة:</span>
+                <span class="detail-value">${itemData.vehicle_source.make_name_ar || '-'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">الموديل:</span>
+                <span class="detail-value">${itemData.vehicle_source.model_name_ar || '-'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">السنة:</span>
+                <span class="detail-value">${itemData.vehicle_source.year || '-'}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">VIN:</span>
+                <span class="detail-value"><code>${itemData.vehicle_source.vin || '-'}</code></span>
+            </div>
+            <div class="mt-3">
+                <a href="/vehicles/?vin=${itemData.vehicle_source.vin}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-eye me-2"></i>عرض السيارة
+                </a>
+            </div>
+        `;
+    }
+}
+
+function displayQRCode() {
+    if (itemData.qr_code) {
+        document.getElementById('qrCodeContainer').innerHTML = `
+            <img src="${itemData.qr_code}" alt="QR Code" class="img-fluid">
+            <p class="mt-2 mb-0"><small>${itemData.sku}</small></p>
+        `;
+    } else {
+        document.getElementById('qrCodeContainer').innerHTML = `
+            <p class="text-muted">لا يوجد رمز QR</p>
+        `;
+    }
+}
+
+function displayImages() {
+    // TODO: تحميل الصور من API
+    // حالياً نعرض رسالة "لا توجد صور"
+    document.getElementById('imagesGallery').innerHTML = `
+        <div class="no-images">
+            <i class="bi bi-image fs-1"></i>
+            <p class="mt-2">لا توجد صور</p>
+            <button class="btn btn-primary btn-sm" onclick="uploadImages()">
+                <i class="bi bi-upload me-2"></i>رفع صور
+            </button>
+        </div>
+    `;
+}
+
+async function loadMovementHistory() {
+    // TODO: تحميل تاريخ الحركات من API
+    // حالياً نعرض حركة واحدة (الإضافة)
+    document.getElementById('movementHistory').innerHTML = `
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-content">
+                    <div class="timeline-date">${new Date(itemData.added_at).toLocaleString('ar-EG')}</div>
+                    <div class="timeline-text">
+                        <strong>إضافة إلى المخزون</strong><br>
+                        <small>بواسطة: ${itemData.added_by_name || '-'}</small><br>
+                        <small>الكمية: ${itemData.quantity}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function loadSalesHistory() {
+    // TODO: تحميل المبيعات السابقة من API
+    // حالياً نخفي القسم
+    document.getElementById('salesSection').style.display = 'none';
+}
+
+async function loadNotes() {
+    // TODO: تحميل الملاحظات من API
+    // حالياً نترك الحقل فارغاً
+}
+
+async function saveNotes() {
+    const notes = document.getElementById('itemNotes').value;
+
+    try {
+        showLoading();
+
+        // TODO: حفظ الملاحظات عبر API
+        await app.apiRequest(`/api/inventory/items/${itemId}/`, {
+            method: 'PATCH',
+            body: JSON.stringify({ notes: notes })
+        });
+
+        actionModals.showInfoModal({
+            title: 'نجح',
+            message: 'تم حفظ الملاحظات بنجاح',
+            type: 'success'
+        });
+
+    } catch (error) {
+        console.error('Error saving notes:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل حفظ الملاحظات: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+function editItem() {
+    window.location.href = `/inventory/?edit=${itemId}`;
+}
+
+function printQR() {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>QR Code - ${itemData.sku}</title>
+            <style>
+                body { text-align: center; padding: 20px; font-family: Arial; }
+                img { max-width: 300px; }
+            </style>
+        </head>
+        <body>
+            <h2>${itemData.part_name_ar || itemData.part_name}</h2>
+            <img src="${itemData.qr_code}" alt="QR Code">
+            <p><strong>${itemData.sku}</strong></p>
+            <p>${itemData.selling_price} ${document.body.dataset.currencySymbol || 'EGP'}</p>
+            <script>window.print(); window.close();</script>
+        </body>
+        </html>
+    `);
+}
+
+function uploadImages() {
+    actionModals.showInfoModal({
+        title: 'قريباً',
+        message: 'ميزة رفع الصور قيد التطوير',
+        type: 'info'
+    });
+}
+
+function getStatusBadge(status) {
+    const badges = {
+        'AVAILABLE': '<span class="badge bg-success">متوفر</span>',
+        'RESERVED': '<span class="badge bg-warning">محجوز</span>',
+        'SOLD': '<span class="badge bg-secondary">مباع</span>',
+        'DAMAGED': '<span class="badge bg-danger">تالف</span>',
+        'RETURNED': '<span class="badge bg-info">مرتجع</span>'
+    };
+    return badges[status] || `<span class="badge bg-secondary">${status}</span>`;
+}
+
+function getConditionBadge(condition) {
+    const badges = {
+        'NEW': '<span class="badge bg-success">جديد</span>',
+        'USED_EXCELLENT': '<span class="badge bg-info">مستعمل ممتاز</span>',
+        'USED_GOOD': '<span class="badge bg-primary">مستعمل جيد</span>',
+        'USED_FAIR': '<span class="badge bg-warning">مستعمل مقبول</span>',
+        'REFURBISHED': '<span class="badge bg-secondary">مجدد</span>'
+    };
+    return badges[condition] || `<span class="badge bg-secondary">${condition}</span>`;
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+</script>
+{% endblock %}
+

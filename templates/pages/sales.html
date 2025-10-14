@@ -1231,6 +1231,20 @@ async function printOrder(id) {
                         font-weight: bold;
                         font-size: 16px;
                     }
+                    .section-title {
+                        margin-bottom: 15px;
+                        color: #2c3e50;
+                    }
+                    .row-discount {
+                        color: #e74c3c;
+                        font-weight: 600;
+                    }
+                    .row-paid {
+                        background-color: #d5f4e6;
+                    }
+                    .row-remaining {
+                        background-color: #fff3cd;
+                    }
                     .footer {
                         clear: both;
                         margin-top: 50px;
@@ -1293,7 +1307,7 @@ async function printOrder(id) {
                     </div>
                 </div>
 
-                <h3 style="margin-bottom: 15px; color: #2c3e50;">تفاصيل القطع</h3>
+                <h3 class="section-title">تفاصيل القطع</h3>
                 <table>
                     <thead>
                         <tr>
@@ -1318,7 +1332,7 @@ async function printOrder(id) {
                         ${sale.discount_amount > 0 ? `
                         <tr>
                             <td>الخصم:</td>
-                            <td class="text-end" style="color: #e74c3c;">-${parseFloat(sale.discount_amount).toFixed(2)} ${currencySymbol}</td>
+                            <td class="text-end row-discount">-${parseFloat(sale.discount_amount).toFixed(2)} ${currencySymbol}</td>
                         </tr>
                         ` : ''}
                         ${sale.tax_amount > 0 ? `
@@ -1331,11 +1345,11 @@ async function printOrder(id) {
                             <td><strong>الإجمالي الكلي:</strong></td>
                             <td class="text-end"><strong>${parseFloat(sale.total_amount).toFixed(2)} ${currencySymbol}</strong></td>
                         </tr>
-                        <tr style="background-color: #d5f4e6;">
+                        <tr class="row-paid">
                             <td>المدفوع:</td>
                             <td class="text-end">${parseFloat(sale.paid_amount).toFixed(2)} ${currencySymbol}</td>
                         </tr>
-                        <tr style="background-color: #fff3cd;">
+                        <tr class="row-remaining">
                             <td><strong>المتبقي:</strong></td>
                             <td class="text-end"><strong>${parseFloat(sale.balance_due).toFixed(2)} ${currencySymbol}</strong></td>
                         </tr>

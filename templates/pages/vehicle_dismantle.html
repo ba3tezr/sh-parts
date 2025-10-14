@@ -492,7 +492,11 @@ class DismantleManager {
                         </select>
                     </div>
                     <div class="detail-row">
-                        <label>السعر:</label>
+                        <label>سعر الكلفة:</label>
+                    <input type="number" id="${id}-cost" placeholder="0" min="0" step="1" ${disabledAttr}>
+                </div>
+                <div class="detail-row">
+                    <label>سعر البيع:</label>
                         <input type="number" id="${id}-price" placeholder="0" min="0" step="1" ${disabledAttr}>
                     </div>
                 </div>
@@ -581,20 +585,27 @@ class DismantleManager {
 
             this.selectedParts.forEach((part, id) => {
                 const condition = document.getElementById(id + '-condition').value;
+                const costInput = document.getElementById(id + '-cost');
                 const priceInput = document.getElementById(id + '-price');
+                const cost = costInput ? costInput.value : '';
                 const price = priceInput ? priceInput.value : '';
 
+                // التحقق من سعر البيع (إلزامي)
                 if (!price || parseFloat(price) <= 0) {
                     hasError = true;
-                    errorMessage = `الرجاء إدخال سعر صحيح لـ ${part.name_ar || part.name_en || 'القطعة'}`;
+                    errorMessage = `الرجاء إدخال سعر بيع صحيح لـ ${part.name_ar || part.name_en || 'القطعة'}`;
                     return;
                 }
+
+                // سعر الكلفة اختياري، لكن إذا تم إدخاله يجب أن يكون صحيحاً
+                const costPrice = cost && parseFloat(cost) > 0 ? parseFloat(cost) : null;
 
                 parts.push({
                     name_ar: part.name_ar || part.name_en || 'غير معروف',
                     name_en: part.name_en || part.name_ar || 'Unknown',
                     category: part.category,
                     condition: condition,
+                    cost_price: costPrice,
                     price: parseFloat(price)
                 });
             });

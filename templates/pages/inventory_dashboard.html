@@ -1,0 +1,648 @@
+{% extends 'base/base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "لوحة تحكم المخزون" %} - SH Parts{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-card);
+}
+
+.dashboard-card h5 {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent-color) 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+}
+
+.metric-card .metric-icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+    margin-bottom: 10px;
+}
+
+.metric-card .metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.metric-card .metric-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.metric-card.green {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.metric-card.blue {
+    background: linear-gradient(135deg, #007bff 0%, #17a2b8 100%);
+}
+
+.metric-card.orange {
+    background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+}
+
+.metric-card.red {
+    background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin: 20px 0;
+}
+
+.top-items-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.top-item {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid var(--primary);
+}
+
+.top-item:hover {
+    background: var(--card-bg);
+}
+
+.top-item .rank {
+    background: var(--primary);
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-left: 10px;
+}
+
+.top-item.gold .rank {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #333;
+}
+
+.top-item.silver .rank {
+    background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+    color: #333;
+}
+
+.top-item.bronze .rank {
+    background: linear-gradient(135deg, #cd7f32 0%, #e8a87c 100%);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-speedometer2 me-2"></i>{% trans "لوحة تحكم المخزون" %}</h2>
+            <p class="text-muted">نظرة شاملة على أداء المخزون</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary" onclick="refreshData()">
+                <i class="bi bi-arrow-clockwise me-2"></i>تحديث
+            </button>
+            <a href="{% url 'inventory' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right me-2"></i>رجوع
+            </a>
+        </div>
+    </div>
+
+    <!-- المقاييس الرئيسية -->
+    <div class="row">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-icon"><i class="bi bi-box-seam"></i></div>
+                <div class="metric-value" id="totalItems">0</div>
+                <div class="metric-label">إجمالي القطع</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card green">
+                <div class="metric-icon"><i class="bi bi-cash-stack"></i></div>
+                <div class="metric-value" id="totalValue">0</div>
+                <div class="metric-label">قيمة المخزون (كلفة)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card blue">
+                <div class="metric-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                <div class="metric-value" id="expectedRevenue">0</div>
+                <div class="metric-label">الإيرادات المتوقعة</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card orange">
+                <div class="metric-icon"><i class="bi bi-trophy"></i></div>
+                <div class="metric-value" id="expectedProfit">0</div>
+                <div class="metric-label">الربح المتوقع</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الرسوم البيانية -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h5><i class="bi bi-pie-chart me-2"></i>توزيع القطع حسب الحالة</h5>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h5><i class="bi bi-bar-chart me-2"></i>توزيع القطع حسب الفئة</h5>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h5><i class="bi bi-graph-up me-2"></i>قيمة المخزون (آخر 30 يوم)</h5>
+                <div class="chart-container">
+                    <canvas id="valueChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h5><i class="bi bi-currency-dollar me-2"></i>الربح المتوقع (آخر 30 يوم)</h5>
+                <div class="chart-container">
+                    <canvas id="profitChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- القوائم -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h5><i class="bi bi-star-fill me-2"></i>أعلى 10 قطع ربحاً</h5>
+                <div class="top-items-list" id="topProfitList">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="dashboard-card">
+                <h5><i class="bi bi-exclamation-triangle me-2"></i>أقل 10 قطع ربحاً</h5>
+                <div class="top-items-list" id="lowProfitList">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معدل الدوران -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="dashboard-card">
+                <h5><i class="bi bi-arrow-repeat me-2"></i>معدل دوران المخزون</h5>
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="metric-card red">
+                            <div class="metric-value" id="slowMoving">0</div>
+                            <div class="metric-label">قطع بطيئة الحركة</div>
+                            <small>(أكثر من 90 يوم)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card orange">
+                            <div class="metric-value" id="mediumMoving">0</div>
+                            <div class="metric-label">قطع متوسطة الحركة</div>
+                            <small>(30-90 يوم)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card green">
+                            <div class="metric-value" id="fastMoving">0</div>
+                            <div class="metric-label">قطع سريعة الحركة</div>
+                            <small>(أقل من 30 يوم)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="metric-card blue">
+                            <div class="metric-value" id="avgTurnover">0</div>
+                            <div class="metric-label">متوسط الدوران</div>
+                            <small>(يوم)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allItems = [];
+let statusChart = null;
+let categoryChart = null;
+let valueChart = null;
+let profitChart = null;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadData();
+});
+
+async function loadData() {
+    try {
+        showLoading();
+        
+        // تحميل جميع القطع
+        const itemsResponse = await app.apiRequest('/api/inventory/items/?limit=1000');
+        allItems = itemsResponse.results || itemsResponse;
+        
+        // حساب وعرض المقاييس
+        calculateMetrics();
+        
+        // عرض الرسوم البيانية
+        displayCharts();
+        
+        // عرض القوائم
+        displayTopLists();
+        
+        // حساب معدل الدوران
+        calculateTurnover();
+        
+    } catch (error) {
+        console.error('Error loading data:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل تحميل البيانات: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+function calculateMetrics() {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    
+    let totalCost = 0;
+    let totalRevenue = 0;
+    
+    allItems.forEach(item => {
+        const cost = parseFloat(item.cost_price) || 0;
+        const selling = parseFloat(item.selling_price) || 0;
+        const qty = parseInt(item.quantity) || 0;
+        
+        totalCost += cost * qty;
+        totalRevenue += selling * qty;
+    });
+    
+    const totalProfit = totalRevenue - totalCost;
+    
+    document.getElementById('totalItems').textContent = allItems.length;
+    document.getElementById('totalValue').textContent = totalCost.toFixed(0) + ' ' + currencySymbol;
+    document.getElementById('expectedRevenue').textContent = totalRevenue.toFixed(0) + ' ' + currencySymbol;
+    document.getElementById('expectedProfit').textContent = totalProfit.toFixed(0) + ' ' + currencySymbol;
+}
+
+function displayCharts() {
+    // توزيع حسب الحالة
+    const statusData = {};
+    allItems.forEach(item => {
+        const status = item.status || 'AVAILABLE';
+        statusData[status] = (statusData[status] || 0) + 1;
+    });
+
+    const statusLabels = Object.keys(statusData).map(s => {
+        const labels = {
+            'AVAILABLE': 'متوفر',
+            'RESERVED': 'محجوز',
+            'SOLD': 'مباع',
+            'DAMAGED': 'تالف'
+        };
+        return labels[s] || s;
+    });
+    const statusCounts = Object.values(statusData);
+
+    if (statusChart) statusChart.destroy();
+
+    const ctx1 = document.getElementById('statusChart').getContext('2d');
+    statusChart = new Chart(ctx1, {
+        type: 'pie',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                data: statusCounts,
+                backgroundColor: [
+                    'rgba(40, 167, 69, 0.7)',
+                    'rgba(255, 193, 7, 0.7)',
+                    'rgba(23, 162, 184, 0.7)',
+                    'rgba(220, 53, 69, 0.7)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+
+    // توزيع حسب الفئة
+    const categoryData = {};
+    allItems.forEach(item => {
+        const category = item.part_details?.category?.name_ar || 'غير محدد';
+        categoryData[category] = (categoryData[category] || 0) + 1;
+    });
+
+    const categoryLabels = Object.keys(categoryData);
+    const categoryCounts = Object.values(categoryData);
+
+    if (categoryChart) categoryChart.destroy();
+
+    const ctx2 = document.getElementById('categoryChart').getContext('2d');
+    categoryChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                label: 'عدد القطع',
+                data: categoryCounts,
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // قيمة المخزون (آخر 30 يوم) - محاكاة
+    const last30Days = [];
+    const valueData = [];
+
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        last30Days.push(date.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' }));
+
+        // محاكاة بيانات (يمكن استبدالها ببيانات حقيقية من API)
+        const itemsAtDate = allItems.filter(item => {
+            const addedDate = new Date(item.added_at);
+            return addedDate <= date;
+        });
+
+        const value = itemsAtDate.reduce((sum, item) => {
+            const cost = parseFloat(item.cost_price) || 0;
+            const qty = parseInt(item.quantity) || 0;
+            return sum + (cost * qty);
+        }, 0);
+
+        valueData.push(value);
+    }
+
+    if (valueChart) valueChart.destroy();
+
+    const ctx3 = document.getElementById('valueChart').getContext('2d');
+    valueChart = new Chart(ctx3, {
+        type: 'line',
+        data: {
+            labels: last30Days,
+            datasets: [{
+                label: 'قيمة المخزون',
+                data: valueData,
+                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // الربح المتوقع (آخر 30 يوم)
+    const profitData = [];
+
+    for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+
+        const itemsAtDate = allItems.filter(item => {
+            const addedDate = new Date(item.added_at);
+            return addedDate <= date;
+        });
+
+        const profit = itemsAtDate.reduce((sum, item) => {
+            const cost = parseFloat(item.cost_price) || 0;
+            const selling = parseFloat(item.selling_price) || 0;
+            const qty = parseInt(item.quantity) || 0;
+            return sum + ((selling - cost) * qty);
+        }, 0);
+
+        profitData.push(profit);
+    }
+
+    if (profitChart) profitChart.destroy();
+
+    const ctx4 = document.getElementById('profitChart').getContext('2d');
+    profitChart = new Chart(ctx4, {
+        type: 'line',
+        data: {
+            labels: last30Days,
+            datasets: [{
+                label: 'الربح المتوقع',
+                data: profitData,
+                borderColor: 'rgba(255, 193, 7, 1)',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function displayTopLists() {
+    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+
+    // حساب الربح لكل قطعة
+    const itemsWithProfit = allItems
+        .filter(item => item.cost_price)
+        .map(item => {
+            const cost = parseFloat(item.cost_price) || 0;
+            const selling = parseFloat(item.selling_price) || 0;
+            const qty = parseInt(item.quantity) || 0;
+            const profit = (selling - cost) * qty;
+
+            return { ...item, totalProfit: profit };
+        });
+
+    // أعلى 10 ربحاً
+    const topProfit = [...itemsWithProfit]
+        .sort((a, b) => b.totalProfit - a.totalProfit)
+        .slice(0, 10);
+
+    document.getElementById('topProfitList').innerHTML = topProfit.map((item, index) => {
+        let itemClass = 'top-item';
+        if (index === 0) itemClass += ' gold';
+        else if (index === 1) itemClass += ' silver';
+        else if (index === 2) itemClass += ' bronze';
+
+        return `
+            <div class="${itemClass}">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <div class="rank">${index + 1}</div>
+                    <div>
+                        <strong>${item.part_name_ar || item.part_name}</strong><br>
+                        <small class="text-muted">${item.sku}</small>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <strong class="text-success">${item.totalProfit.toFixed(0)} ${currencySymbol}</strong>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // أقل 10 ربحاً
+    const lowProfit = [...itemsWithProfit]
+        .sort((a, b) => a.totalProfit - b.totalProfit)
+        .slice(0, 10);
+
+    document.getElementById('lowProfitList').innerHTML = lowProfit.map((item, index) => {
+        return `
+            <div class="top-item">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <div class="rank">${index + 1}</div>
+                    <div>
+                        <strong>${item.part_name_ar || item.part_name}</strong><br>
+                        <small class="text-muted">${item.sku}</small>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <strong class="text-danger">${item.totalProfit.toFixed(0)} ${currencySymbol}</strong>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function calculateTurnover() {
+    const today = new Date();
+
+    let slowMoving = 0;
+    let mediumMoving = 0;
+    let fastMoving = 0;
+    let totalDays = 0;
+    let count = 0;
+
+    allItems.forEach(item => {
+        const addedDate = new Date(item.added_at);
+        const daysSinceAdded = Math.floor((today - addedDate) / (1000 * 60 * 60 * 24));
+
+        if (daysSinceAdded > 90) {
+            slowMoving++;
+        } else if (daysSinceAdded >= 30) {
+            mediumMoving++;
+        } else {
+            fastMoving++;
+        }
+
+        totalDays += daysSinceAdded;
+        count++;
+    });
+
+    const avgTurnover = count > 0 ? Math.round(totalDays / count) : 0;
+
+    document.getElementById('slowMoving').textContent = slowMoving;
+    document.getElementById('mediumMoving').textContent = mediumMoving;
+    document.getElementById('fastMoving').textContent = fastMoving;
+    document.getElementById('avgTurnover').textContent = avgTurnover;
+}
+
+async function refreshData() {
+    await loadData();
+    actionModals.showInfoModal({
+        title: 'تم التحديث',
+        message: 'تم تحديث البيانات بنجاح',
+        type: 'success'
+    });
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+</script>
+{% endblock %}
+

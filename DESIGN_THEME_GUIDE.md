@@ -33,6 +33,16 @@ Supporting surface tokens:
 - `--table-header-bg`, `--table-row-hover` — provide accessible table contrast.
 - `--shadow-soft`, `--shadow-card` — depth presets for flyouts and cards.
 
+### Theme presets
+
+| Theme key | Use-case | Primary | Background | Notes |
+|-----------|----------|---------|------------|-------|
+| `dark-blue` | Default immersive dashboard | `#3b82f6` | `#0f172a` | High-contrast dark shell |
+| `light` | Bright neutral UI | `#2563eb` | `#f8fafc` | Matches standard Bootstrap light mode |
+| `day-blue` | **New.** Daytime blue accented palette with deep navy highlights | `#2563eb` | `#e9f2ff` | Keeps cards white while typography remains navy for readability |
+| `high-contrast` | Accessibility mode | `#ffcc00` | `#000000` | Maximum contrast, minimal shadows |
+| `olive-sage` | Alternative earthy tone | `#6b8e23` | `#f5f5dc` | Subtle muted palette |
+
 ### Elevation
 - `--shadow-soft`: `0 16px 40px rgba(15, 23, 42, 0.35)`
 - `--shadow-card`: `0 12px 32px rgba(15, 23, 42, 0.25)`
@@ -88,6 +98,7 @@ Supporting surface tokens:
 
 ### Badges & Pills
 - Use `.badge-state` helpers: `.badge-success`, `.badge-warning`, `.badge-danger`, `.badge-info`.
+- Badge text is forced to a light color (`#fff`) so ensure backgrounds leverage the state tokens for contrast.
 - Keep text bold with `letter-spacing: 0.02em` for readability.
 
 ### Modals

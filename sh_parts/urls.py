@@ -21,8 +21,9 @@ from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from core.views import (
     dashboard, login_view, logout_view,
-    vehicles_list, inventory_list, sales_list,
-    customers_list, reports_view, price_management_view,
+    vehicles_list, inventory_list, inventory_enhanced, inventory_item_details,
+    profitability_report, inventory_count, inventory_dashboard,
+    sales_list, customers_list, reports_view, price_management_view,
     vehicle_dismantle_view, save_dismantling
 )
 from core.views_api import get_system_settings
@@ -41,7 +42,11 @@ urlpatterns = [
     # صفحات النظام
     path('vehicles/', vehicles_list, name='vehicles'),
     path('vehicles/dismantle/<int:vehicle_id>/', vehicle_dismantle_view, name='vehicle_dismantle'),
-    path('inventory/', inventory_list, name='inventory'),
+    path('inventory/', inventory_enhanced, name='inventory'),  # الصفحة المحسّنة كصفحة أساسية
+    path('inventory/item/', inventory_item_details, name='inventory_item_details'),
+    path('inventory/profitability/', profitability_report, name='profitability_report'),
+    path('inventory/count/', inventory_count, name='inventory_count'),
+    path('inventory/dashboard/', inventory_dashboard, name='inventory_dashboard'),
     path('sales/', sales_list, name='sales'),
     path('customers/', customers_list, name='customers'),
     path('reports/', reports_view, name='reports'),

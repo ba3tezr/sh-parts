@@ -1,0 +1,633 @@
+{% extends 'base/base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "نظام الجرد" %} - SH Parts{% endblock %}
+
+{% block extra_css %}
+<style>
+.count-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-card);
+}
+
+.count-card h5 {
+    color: var(--primary);
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+.count-item {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--primary);
+}
+
+.count-item.discrepancy {
+    border-left-color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+.count-item.match {
+    border-left-color: #28a745;
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.count-input {
+    width: 100px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.discrepancy-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.discrepancy-badge.positive {
+    background: #28a745;
+    color: white;
+}
+
+.discrepancy-badge.negative {
+    background: #dc3545;
+    color: white;
+}
+
+.session-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.session-badge.active {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.session-badge.completed {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+}
+
+.progress-bar-custom {
+    height: 30px;
+    border-radius: 15px;
+    background: var(--bg);
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--accent-color) 100%);
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-clipboard-check me-2"></i>{% trans "نظام الجرد" %}</h2>
+            <p class="text-muted">جرد دوري للمخزون والتحقق من الكميات</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" onclick="startNewSession()" id="startSessionBtn">
+                <i class="bi bi-plus-circle me-2"></i>جلسة جرد جديدة
+            </button>
+            <button class="btn btn-primary" onclick="viewHistory()" style="display: none;" id="historyBtn">
+                <i class="bi bi-clock-history me-2"></i>السجل
+            </button>
+            <a href="{% url 'inventory' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-right me-2"></i>رجوع
+            </a>
+        </div>
+    </div>
+
+    <!-- جلسة الجرد النشطة -->
+    <div id="activeSession" style="display: none;">
+        <div class="count-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-2"><i class="bi bi-clipboard-data me-2"></i>جلسة الجرد النشطة</h5>
+                    <span class="session-badge active" id="sessionInfo">جلسة #1</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-success" onclick="completeSession()">
+                        <i class="bi bi-check-circle me-2"></i>إتمام الجرد
+                    </button>
+                    <button class="btn btn-danger" onclick="cancelSession()">
+                        <i class="bi bi-x-circle me-2"></i>إلغاء
+                    </button>
+                </div>
+            </div>
+            
+            <!-- التقدم -->
+            <div class="progress-bar-custom">
+                <div class="progress-fill" id="progressBar" style="width: 0%;">0%</div>
+            </div>
+            
+            <!-- الفلاتر -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">الفئة</label>
+                    <select class="form-select" id="countCategory" onchange="filterCountItems()">
+                        <option value="">جميع الفئات</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">الموقع</label>
+                    <select class="form-select" id="countLocation" onchange="filterCountItems()">
+                        <option value="">جميع المواقع</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">عرض</label>
+                    <select class="form-select" id="countFilter" onchange="filterCountItems()">
+                        <option value="all">الكل</option>
+                        <option value="pending">لم يتم الجرد</option>
+                        <option value="counted">تم الجرد</option>
+                        <option value="discrepancy">فروقات فقط</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- قائمة القطع -->
+            <div id="countItemsList">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ملخص الفروقات -->
+        <div class="count-card" id="discrepancySummary" style="display: none;">
+            <h5><i class="bi bi-exclamation-triangle me-2"></i>ملخص الفروقات</h5>
+            <div id="discrepancyList"></div>
+        </div>
+    </div>
+
+    <!-- الشاشة الافتراضية -->
+    <div id="defaultScreen">
+        <div class="count-card text-center py-5">
+            <i class="bi bi-clipboard-check" style="font-size: 5rem; color: var(--primary); opacity: 0.3;"></i>
+            <h3 class="mt-4 mb-3">لا توجد جلسة جرد نشطة</h3>
+            <p class="text-muted mb-4">ابدأ جلسة جرد جديدة للتحقق من كميات المخزون</p>
+            <button class="btn btn-success btn-lg" onclick="startNewSession()">
+                <i class="bi bi-plus-circle me-2"></i>بدء جلسة جرد جديدة
+            </button>
+        </div>
+        
+        <!-- آخر جلسات الجرد -->
+        <div class="count-card">
+            <h5><i class="bi bi-clock-history me-2"></i>آخر جلسات الجرد</h5>
+            <div id="recentSessions">
+                <p class="text-muted">لا توجد جلسات سابقة</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+    <div class="spinner-border text-light" style="width: 3rem; height: 3rem;"></div>
+</div>
+
+<!-- Modal تأكيد الإتمام -->
+<div class="modal fade" id="completeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد إتمام الجرد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="completeSummary"></div>
+                <div class="alert alert-warning mt-3">
+                    <strong>تنبيه:</strong> سيتم تحديث الكميات في النظام بناءً على الجرد الفعلي.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-success" onclick="confirmComplete()">
+                    <i class="bi bi-check-circle me-2"></i>تأكيد الإتمام
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let allItems = [];
+let countedItems = {};
+let categories = [];
+let locations = [];
+let sessionActive = false;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadData();
+    checkActiveSession();
+});
+
+async function loadData() {
+    try {
+        showLoading();
+        
+        // تحميل القطع المتوفرة فقط
+        const itemsResponse = await app.apiRequest('/api/inventory/items/?status=AVAILABLE&limit=1000');
+        allItems = itemsResponse.results || itemsResponse;
+        
+        // تحميل الفئات
+        const categoriesResponse = await app.apiRequest('/api/cars/categories/');
+        categories = categoriesResponse.results || categoriesResponse;
+        
+        // تحميل المواقع
+        const locationsResponse = await app.apiRequest('/api/inventory/locations/');
+        locations = locationsResponse.results || locationsResponse;
+        
+        // ملء القوائم المنسدلة
+        populateFilters();
+        
+    } catch (error) {
+        console.error('Error loading data:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل تحميل البيانات: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+function populateFilters() {
+    // ملء الفئات
+    const categorySelect = document.getElementById('countCategory');
+    categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.name_ar || cat.name;
+        categorySelect.appendChild(option);
+    });
+    
+    // ملء المواقع
+    const locationSelect = document.getElementById('countLocation');
+    locations.forEach(loc => {
+        const option = document.createElement('option');
+        option.value = loc.id;
+        option.textContent = `${loc.warehouse}-${loc.aisle}-${loc.shelf}`;
+        locationSelect.appendChild(option);
+    });
+}
+
+function checkActiveSession() {
+    // TODO: التحقق من وجود جلسة نشطة في localStorage أو API
+    const savedSession = localStorage.getItem('activeCountSession');
+    
+    if (savedSession) {
+        sessionActive = true;
+        countedItems = JSON.parse(localStorage.getItem('countedItems') || '{}');
+        showActiveSession();
+    } else {
+        showDefaultScreen();
+    }
+}
+
+function showActiveSession() {
+    document.getElementById('defaultScreen').style.display = 'none';
+    document.getElementById('activeSession').style.display = 'block';
+    document.getElementById('startSessionBtn').style.display = 'none';
+    document.getElementById('historyBtn').style.display = 'block';
+    
+    displayCountItems();
+    updateProgress();
+}
+
+function showDefaultScreen() {
+    document.getElementById('defaultScreen').style.display = 'block';
+    document.getElementById('activeSession').style.display = 'none';
+    document.getElementById('startSessionBtn').style.display = 'block';
+    document.getElementById('historyBtn').style.display = 'none';
+}
+
+async function startNewSession() {
+    const confirmed = await actionModals.showConfirmModal({
+        title: 'بدء جلسة جرد جديدة',
+        message: `سيتم جرد ${allItems.length} قطعة. هل تريد المتابعة؟`,
+        confirmText: 'بدء الجرد',
+        cancelText: 'إلغاء'
+    });
+
+    if (!confirmed) return;
+
+    sessionActive = true;
+    countedItems = {};
+
+    // حفظ الجلسة
+    const sessionId = Date.now();
+    localStorage.setItem('activeCountSession', sessionId);
+    localStorage.setItem('countedItems', JSON.stringify(countedItems));
+
+    document.getElementById('sessionInfo').textContent = `جلسة #${sessionId}`;
+
+    showActiveSession();
+}
+
+function displayCountItems() {
+    const container = document.getElementById('countItemsList');
+    const selectedCategory = document.getElementById('countCategory').value;
+    const selectedLocation = document.getElementById('countLocation').value;
+    const filter = document.getElementById('countFilter').value;
+
+    // تصفية القطع
+    let filteredItems = allItems.filter(item => {
+        if (selectedCategory && item.part != selectedCategory) return false;
+        if (selectedLocation && item.location != selectedLocation) return false;
+
+        if (filter === 'pending' && countedItems[item.id]) return false;
+        if (filter === 'counted' && !countedItems[item.id]) return false;
+        if (filter === 'discrepancy') {
+            if (!countedItems[item.id]) return false;
+            if (countedItems[item.id].actual === item.quantity) return false;
+        }
+
+        return true;
+    });
+
+    if (filteredItems.length === 0) {
+        container.innerHTML = '<p class="text-center text-muted py-4">لا توجد قطع</p>';
+        return;
+    }
+
+    container.innerHTML = filteredItems.map(item => {
+        const counted = countedItems[item.id];
+        const systemQty = parseInt(item.quantity) || 0;
+        const actualQty = counted ? counted.actual : null;
+        const discrepancy = actualQty !== null ? actualQty - systemQty : null;
+
+        let itemClass = 'count-item';
+        if (counted) {
+            itemClass += discrepancy === 0 ? ' match' : ' discrepancy';
+        }
+
+        return `
+            <div class="${itemClass}">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <strong>${item.part_name_ar || item.part_name}</strong><br>
+                        <small class="text-muted">${item.sku}</small><br>
+                        <small class="text-muted">${item.location_name || '-'}</small>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <small class="text-muted d-block">الكمية في النظام</small>
+                        <strong class="fs-5">${systemQty}</strong>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <small class="text-muted d-block">الكمية الفعلية</small>
+                        <input type="number"
+                               class="form-control count-input"
+                               id="count-${item.id}"
+                               value="${actualQty !== null ? actualQty : ''}"
+                               min="0"
+                               onchange="updateCount(${item.id}, this.value, ${systemQty})"
+                               placeholder="0">
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <small class="text-muted d-block">الفرق</small>
+                        ${discrepancy !== null ? `
+                            <span class="discrepancy-badge ${discrepancy >= 0 ? 'positive' : 'negative'}">
+                                ${discrepancy >= 0 ? '+' : ''}${discrepancy}
+                            </span>
+                        ` : '-'}
+                    </div>
+                    <div class="col-md-2 text-center">
+                        ${counted ? '<i class="bi bi-check-circle text-success fs-4"></i>' : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateCount(itemId, actualQty, systemQty) {
+    actualQty = parseInt(actualQty) || 0;
+
+    countedItems[itemId] = {
+        actual: actualQty,
+        system: systemQty,
+        discrepancy: actualQty - systemQty
+    };
+
+    // حفظ في localStorage
+    localStorage.setItem('countedItems', JSON.stringify(countedItems));
+
+    // تحديث العرض
+    displayCountItems();
+    updateProgress();
+    updateDiscrepancySummary();
+}
+
+function filterCountItems() {
+    displayCountItems();
+}
+
+function updateProgress() {
+    const total = allItems.length;
+    const counted = Object.keys(countedItems).length;
+    const percentage = total > 0 ? Math.round((counted / total) * 100) : 0;
+
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = percentage + '%';
+    progressBar.textContent = `${counted} / ${total} (${percentage}%)`;
+}
+
+function updateDiscrepancySummary() {
+    const discrepancies = Object.entries(countedItems).filter(([id, data]) => data.discrepancy !== 0);
+
+    if (discrepancies.length === 0) {
+        document.getElementById('discrepancySummary').style.display = 'none';
+        return;
+    }
+
+    document.getElementById('discrepancySummary').style.display = 'block';
+
+    const list = discrepancies.map(([id, data]) => {
+        const item = allItems.find(i => i.id == id);
+        return `
+            <div class="count-item discrepancy mb-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${item.part_name_ar || item.part_name}</strong><br>
+                        <small class="text-muted">${item.sku}</small>
+                    </div>
+                    <div class="text-end">
+                        <div>النظام: <strong>${data.system}</strong></div>
+                        <div>الفعلي: <strong>${data.actual}</strong></div>
+                        <div>الفرق: <span class="discrepancy-badge ${data.discrepancy >= 0 ? 'positive' : 'negative'}">
+                            ${data.discrepancy >= 0 ? '+' : ''}${data.discrepancy}
+                        </span></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    document.getElementById('discrepancyList').innerHTML = list;
+}
+
+async function completeSession() {
+    const total = allItems.length;
+    const counted = Object.keys(countedItems).length;
+
+    if (counted === 0) {
+        actionModals.showInfoModal({
+            title: 'تنبيه',
+            message: 'لم يتم جرد أي قطعة بعد',
+            type: 'warning'
+        });
+        return;
+    }
+
+    if (counted < total) {
+        const confirmed = await actionModals.showConfirmModal({
+            title: 'تنبيه',
+            message: `تم جرد ${counted} من ${total} قطعة فقط. هل تريد المتابعة؟`,
+            confirmText: 'نعم، إتمام',
+            cancelText: 'إلغاء'
+        });
+
+        if (!confirmed) return;
+    }
+
+    // عرض ملخص
+    const discrepancies = Object.entries(countedItems).filter(([id, data]) => data.discrepancy !== 0);
+
+    document.getElementById('completeSummary').innerHTML = `
+        <p><strong>إجمالي القطع المجردة:</strong> ${counted} / ${total}</p>
+        <p><strong>عدد الفروقات:</strong> ${discrepancies.length}</p>
+        ${discrepancies.length > 0 ? '<p class="text-warning"><i class="bi bi-exclamation-triangle me-2"></i>سيتم تحديث الكميات في النظام</p>' : ''}
+    `;
+
+    const modal = new bootstrap.Modal(document.getElementById('completeModal'));
+    modal.show();
+}
+
+async function confirmComplete() {
+    try {
+        showLoading();
+
+        // تحديث الكميات في النظام
+        for (const [itemId, data] of Object.entries(countedItems)) {
+            if (data.discrepancy !== 0) {
+                await app.apiRequest(`/api/inventory/items/${itemId}/`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ quantity: data.actual })
+                });
+            }
+        }
+
+        // حفظ سجل الجرد
+        const sessionId = localStorage.getItem('activeCountSession');
+        const sessionData = {
+            id: sessionId,
+            date: new Date().toISOString(),
+            total: allItems.length,
+            counted: Object.keys(countedItems).length,
+            discrepancies: Object.entries(countedItems).filter(([id, data]) => data.discrepancy !== 0).length,
+            items: countedItems
+        };
+
+        // حفظ في localStorage (يمكن تحسينه بحفظه في API)
+        const history = JSON.parse(localStorage.getItem('countHistory') || '[]');
+        history.unshift(sessionData);
+        localStorage.setItem('countHistory', JSON.stringify(history.slice(0, 10))); // آخر 10 جلسات
+
+        // مسح الجلسة النشطة
+        localStorage.removeItem('activeCountSession');
+        localStorage.removeItem('countedItems');
+
+        // إخفاء النافذة
+        const modal = bootstrap.Modal.getInstance(document.getElementById('completeModal'));
+        modal.hide();
+
+        actionModals.showInfoModal({
+            title: 'نجح',
+            message: 'تم إتمام الجرد وتحديث الكميات بنجاح',
+            type: 'success'
+        });
+
+        // إعادة تحميل
+        sessionActive = false;
+        countedItems = {};
+        await loadData();
+        showDefaultScreen();
+
+    } catch (error) {
+        console.error('Error completing session:', error);
+        actionModals.showInfoModal({
+            title: 'خطأ',
+            message: 'فشل إتمام الجرد: ' + error.message,
+            type: 'error'
+        });
+    } finally {
+        hideLoading();
+    }
+}
+
+async function cancelSession() {
+    const confirmed = await actionModals.showConfirmModal({
+        title: 'إلغاء الجرد',
+        message: 'سيتم فقدان جميع البيانات المدخلة. هل تريد المتابعة؟',
+        confirmText: 'نعم، إلغاء',
+        cancelText: 'رجوع'
+    });
+
+    if (!confirmed) return;
+
+    localStorage.removeItem('activeCountSession');
+    localStorage.removeItem('countedItems');
+
+    sessionActive = false;
+    countedItems = {};
+
+    showDefaultScreen();
+}
+
+function viewHistory() {
+    actionModals.showInfoModal({
+        title: 'قريباً',
+        message: 'صفحة سجل الجرد قيد التطوير',
+        type: 'info'
+    });
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+</script>
+{% endblock %}
+
