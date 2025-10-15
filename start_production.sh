@@ -14,12 +14,25 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# Activate virtual environment if it exists
+if [ -d ".venv" ]; then
+    echo -e "${BLUE}📋 Activating virtual environment...${NC}"
+    source .venv/bin/activate
+    echo -e "${GREEN}✅ Virtual environment activated${NC}"
+elif [ -d "venv" ]; then
+    echo -e "${BLUE}📋 Activating virtual environment...${NC}"
+    source venv/bin/activate
+    echo -e "${GREEN}✅ Virtual environment activated${NC}"
+else
+    echo -e "${YELLOW}⚠️  No virtual environment found, using system Python${NC}"
+fi
+
 # Use existing Django settings (not production_settings to preserve database)
 export DJANGO_SETTINGS_MODULE=sh_parts.settings
 export DEBUG=False
 export ALLOWED_HOSTS=*
 
-echo -e "${BLUE}📋 Step 1: Checking Python environment...${NC}"
+echo -e "\n${BLUE}📋 Step 1: Checking Python environment...${NC}"
 if ! command -v python3 &> /dev/null; then
     echo "❌ Python3 is not installed!"
     exit 1

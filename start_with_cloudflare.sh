@@ -15,6 +15,19 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+# Activate virtual environment if it exists
+if [ -d ".venv" ]; then
+    echo -e "${BLUE}📋 Activating virtual environment...${NC}"
+    source .venv/bin/activate
+    echo -e "${GREEN}✅ Virtual environment activated${NC}"
+elif [ -d "venv" ]; then
+    echo -e "${BLUE}📋 Activating virtual environment...${NC}"
+    source venv/bin/activate
+    echo -e "${GREEN}✅ Virtual environment activated${NC}"
+else
+    echo -e "${YELLOW}⚠️  No virtual environment found${NC}"
+fi
+
 # Check if cloudflared is installed
 echo -e "${BLUE}📋 Checking for cloudflared...${NC}"
 if ! command -v cloudflared &> /dev/null; then
