@@ -2,9 +2,38 @@
 .dropdown-menu { z-index: 2000; }
 
 /* -------------------------------------------------- */
-/* Core theme tokens                                  */
+/* Core theme tokens - Default: Day Blue Theme       */
 /* -------------------------------------------------- */
 :root {
+    --bg: #e9f2ff;
+    --card-bg: #ffffff;
+    --text: #10203e;
+    --muted: #536480;
+    --text-color: var(--text);
+    --text-secondary: var(--muted);
+    --border-color: rgba(16, 32, 62, 0.16);
+    --primary: #2563eb;
+    --primary-600: #1e40af;
+    --accent-color: #1b4ed4;
+    --success: #15803d;
+    --warning: #c2410c;
+    --danger: #b91c1c;
+    --info: #0369a1;
+    --alert-success-fg: #14532d;
+    --alert-warning-fg: #7c2d12;
+    --alert-info-fg: #0b3a60;
+    --alert-danger-fg: #7f1d1d;
+    --input-bg: #ffffff;
+    --input-border: rgba(16, 32, 62, 0.16);
+    --input-ring: rgba(37, 99, 235, 0.25);
+    --table-header-bg: rgba(30, 64, 175, 0.12);
+    --table-row-hover: rgba(37, 99, 235, 0.12);
+    --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.12);
+    --shadow-card: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme='dark-blue'],
+body[data-theme='dark-blue'] {
     --bg: #0f172a;
     --card-bg: #111c2f;
     --text: #f8fbff;

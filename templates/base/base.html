@@ -5,21 +5,17 @@
     <!-- تطبيق الثيم فوراً قبل أي شيء آخر - منع الوميض 100% -->
     <script>
         (function() {
-            const savedTheme = localStorage.getItem('theme') || 'dark-blue';
+            const savedTheme = localStorage.getItem('theme') || 'day-blue';
             const html = document.documentElement;
             const body = document.body;
 
             // تطبيق الثيم فوراً على html قبل تحميل أي شيء
-            if (savedTheme !== 'dark-blue') {
-                html.setAttribute('data-theme', savedTheme);
-            }
+            html.setAttribute('data-theme', savedTheme);
 
             // تطبيق على body أيضاً بعد تحميله
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', function() {
-                    if (savedTheme !== 'dark-blue') {
-                        document.body.setAttribute('data-theme', savedTheme);
-                    }
+                    document.body.setAttribute('data-theme', savedTheme);
                 });
             }
         })();
@@ -177,21 +173,21 @@
             <div class="d-flex align-items-center gap-3">
                 <!-- Theme Switcher -->
                 <div class="theme-switcher">
-                    <button class="theme-btn dark-blue active"
+                    <button class="theme-btn day-blue active"
+                            data-theme="day-blue"
+                            title="الثيم الأزرق النهاري / Day Blue Theme"></button>
+                    <button class="theme-btn dark-blue"
                             data-theme="dark-blue"
                             title="الثيم الأزرق الداكن / Dark Blue Theme"></button>
                     <button class="theme-btn light"
                             data-theme="light"
                             title="الثيم الفاتح / Light Theme"></button>
-            <button class="theme-btn day-blue"
-                data-theme="day-blue"
-                title="الثيم الأزرق النهاري / Day Blue Theme"></button>
-            <button class="theme-btn camel-dune"
-                data-theme="camel-dune"
-                title="ثيم الرمال الذهبية / Camel Dune Theme"></button>
-            <button class="theme-btn olive-sage"
-                data-theme="olive-sage"
-                title="الثيم الزيتي / Olive Sage Theme"></button>
+                    <button class="theme-btn camel-dune"
+                            data-theme="camel-dune"
+                            title="ثيم الرمال الذهبية / Camel Dune Theme"></button>
+                    <button class="theme-btn olive-sage"
+                            data-theme="olive-sage"
+                            title="الثيم الزيتي / Olive Sage Theme"></button>
                 </div>
 
                 <!-- Language Switcher -->

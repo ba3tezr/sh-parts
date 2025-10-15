@@ -3,7 +3,7 @@
   var supportedThemes = ['dark-blue','light','day-blue','camel-dune','olive-sage'];
   function applyTheme(theme){
     if (supportedThemes.indexOf(theme) === -1) {
-      theme = 'dark-blue';
+      theme = 'day-blue';
     }
     var html = document.documentElement;
     var body = document.body;
@@ -21,7 +21,7 @@
   document.addEventListener('DOMContentLoaded', function(){
     var saved = null;
     try { saved = localStorage.getItem('theme'); } catch(e){}
-  applyTheme(saved || 'dark-blue');
+  applyTheme(saved || 'day-blue');
     document.querySelectorAll('.theme-btn').forEach(function(btn){
       btn.addEventListener('click', function(){
         var t = btn.getAttribute('data-theme');
