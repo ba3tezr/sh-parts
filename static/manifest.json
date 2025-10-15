@@ -1,0 +1,68 @@
+{
+  "name": "SH Parts - نظام إدارة قطع السيارات",
+  "short_name": "SH Parts",
+  "description": "نظام متكامل لإدارة قطع السيارات والمخزون والمبيعات",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0d6efd",
+  "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [],
+  "screenshots": [
+    {
+      "src": "/static/screenshots/dashboard.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/static/screenshots/inventory.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "المخزون",
+      "short_name": "المخزون",
+      "description": "عرض المخزون",
+      "url": "/inventory/",
+      "icons": [
+        {
+          "src": "/static/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "المبيعات",
+      "short_name": "المبيعات",
+      "description": "عرض المبيعات",
+      "url": "/sales/",
+      "icons": [
+        {
+          "src": "/static/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "الباركود",
+      "short_name": "الباركود",
+      "description": "مسح الباركود",
+      "url": "/inventory/barcode/",
+      "icons": [
+        {
+          "src": "/static/icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}
+

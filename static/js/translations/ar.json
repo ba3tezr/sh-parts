@@ -1,0 +1,285 @@
+{
+  "_comment": "ملف الترجمات العربية - SH Parts Arabic Translations",
+  "_version": "1.0",
+  "_author": "Zakee Tahawi",
+
+  "app_name": "SH Parts",
+  "app_full_name": "SH Parts Management System",
+
+  "loading": "جاري التحميل...",
+  "loading_data": "جاري تحميل البيانات...",
+  "loading_details": "جاري تحميل التفاصيل...",
+  "loading_invoice": "جاري تحميل تفاصيل الفاتورة...",
+  "loading_order": "جاري تحميل تفاصيل الطلب...",
+  
+  "error": "حدث خطأ",
+  "error_loading": "حدث خطأ في تحميل البيانات",
+  "error_loading_data": "حدث خطأ في تحميل البيانات",
+  "error_loading_invoice": "خطأ في تحميل تفاصيل الفاتورة",
+  "error_saving": "حدث خطأ في حفظ البيانات",
+  "error_deleting": "حدث خطأ في الحذف",
+  
+  "success": "تمت العملية بنجاح",
+  "success_saved": "تم الحفظ بنجاح",
+  "success_deleted": "تم الحذف بنجاح",
+  "success_updated": "تم التحديث بنجاح",
+  
+  "confirm": "تأكيد",
+  "confirm_delete": "هل أنت متأكد من الحذف؟",
+  "confirm_delete_item": "هل أنت متأكد من حذف هذا العنصر؟",
+  "confirm_delete_multiple": "هل أنت متأكد من حذف {count} عنصر؟",
+  "confirm_delete_customer": "هل أنت متأكد من حذف هذا العميل؟",
+  "confirm_delete_customers": "هل أنت متأكد من حذف العملاء المحددين؟",
+  
+  "yes": "نعم",
+  "no": "لا",
+  "ok": "موافق",
+  "cancel": "إلغاء",
+  "close": "إغلاق",
+  "save": "حفظ",
+  "edit": "تعديل",
+  "delete": "حذف",
+  "view": "عرض",
+  "add": "إضافة",
+  "search": "بحث",
+  "filter": "تصفية",
+  "export": "تصدير",
+  "print": "طباعة",
+  "refresh": "تحديث",
+  "reset": "إعادة تعيين",
+  "apply": "تطبيق",
+  "clear": "مسح",
+  "select": "اختيار",
+  "select_all": "تحديد الكل",
+  "deselect_all": "إلغاء تحديد الكل",
+  
+  "no_data": "لا توجد بيانات",
+  "no_results": "لا توجد نتائج",
+  "no_items": "لا توجد عناصر",
+  "no_customers": "لا يوجد عملاء",
+  "no_sales": "لا توجد مبيعات",
+  "no_inventory": "لا توجد قطع في المخزون",
+  
+  "select_customer": "اختر عميل",
+  "select_item": "اختر عنصر",
+  "select_at_least_one": "يرجى اختيار عميل واحد على الأقل",
+  "select_customer_first": "يرجى اختيار عميل أولاً",
+  
+  "customers": "العملاء",
+  "customer": "عميل",
+  "customer_name": "اسم العميل",
+  "customer_code": "كود العميل",
+  "customer_type": "نوع العميل",
+  "customer_phone": "هاتف العميل",
+  "customer_email": "بريد العميل",
+  "customer_address": "عنوان العميل",
+  "customer_details": "تفاصيل العميل",
+  "customer_info": "معلومات العميل",
+  
+  "inventory": "المخزون",
+  "inventory_item": "قطعة",
+  "inventory_items": "القطع",
+  "part": "قطعة",
+  "parts": "القطع",
+  "part_name": "اسم القطعة",
+  "part_number": "رقم القطعة",
+  "sku": "SKU",
+  "quantity": "الكمية",
+  "price": "السعر",
+  "cost": "التكلفة",
+  "selling_price": "سعر البيع",
+  "cost_price": "سعر التكلفة",
+  
+  "sales": "المبيعات",
+  "sale": "بيع",
+  "invoice": "فاتورة",
+  "invoices": "الفواتير",
+  "invoice_number": "رقم الفاتورة",
+  "invoice_date": "تاريخ الفاتورة",
+  "invoice_details": "تفاصيل الفاتورة",
+  
+  "orders": "الطلبات",
+  "order": "طلب",
+  "order_number": "رقم الطلب",
+  "order_date": "تاريخ الطلب",
+  "order_details": "تفاصيل الطلب",
+  
+  "reports": "التقارير",
+  "report": "تقرير",
+  "dashboard": "لوحة التحكم",
+  "statistics": "الإحصائيات",
+  "analytics": "التحليلات",
+  
+  "total": "الإجمالي",
+  "subtotal": "المجموع الفرعي",
+  "total_amount": "المبلغ الإجمالي",
+  "total_sales": "إجمالي المبيعات",
+  "total_customers": "إجمالي العملاء",
+  "total_items": "إجمالي القطع",
+  "total_debt": "إجمالي الديون",
+  
+  "paid": "مدفوع",
+  "unpaid": "غير مدفوع",
+  "partial": "جزئي",
+  "paid_amount": "المبلغ المدفوع",
+  "remaining": "المتبقي",
+  "balance": "الرصيد",
+  "balance_due": "المبلغ المستحق",
+  
+  "status": "الحالة",
+  "active": "نشط",
+  "inactive": "غير نشط",
+  "completed": "مكتمل",
+  "pending": "قيد الانتظار",
+  "cancelled": "ملغي",
+  "draft": "مسودة",
+  
+  "payment_status": "حالة الدفع",
+  "payment_method": "طريقة الدفع",
+  "cash": "نقدي",
+  "card": "بطاقة",
+  "transfer": "تحويل",
+  
+  "date": "التاريخ",
+  "time": "الوقت",
+  "created_at": "تاريخ الإنشاء",
+  "updated_at": "تاريخ التحديث",
+  "from": "من",
+  "to": "إلى",
+  
+  "name": "الاسم",
+  "phone": "الهاتف",
+  "email": "البريد الإلكتروني",
+  "address": "العنوان",
+  "city": "المدينة",
+  "country": "الدولة",
+  
+  "notes": "ملاحظات",
+  "note": "ملاحظة",
+  "add_note": "إضافة ملاحظة",
+  "edit_note": "تعديل ملاحظة",
+  "delete_note": "حذف ملاحظة",
+  
+  "purchases": "المشتريات",
+  "purchase": "شراء",
+  "purchase_history": "سجل المشتريات",
+  "view_purchases": "عرض المشتريات",
+  
+  "credits": "الأرصدة",
+  "credit": "رصيد",
+  "add_credit": "إضافة رصيد",
+  "credit_amount": "مبلغ الرصيد",
+  
+  "discount": "خصم",
+  "discount_amount": "مبلغ الخصم",
+  "discount_percent": "نسبة الخصم",
+  
+  "tax": "ضريبة",
+  "tax_amount": "مبلغ الضريبة",
+  "tax_rate": "نسبة الضريبة",
+  
+  "seller": "البائع",
+  "sales_person": "موظف المبيعات",
+  
+  "location": "الموقع",
+  "warehouse": "المستودع",
+  "from_location": "من موقع",
+  "to_location": "إلى موقع",
+  
+  "reason": "السبب",
+  "description": "الوصف",
+  "details": "التفاصيل",
+  
+  "actions": "الإجراءات",
+  "action": "إجراء",
+  
+  "excel_export": "تصدير Excel",
+  "exporting": "جاري التصدير...",
+  "export_success": "تم التصدير بنجاح",
+  
+  "card_view": "عرض البطاقات",
+  "table_view": "عرض الجدول",
+  
+  "individual": "فرد",
+  "business": "شركة",
+  
+  "all": "الكل",
+  "all_customers": "جميع العملاء",
+  "all_items": "جميع القطع",
+  
+  "new": "جديد",
+  "new_customer": "عميل جديد",
+  "new_customers": "عملاء جدد",
+  
+  "active_customers": "عملاء نشطون",
+  "inactive_customers": "عملاء غير نشطين",
+  
+  "this_month": "هذا الشهر",
+  "this_year": "هذا العام",
+  "last_month": "الشهر الماضي",
+  "last_year": "العام الماضي",
+  
+  "of_total": "من الإجمالي",
+  
+  "view_invoice": "عرض الفاتورة",
+  "view_order": "عرض الطلب",
+  "view_details": "عرض التفاصيل",
+  
+  "sold_items": "القطع المباعة",
+  "items_sold": "القطع المباعة",
+  
+  "important": "مهم",
+  "not_important": "غير مهم",
+  
+  "used": "مستخدم",
+  "not_used": "غير مستخدم",
+  
+  "available": "متاح",
+  "reserved": "محجوز",
+  "sold": "مباع",
+  
+  "condition": "الحالة",
+  "new_condition": "جديد",
+  "used_good": "مستعمل - جيد",
+  "used_fair": "مستعمل - مقبول",
+  
+  "min_quantity": "الحد الأدنى",
+  "max_quantity": "الحد الأقصى",
+  
+  "low_stock": "مخزون منخفض",
+  "out_of_stock": "نفذ من المخزون",
+  
+  "category": "الفئة",
+  "categories": "الفئات",
+  
+  "make": "الماركة",
+  "model": "الموديل",
+  "year": "السنة",
+  
+  "vehicle": "المركبة",
+  "vehicles": "المركبات",
+  "vin": "رقم الهيكل",
+  
+  "settings": "الإعدادات",
+  "profile": "الملف الشخصي",
+  "logout": "تسجيل الخروج",
+  "login": "تسجيل الدخول",
+  
+  "username": "اسم المستخدم",
+  "password": "كلمة المرور",
+  "remember_me": "تذكرني",
+  
+  "admin_panel": "لوحة الإدارة",
+  
+  "language": "اللغة",
+  "arabic": "العربية",
+  "english": "English",
+  
+  "theme": "المظهر",
+  "dark_theme": "المظهر الداكن",
+  "light_theme": "المظهر الفاتح",
+  
+  "currency": "العملة",
+  "currency_symbol": "رمز العملة"
+}
+
