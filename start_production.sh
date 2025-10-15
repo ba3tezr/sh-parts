@@ -14,8 +14,10 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Set production settings
-export DJANGO_SETTINGS_MODULE=production_settings
+# Use existing Django settings (not production_settings to preserve database)
+export DJANGO_SETTINGS_MODULE=sh_parts.settings
+export DEBUG=False
+export ALLOWED_HOSTS=*
 
 echo -e "${BLUE}📋 Step 1: Checking Python environment...${NC}"
 if ! command -v python3 &> /dev/null; then
@@ -29,28 +31,24 @@ pip install -q gunicorn whitenoise 2>/dev/null || echo "Dependencies already ins
 echo -e "${GREEN}✅ Dependencies ready${NC}"
 
 echo -e "\n${BLUE}📋 Step 3: Collecting static files...${NC}"
-python3 manage.py collectstatic --noinput --settings=production_settings
+python3 manage.py collectstatic --noinput
 echo -e "${GREEN}✅ Static files collected${NC}"
 
-echo -e "\n${BLUE}📋 Step 4: Running database migrations...${NC}"
-python3 manage.py migrate --noinput --settings=production_settings
-echo -e "${GREEN}✅ Database migrated${NC}"
+echo -e "\n${BLUE}📋 Step 4: Checking database...${NC}"
+if [ -f "db.sqlite3" ]; then
+    echo -e "${GREEN}✅ Database exists ($(du -h db.sqlite3 | cut -f1)), skipping migrations${NC}"
+else
+    echo -e "${YELLOW}⚠️  Database not found, running migrations...${NC}"
+    python3 manage.py migrate --noinput
+    echo -e "${GREEN}✅ Database created${NC}"
+fi
 
 echo -e "\n${BLUE}📋 Step 5: Creating media directories...${NC}"
 mkdir -p media/qr_codes media/vehicles media/parts media/inventory_items
 echo -e "${GREEN}✅ Media directories created${NC}"
 
-echo -e "\n${BLUE}📋 Step 6: Checking for superuser...${NC}"
-python3 manage.py shell --settings=production_settings << EOF
-from django.contrib.auth import get_user_model
-User = get_user_model()
-if not User.objects.filter(is_superuser=True).exists():
-    print("Creating default admin user...")
-    User.objects.create_superuser('admin@shparts.com', 'admin@shparts.com', 'admin123')
-    print("✅ Admin user created: admin@shparts.com / admin123")
-else:
-    print("✅ Admin user already exists")
-EOF
+echo -e "\n${BLUE}📋 Step 6: Database ready${NC}"
+echo -e "${GREEN}✅ Using existing database${NC}"
 
 echo -e "\n${GREEN}=========================================="
 echo "✅ Server is ready to start!"
@@ -61,12 +59,13 @@ echo -e "\n${YELLOW}📝 Server Information:${NC}"
 echo "   - Host: 0.0.0.0"
 echo "   - Port: 8000"
 echo "   - Workers: 4"
-echo "   - Settings: production_settings"
+echo "   - Settings: sh_parts.settings"
+echo "   - Database: db.sqlite3 (preserved)"
 
 echo -e "\n${BLUE}🚀 Starting Gunicorn server...${NC}"
 echo ""
 
-# Start Gunicorn with production settings
+# Start Gunicorn with existing settings
 exec gunicorn \
     --bind 0.0.0.0:8000 \
     --workers 4 \
@@ -74,6 +73,6 @@ exec gunicorn \
     --access-logfile - \
     --error-logfile - \
     --log-level info \
-    --env DJANGO_SETTINGS_MODULE=production_settings \
+    --env DJANGO_SETTINGS_MODULE=sh_parts.settings \
     sh_parts.wsgi:application
 

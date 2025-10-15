@@ -60,14 +60,15 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'core.middleware.ForceDefaultLanguageMiddleware',  # Force default language
+    'django.middleware.locale.LocaleMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'core.middleware.LanguageMiddleware',
+    'core.middleware.RoleBasedAccessMiddleware',  # Role-based access control
 ]
 
 ROOT_URLCONF = 'sh_parts.urls'
@@ -138,6 +139,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Custom User Model
+AUTH_USER_MODEL = 'authentication.User'
 
 # REST Framework
 REST_FRAMEWORK = {
