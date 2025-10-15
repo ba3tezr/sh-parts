@@ -1,0 +1,6 @@
+/* Prevent Flash of Unstyled Content (FOUC) */
+html { visibility: visible; }
+body { visibility: hidden; }
+
+/* In base.html we set body visible on DOMContentLoaded */
+
