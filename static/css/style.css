@@ -747,12 +747,39 @@ html[data-theme='light'] .alert { color: var(--text); }
 /* -------------------------------------------------- */
 /* Login layout                                       */
 /* -------------------------------------------------- */
-.login-card { background: var(--card-bg); color: var(--text); border-radius: 18px; }
-.login-card .form-label { color: var(--text); }
-.login-card .form-control { background: var(--input-bg); color: var(--text); border-color: var(--input-border); }
-.login-card .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 0.25rem var(--input-ring); }
-.login-card .text-muted { color: var(--text-secondary) !important; }
-.login-card .form-control::placeholder { color: var(--text-secondary); opacity: 0.9; }
+.login-card {
+    background: var(--card-bg);
+    color: var(--text);
+    border-radius: 18px;
+}
+.login-card .form-label {
+    color: var(--text);
+    font-weight: 600;
+}
+.login-card .form-control {
+    background: var(--input-bg);
+    color: var(--primary);
+    border-color: var(--input-border);
+    font-weight: 500;
+}
+.login-card .form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.25rem var(--input-ring);
+    color: var(--primary);
+}
+.login-card .text-muted {
+    color: var(--text-secondary) !important;
+}
+.login-card .form-control::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+.login-card h2 {
+    color: var(--text);
+}
+.login-card .form-check-label {
+    color: var(--text-secondary);
+}
 
 /* -------------------------------------------------- */
 /* Misc utilities                                     */
