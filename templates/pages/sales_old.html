@@ -14,7 +14,7 @@
                     <i class="bi bi-cash-stack fs-1 text-success me-3"></i>
                     <div>
                         <p class="mb-0 text-muted">إجمالي المبيعات اليوم</p>
-                        <h4 class="mb-0" id="todaySales">0 {{ currency_symbol }}</h4>
+                        <h4 class="mb-0" id="todaySales">0 EGP</h4>
                     </div>
                 </div>
             </div>
@@ -27,7 +27,7 @@
                     <i class="bi bi-calendar-week fs-1 text-primary me-3"></i>
                     <div>
                         <p class="mb-0 text-muted">مبيعات هذا الشهر</p>
-                        <h4 class="mb-0" id="monthSales">0 {{ currency_symbol }}</h4>
+                        <h4 class="mb-0" id="monthSales">0 EGP</h4>
                     </div>
                 </div>
             </div>
@@ -124,9 +124,9 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ sale.created_at|date:"Y-m-d H:i"|default:"-" }}</td>
-                                    <td><strong>{{ sale.total_amount }} {{ currency_symbol }}</strong></td>
-                                    <td>{{ sale.paid_amount }} {{ currency_symbol }}</td>
-                                    <td>{{ sale.balance_due }} {{ currency_symbol }}</td>
+                                    <td><strong>{{ sale.total_amount }} EGP</strong></td>
+                                    <td>{{ sale.paid_amount }} EGP</td>
+                                    <td>{{ sale.balance_due }} EGP</td>
                                     <td>
                                         {% if sale.status == 'DRAFT' %}
                                             <span class="badge bg-secondary">مسودة</span>
@@ -239,19 +239,19 @@
                             <table class="table table-sm">
                                 <tr>
                                     <td data-translate="subtotal">المجموع الفرعي:</td>
-                                    <td class="text-end"><strong id="subtotal">0 {{ currency_symbol }}</strong></td>
+                                    <td class="text-end"><strong id="subtotal">0 EGP</strong></td>
                                 </tr>
                                 <tr>
                                     <td data-translate="discount">الخصم:</td>
-                                    <td class="text-end"><span id="totalDiscount">0 {{ currency_symbol }}</span></td>
+                                    <td class="text-end"><span id="totalDiscount">0 EGP</span></td>
                                 </tr>
                                 <tr>
                                     <td data-translate="tax">الضريبة ({{ system_settings.tax_rate }}%):</td>
-                                    <td class="text-end"><span id="tax">0 {{ currency_symbol }}</span></td>
+                                    <td class="text-end"><span id="tax">0 EGP</span></td>
                                 </tr>
                                 <tr class="table-primary">
                                     <td><strong data-translate="total">الإجمالي:</strong></td>
-                                    <td class="text-end"><strong id="total">0 {{ currency_symbol }}</strong></td>
+                                    <td class="text-end"><strong id="total">0 EGP</strong></td>
                                 </tr>
                             </table>
                         </div>

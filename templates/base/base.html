@@ -55,7 +55,7 @@
     {% block extra_head %}{% endblock %}
     {% block extra_css %}{% endblock %}
 </head>
-<body data-user-id="{{ request.user.id }}" data-currency-symbol="{{ currency_symbol }}">
+<body data-user-id="{{ request.user.id }}" data-currency-symbol="EGP">
     <!-- Sidebar -->
     <nav class="sidebar">
         <div class="logo">
@@ -279,12 +279,11 @@
             // إظهار الجسم بعد التحميل لتفادي الوميض
             document.body.style.visibility = 'visible';
 
-            // مزامنة رمز العملة من الخادم إلى إعدادات الواجهة
+            // Use EGP currency symbol always
             try {
-                var sym = document.body.dataset.currencySymbol;
-                if (sym && window.app && app.getSettings && app.setSettings) {
+                if (window.app && app.getSettings && app.setSettings) {
                     var s = app.getSettings();
-                    s.currency_symbol = sym;
+                    s.currency_symbol = 'EGP';
                     app.setSettings(s);
                 }
             } catch(e){}

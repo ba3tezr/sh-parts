@@ -348,5 +348,8 @@
   "selling_price_required": "Selling price is required",
   "item_added_successfully": "Item added successfully",
   "error_saving_item": "Error saving item",
-  "saving": "Saving..."
+  "saving": "Saving...",
+  "export_excel": "Export Excel",
+  "export_pdf": "Export PDF",
+  "location_transfer": "Transfer Between Locations"
 }

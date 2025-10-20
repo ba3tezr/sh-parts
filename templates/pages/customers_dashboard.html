@@ -551,7 +551,7 @@ function createRFMChart() {
 
 // Helper Functions
 function formatCurrency(amount) {
-    const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+    const currencySymbol = 'EGP';
     const formattedNumber = parseFloat(amount).toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2

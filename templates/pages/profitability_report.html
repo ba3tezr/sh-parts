@@ -367,7 +367,7 @@ function applyFilters() {
 }
 
 function calculateStats(items) {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
 
     let totalCost = 0;
     let totalRevenue = 0;
@@ -397,7 +397,7 @@ function calculateStats(items) {
 }
 
 function displayItemsTable(items) {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
     const tbody = document.getElementById('profitTableBody');
 
     if (items.length === 0) {
@@ -441,7 +441,7 @@ function displayItemsTable(items) {
 }
 
 function displayCategoryTable(items) {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
     const tbody = document.getElementById('categoryTableBody');
 
     // تجميع حسب الفئة
@@ -492,7 +492,7 @@ function displayCategoryTable(items) {
 }
 
 function displayVehicleTable(items) {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
     const tbody = document.getElementById('vehicleTableBody');
 
     // تجميع حسب السيارة
@@ -640,7 +640,7 @@ function displayCharts(items) {
 }
 
 function exportToExcel() {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
 
     // تجهيز البيانات
     const data = allItems

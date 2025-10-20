@@ -60,7 +60,7 @@
                                     </td>
                                     <td>-</td>
                                     <td>{{ sale.created_at|date:"Y-m-d"|default:"-" }}</td>
-                                    <td><strong>{{ sale.total_amount }} {{ currency_symbol }}</strong></td>
+                                    <td><strong>{{ sale.total_amount }} EGP</strong></td>
                                     <td>
                                         {% if sale.status == 'DRAFT' %}
                                             <span class="badge bg-warning">{% trans "قيد الانتظار" %}</span>
@@ -267,7 +267,7 @@ function showPartsSelectionModal(parts) {
                     <small class="text-muted">SKU: ${part.sku}</small>
                 </td>
                 <td><span class="badge bg-info">${part.quantity}</span></td>
-                <td><strong class="text-success">${part.selling_price} ${document.body.dataset.currencySymbol || '\ufdfc'}</strong></td>
+                <td><strong class="text-success">${part.selling_price} ${'EGP'}</strong></td>
                 <td>
                     <input type="number"
                            class="form-control form-control-sm"
@@ -387,10 +387,10 @@ function updateAddedItemsList() {
             <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded">
                 <div>
                     <strong>${item.partName}</strong><br>
-                    <small>${t('quantity')}: ${item.quantity} × ${item.price} ${document.body.dataset.currencySymbol || '\ufdfc'}</small>
+                    <small>${t('quantity')}: ${item.quantity} × ${item.price} ${'EGP'}</small>
                 </div>
                 <div>
-                    <strong class="text-success">${item.total} ${document.body.dataset.currencySymbol || '﷼'}</strong>
+                    <strong class="text-success">${item.total} ${'EGP'}</strong>
                     <button class="btn btn-sm btn-danger ms-2" onclick="removeItemFromOrder(${index})">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -402,7 +402,7 @@ function updateAddedItemsList() {
     
     const total = currentOrder.items.reduce((sum, item) => sum + item.total, 0);
     html += `<div class="mt-3 p-2 bg-primary text-white rounded text-center">
-        <strong>${t('total')}: ${total} ${document.body.dataset.currencySymbol || 'EGP'}</strong>
+        <strong>${t('total')}: ${total} ${'EGP'}</strong>
     </div>`;
     
     listEl.innerHTML = html;
@@ -494,7 +494,7 @@ function showPaymentModal(sale) {
     console.log('Payment modal - Sale data:', sale);
 
     const totalAmount = parseFloat(sale.total_amount || 0);
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
 
     console.log('Total amount:', totalAmount);
 
@@ -666,7 +666,7 @@ async function processPayment(saleId, totalAmount) {
         // عرض رسالة نجاح
         actionModals.showInfoModal({
             title: 'تم الدفع! ✅',
-            message: `تم تسجيل الدفع بنجاح\nرقم الدفع: ${result.payment_number || 'N/A'}\nالمبلغ المدفوع: ${paidAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}`,
+            message: `تم تسجيل الدفع بنجاح\nرقم الدفع: ${result.payment_number || 'N/A'}\nالمبلغ المدفوع: ${paidAmount.toFixed(2)} ${'EGP'}`,
             type: 'success',
             onClose: () => location.reload()
         });
@@ -711,7 +711,7 @@ async function viewOrder(id) {
             });
         }
 
-        const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+        const currencySymbol = 'EGP';
 
         const modalHtml = `
             <div class="modal fade" id="viewOrderModal" tabindex="-1">
@@ -858,7 +858,7 @@ async function completeOrder(id) {
         if (paymentStatus !== 'PAID' && balanceDue > 0) {
             const shouldPay = await actionModals.showConfirmModal({
                 title: '⚠️ الطلب غير مدفوع',
-                message: `المبلغ الإجمالي: ${totalAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}\nالمدفوع: ${paidAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}\nالمتبقي: ${balanceDue.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}\n\nيجب دفع المبلغ المتبقي قبل إتمام الطلب.\nهل تريد إضافة دفعة الآن؟`,
+                message: `المبلغ الإجمالي: ${totalAmount.toFixed(2)} ${'EGP'}\nالمدفوع: ${paidAmount.toFixed(2)} ${'EGP'}\nالمتبقي: ${balanceDue.toFixed(2)} ${'EGP'}\n\nيجب دفع المبلغ المتبقي قبل إتمام الطلب.\nهل تريد إضافة دفعة الآن؟`,
                 confirmText: 'نعم، إضافة دفعة',
                 cancelText: 'إلغاء'
             });
@@ -908,7 +908,7 @@ async function completeOrder(id) {
 
 // عرض نافذة الدفع عند محاولة إتمام طلب غير مدفوع
 function showPaymentModalForCompletion(sale, requiredAmount) {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
 
     const modalHtml = `
         <div class="modal fade" id="completionPaymentModal" tabindex="-1">
@@ -1019,7 +1019,7 @@ async function processCompletionPayment(saleId, requiredAmount) {
     if (paidAmount < requiredAmount) {
         actionModals.showInfoModal({
             title: 'تحذير',
-            message: `يجب دفع المبلغ المتبقي بالكامل (${requiredAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'})`,
+            message: `يجب دفع المبلغ المتبقي بالكامل (${requiredAmount.toFixed(2)} ${'EGP'})`,
             type: 'warning'
         });
         return;
@@ -1055,7 +1055,7 @@ async function processCompletionPayment(saleId, requiredAmount) {
         // عرض رسالة نجاح
         actionModals.showInfoModal({
             title: 'تم بنجاح! ✅',
-            message: `تم تسجيل الدفع وإتمام الطلب بنجاح\nالمبلغ المدفوع: ${paidAmount.toFixed(2)} ${document.body.dataset.currencySymbol || 'EGP'}`,
+            message: `تم تسجيل الدفع وإتمام الطلب بنجاح\nالمبلغ المدفوع: ${paidAmount.toFixed(2)} ${'EGP'}`,
             type: 'success',
             onClose: () => location.reload()
         });
@@ -1140,7 +1140,7 @@ async function printOrder(id) {
             });
         }
 
-        const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+        const currencySymbol = 'EGP';
         const currentDate = new Date().toLocaleDateString('ar-EG');
 
         const printContent = `

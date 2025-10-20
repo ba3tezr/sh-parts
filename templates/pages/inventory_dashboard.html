@@ -332,7 +332,7 @@ async function loadData() {
 }
 
 function calculateMetrics() {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
     
     let totalCost = 0;
     let totalRevenue = 0;
@@ -534,7 +534,7 @@ function displayCharts() {
 }
 
 function displayTopLists() {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
 
     // حساب الربح لكل قطعة
     const itemsWithProfit = allItems

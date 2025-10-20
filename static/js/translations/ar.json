@@ -348,5 +348,8 @@
   "selling_price_required": "يرجى إدخال سعر بيع صحيح",
   "item_added_successfully": "تم إضافة المنتج بنجاح",
   "error_saving_item": "فشل حفظ المنتج",
-  "saving": "جارٍ الحفظ..."
+  "saving": "جارٍ الحفظ...",
+  "export_excel": "تصدير Excel",
+  "export_pdf": "تصدير PDF",
+  "location_transfer": "نقل بين المواقع"
 }

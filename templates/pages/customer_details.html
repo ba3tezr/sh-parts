@@ -555,7 +555,7 @@ async function loadNotes() {
 }
 
 function displayCustomerInfo() {
-    const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+    const currencySymbol = 'EGP';
 
     // Avatar
     const initials = getInitials(customerData.full_name || customerData.business_name);
@@ -737,7 +737,7 @@ function createPurchasesChart() {
 
 // Helper Functions
 function formatCurrency(amount) {
-    const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+    const currencySymbol = 'EGP';
     const formattedNumber = parseFloat(amount).toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
@@ -962,7 +962,7 @@ async function viewInvoice(saleId) {
             });
         }
 
-        const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+        const currencySymbol = 'EGP';
 
         // Create modal HTML
         const modalHtml = `

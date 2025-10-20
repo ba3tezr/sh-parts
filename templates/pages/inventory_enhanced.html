@@ -335,28 +335,28 @@
                 </ul>
             </div>
             <a href="{% url 'location_transfer' %}" class="btn btn-warning">
-                <i class="bi bi-arrow-left-right me-2"></i>نقل بين المواقع
+                <i class="bi bi-arrow-left-right me-2"></i><span data-translate="location_transfer">نقل بين المواقع</span>
             </a>
             <a href="{% url 'inventory_count' %}" class="btn btn-primary">
-                <i class="bi bi-clipboard-check me-2"></i>الجرد
+                <i class="bi bi-clipboard-check me-2"></i><span data-translate="inventory_count">الجرد</span>
             </a>
             <button class="btn btn-success" onclick="exportToExcel()">
-                <i class="bi bi-file-earmark-excel me-2"></i>تصدير Excel
+                <i class="bi bi-file-earmark-excel me-2"></i><span data-translate="export_excel">تصدير Excel</span>
             </button>
             <button class="btn btn-info" onclick="exportToPDF()">
-                <i class="bi bi-file-earmark-pdf me-2"></i>تصدير PDF
+                <i class="bi bi-file-earmark-pdf me-2"></i><span data-translate="export_pdf">تصدير PDF</span>
             </button>
             <button class="btn btn-secondary" onclick="window.print()">
-                <i class="bi bi-printer me-2"></i>طباعة
+                <i class="bi bi-printer me-2"></i><span data-translate="print">طباعة</span>
             </button>
         </div>
 
         <div class="view-toggle">
             <button class="btn btn-outline-primary active" id="cardsViewBtn" onclick="switchView('cards')">
-                <i class="bi bi-grid-3x3-gap me-2"></i>بطاقات
+                <i class="bi bi-grid-3x3-gap me-2"></i><span data-translate="cards_view">بطاقات</span>
             </button>
             <button class="btn btn-outline-primary" id="tableViewBtn" onclick="switchView('table')">
-                <i class="bi bi-table me-2"></i>جدول
+                <i class="bi bi-table me-2"></i><span data-translate="table_view">جدول</span>
             </button>
         </div>
     </div>
@@ -376,16 +376,16 @@
                     <thead class="table-light">
                         <tr>
                             <th>SKU</th>
-                            <th>القطعة</th>
-                            <th>الفئة</th>
-                            <th>الحالة</th>
-                            <th>الموقع</th>
-                            <th>الكمية</th>
-                            <th>سعر الكلفة</th>
-                            <th>سعر البيع</th>
-                            <th>الربح</th>
-                            <th>الحالة</th>
-                            <th class="no-print">إجراءات</th>
+                            <th><span data-translate="part_name">القطعة</span></th>
+                            <th><span data-translate="category">الفئة</span></th>
+                            <th><span data-translate="condition">الحالة</span></th>
+                            <th><span data-translate="location">الموقع</span></th>
+                            <th><span data-translate="quantity">الكمية</span></th>
+                            <th><span data-translate="cost_price">سعر الكلفة</span></th>
+                            <th><span data-translate="selling_price">سعر البيع</span></th>
+                            <th><span data-translate="profit">الربح</span></th>
+                            <th><span data-translate="status">الحالة</span></th>
+                            <th class="no-print"><span data-translate="actions">إجراءات</span></th>
                         </tr>
                     </thead>
                     <tbody id="inventoryTableBody">
@@ -708,6 +708,11 @@ async function loadData() {
         filteredItems = [...allItems];
         renderItems();
         updateStats();
+        
+        // تطبيق الترجمات على جميع العناصر
+        if (typeof applyTranslations === 'function') {
+            applyTranslations();
+        }
     } catch (error) {
         console.error('Error loading data:', error);
         actionModals.showInfoModal({
@@ -727,7 +732,9 @@ function populateFilters() {
     categories.forEach(cat => {
         const option = document.createElement('option');
         option.value = cat.id;
-        option.textContent = cat.name_ar || cat.name;
+        // استخدام اللغة الحالية
+        const currentLang = localStorage.getItem('language') || 'ar';
+        option.textContent = currentLang === 'en' && cat.name_en ? cat.name_en : (cat.name_ar || cat.name);
         categorySelect.appendChild(option);
     });
 
@@ -872,13 +879,17 @@ function renderCardsView() {
 
         const statusBadge = getStatusBadge(item.status);
         const conditionBadge = getConditionBadge(item.condition);
+        
+        // استخدام اللغة الحالية
+        const currentLang = localStorage.getItem('language') || 'ar';
+        const partName = currentLang === 'en' && item.part_name_en ? item.part_name_en : (item.part_name_ar || item.part_name || 'Unknown');
 
         return `
             <div class="item-card">
                 <div class="item-header">
                     <div>
                         <div class="item-sku">${item.sku}</div>
-                        <div class="item-name">${item.part_name_ar || item.part_name || 'غير معروف'}</div>
+                        <div class="item-name">${partName}</div>
                         ${conditionBadge}
                     </div>
                     <div class="text-end">
@@ -906,10 +917,10 @@ function renderCardsView() {
                         <div class="item-price">${selling.toFixed(2)} ${currencySymbol}</div>
                     </div>
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-info" onclick="viewItemDetails(${item.id})" title="عرض">
+                        <button class="btn btn-info" onclick="viewItemDetails(${item.id})" data-translate-title="view" title="عرض">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button class="btn btn-primary" onclick="quickEdit(${item.id})" title="تعديل">
+                        <button class="btn btn-primary" onclick="quickEdit(${item.id})" data-translate-title="edit" title="تعديل">
                             <i class="bi bi-pencil"></i>
                         </button>
                     </div>
@@ -917,6 +928,11 @@ function renderCardsView() {
             </div>
         `;
     }).join('');
+    
+    // تطبيق الترجمات على العناصر الديناميكية
+    if (typeof applyTranslations === 'function') {
+        applyTranslations();
+    }
 }
 
 // عرض الجدول
@@ -941,12 +957,18 @@ function renderTableView() {
         const selling = parseFloat(item.selling_price) || 0;
         const profit = selling - cost;
         const profitPercent = cost > 0 ? ((profit / cost) * 100).toFixed(1) : 0;
+        
+        // استخدام اللغة الحالية
+        const currentLang = localStorage.getItem('language') || 'ar';
+        const partName = currentLang === 'en' && item.part_name_en ? item.part_name_en : (item.part_name_ar || item.part_name || 'Unknown');
+        const categoryName = item.part_details?.category ? 
+            (currentLang === 'en' && item.part_details.category.name_en ? item.part_details.category.name_en : (item.part_details.category.name_ar || item.part_details.category.name || '-')) : '-';
 
         return `
             <tr>
                 <td><code>${item.sku}</code></td>
-                <td><strong>${item.part_name_ar || item.part_name || 'غير معروف'}</strong></td>
-                <td>${item.part_details?.category?.name_ar || '-'}</td>
+                <td><strong>${partName}</strong></td>
+                <td>${categoryName}</td>
                 <td>${getConditionBadge(item.condition)}</td>
                 <td><small>${item.location_name || '-'}</small></td>
                 <td>
@@ -966,10 +988,10 @@ function renderTableView() {
                 <td>${getStatusBadge(item.status)}</td>
                 <td class="no-print">
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-info" onclick="viewItemDetails(${item.id})" title="عرض">
+                        <button class="btn btn-info" onclick="viewItemDetails(${item.id})" data-translate-title="view" title="عرض">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button class="btn btn-primary" onclick="quickEdit(${item.id})" title="تعديل">
+                        <button class="btn btn-primary" onclick="quickEdit(${item.id})" data-translate-title="edit" title="تعديل">
                             <i class="bi bi-pencil"></i>
                         </button>
                     </div>
@@ -977,6 +999,11 @@ function renderTableView() {
             </tr>
         `;
     }).join('');
+    
+    // تطبيق الترجمات على العناصر الديناميكية
+    if (typeof applyTranslations === 'function') {
+        applyTranslations();
+    }
 }
 
 // تحديث الإحصائيات
@@ -1328,7 +1355,9 @@ async function showAddManualItemModal() {
         cats.forEach(cat => {
             const option = document.createElement('option');
             option.value = cat.id;
-            option.textContent = cat.name_ar || cat.name;
+            // استخدام اللغة الحالية لاختيار الاسم المناسب
+            const currentLang = localStorage.getItem('language') || 'ar';
+            option.textContent = currentLang === 'en' && cat.name_en ? cat.name_en : (cat.name_ar || cat.name);
             categorySelect.appendChild(option);
         });
     } catch (error) {

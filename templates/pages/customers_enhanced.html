@@ -703,7 +703,7 @@ function getInitials(name) {
 
 function formatCurrency(amount) {
     // Get currency symbol from body data attribute (set by Django)
-    const currencySymbol = document.body.dataset.currencySymbol || 'ر.س';
+    const currencySymbol = 'EGP';
 
     // Format number with English digits and 2 decimal places
     const formattedNumber = parseFloat(amount).toLocaleString('en-US', {

@@ -206,7 +206,7 @@ function displayStatistics() {
 
 function displayItems() {
     const tbody = document.getElementById('itemsTable');
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
     
     if (allItems.length === 0) {
         tbody.innerHTML = `
@@ -310,7 +310,7 @@ async function applyDiscount(itemId, newPrice) {
 }
 
 function exportToExcel() {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
     const data = allItems.map(item => ({
         'SKU': item.sku,
         'القطعة': item.part_details?.name_ar || item.part_details?.name || '-',

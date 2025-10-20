@@ -376,7 +376,7 @@ async function loadItemDetails() {
 }
 
 function displayBasicInfo() {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
     document.getElementById('breadcrumbSKU').textContent = itemData.sku;
 
     const statusBadge = getStatusBadge(itemData.status);
@@ -423,7 +423,7 @@ function displayBasicInfo() {
 }
 
 function displayPriceInfo() {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
     const cost = parseFloat(itemData.cost_price) || 0;
     const selling = parseFloat(itemData.selling_price) || 0;
     const profit = selling - cost;
@@ -701,7 +701,7 @@ function printQR() {
             <h2>${partName}</h2>
             <img src="${itemData.qr_code}" alt="QR Code">
             <p><strong>${itemData.sku}</strong></p>
-            <p>${itemData.selling_price} ${document.body.dataset.currencySymbol || 'EGP'}</p>
+            <p>${itemData.selling_price} ${'EGP'}</p>
             <script>window.print(); window.close();<\/script>
         </body>
         </html>

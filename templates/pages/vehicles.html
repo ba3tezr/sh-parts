@@ -368,7 +368,7 @@ async function viewVehicleDetails(id) {
                     <small class="text-muted">${p.condition_display || p.condition || ''}</small>
                 </td>
                 <td><span class="badge bg-info">${p.quantity || 1}</span></td>
-                <td><strong class="text-success">${parseFloat(p.selling_price || 0).toFixed(2)} ${document.body.dataset.currencySymbol || '﷼'}</strong></td>
+                <td><strong class="text-success">${parseFloat(p.selling_price || 0).toFixed(2)} ${'EGP'}</strong></td>
                 <td><small class="text-muted">${p.sku || '-'}</small></td>
             </tr>
         `).join('') || `<tr><td colspan="4" class="text-center text-muted">{% trans "لا توجد قطع مستخرجة" %}</td></tr>`;
