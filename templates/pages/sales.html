@@ -81,10 +81,10 @@
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <button class="btn btn-info" onclick="viewOrder({{ sale.id }})" title="عرض">
+                                            <button class="btn btn-info" onclick="viewOrder({{ sale.id }})" data-translate-title="view_order" title="عرض">
                                                 <i class="bi bi-eye"></i>
                                             </button>
-                                            <button class="btn btn-success" onclick="printOrder({{ sale.id }})" title="طباعة">
+                                            <button class="btn btn-success" onclick="printOrder({{ sale.id }})" data-translate-title="print_order" title="طباعة">
                                                 <i class="bi bi-printer"></i>
                                             </button>
                                         </div>
@@ -93,7 +93,7 @@
                                 {% endfor %}
                             {% else %}
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted">لا توجد طلبات بعد</td>
+                                    <td colspan="8" class="text-center text-muted" data-translate="no_orders">لا توجد طلبات بعد</td>
                                 </tr>
                             {% endif %}
                         </tbody>
@@ -117,17 +117,17 @@ let currentOrder = {
 // فتح نافذة طلب جديد
 function openNewOrderModal() {
     actionModals.showFormModal({
-        title: '✨ طلب جديد',
+        title: '✨ ' + t('new_order'),
         fields: [
             {
                 name: 'customer_id',
-                label: 'اختر العميل',
+                label: t('select_customer'),
                 type: 'select',
                 required: true,
                 options: []  // سنملأها ديناميكياً
             }
         ],
-        submitText: 'التالي',
+        submitText: t('next'),
         onSubmit: async (data) => {
             currentOrder.customer = data.customer_id;
             await showCarModelSelection();
@@ -165,11 +165,11 @@ async function showCarModelSelection() {
         const models = data && data.results ? data.results : [];
         
         actionModals.showFormModal({
-            title: '🚗 اختر نوع السيارة',
+            title: '🚗 ' + t('select_car_model'),
             fields: [
                 {
                     name: 'car_model_id',
-                    label: 'نوع السيارة',
+                    label: t('car_type'),
                     type: 'select',
                     required: true,
                     options: models.map(m => ({
@@ -178,8 +178,8 @@ async function showCarModelSelection() {
                     }))
                 }
             ],
-            submitText: 'عرض القطع المتوفرة',
-            cancelText: 'رجوع',
+            submitText: t('show_available_parts'),
+            cancelText: t('back'),
             onSubmit: async (data) => {
                 currentOrder.carModel = data.car_model_id;
                 await showAvailableParts();
@@ -187,8 +187,8 @@ async function showCarModelSelection() {
         });
     } catch (error) {
         actionModals.showInfoModal({
-            title: 'خطأ',
-            message: 'فشل تحميل موديلات السيارات',
+            title: t('error'),
+            message: t('failed_to_load_car_models'),
             type: 'error'
         });
     }
@@ -210,8 +210,8 @@ async function showAvailableParts() {
 
         if (!data || !data.results || data.results.length === 0) {
             actionModals.showInfoModal({
-                title: 'لا توجد قطع',
-                message: 'لا توجد قطع متوفرة في المخزون لهذا النوع من السيارات',
+                title: t('no_parts_title'),
+                message: t('no_parts_available'),
                 type: 'warning',
                 onClose: () => showCarModelSelection()
             });
@@ -239,17 +239,17 @@ function showPartsSelectionModal(parts) {
         <div class="mb-3">
             <h6 class="text-success">
                 <i class="bi bi-check-circle me-2"></i>
-                قطع متوفرة: ${parts.length} قطعة
+                ${t('available_parts_count')}: ${parts.length}
             </h6>
         </div>
         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
             <table class="table table-hover">
                 <thead class="table-light sticky-top">
                     <tr>
-                        <th>القطعة</th>
-                        <th>الكمية المتوفرة</th>
-                        <th>السعر</th>
-                        <th>الكمية</th>
+                        <th data-translate="part">القطعة</th>
+                        <th data-translate="available_quantity">الكمية المتوفرة</th>
+                        <th data-translate="price">السعر</th>
+                        <th data-translate="quantity">الكمية</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -264,7 +264,7 @@ function showPartsSelectionModal(parts) {
             <tr>
                 <td>
                     <strong>${partName}</strong><br>
-                    <small class="text-muted">كود: ${part.sku}</small>
+                    <small class="text-muted">SKU: ${part.sku}</small>
                 </td>
                 <td><span class="badge bg-info">${part.quantity}</span></td>
                 <td><strong class="text-success">${part.selling_price} ${document.body.dataset.currencySymbol || '\ufdfc'}</strong></td>
@@ -282,7 +282,7 @@ function showPartsSelectionModal(parts) {
                             class="btn btn-sm btn-primary"
                             onclick="addPartToOrder(${part.id}, '${partNameEscaped}', ${part.selling_price}, ${part.quantity})">
                         <i class="bi bi-plus-circle"></i>
-                        إضافة
+                        ${t('add_to_order')}
                     </button>
                 </td>
             </tr>
@@ -294,7 +294,7 @@ function showPartsSelectionModal(parts) {
             </table>
         </div>
         <div class="mt-3 p-3 bg-light rounded">
-            <h6>القطع المضافة: <span id="addedItemsCount">0</span></h6>
+            <h6>${t('selected_parts')}: <span id="addedItemsCount">0</span></h6>
             <div id="addedItemsList"></div>
         </div>
     `;
@@ -306,7 +306,7 @@ function showPartsSelectionModal(parts) {
                     <div class="modal-header">
                         <h5 class="modal-title">
                             <i class="bi bi-gear me-2"></i>
-                            اختر القطع للطلب
+                            ${t('select_parts_for_order')}
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
@@ -314,10 +314,10 @@ function showPartsSelectionModal(parts) {
                         ${partsHtml}
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${t('cancel')}</button>
                         <button type="button" class="btn btn-primary" onclick="finishOrder()">
                             <i class="bi bi-check-circle me-2"></i>
-                            حفظ الطلب
+                            ${t('save_order')}
                         </button>
                     </div>
                 </div>
@@ -377,7 +377,7 @@ function updateAddedItemsList() {
     countEl.textContent = currentOrder.items.length;
     
     if (currentOrder.items.length === 0) {
-        listEl.innerHTML = '<small class="text-muted">لم تتم إضافة أي قطع بعد</small>';
+        listEl.innerHTML = '<small class="text-muted">' + t('no_parts_selected') + '</small>';
         return;
     }
     
@@ -387,7 +387,7 @@ function updateAddedItemsList() {
             <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded">
                 <div>
                     <strong>${item.partName}</strong><br>
-                    <small>الكمية: ${item.quantity} × ${item.price} ${document.body.dataset.currencySymbol || '\ufdfc'}</small>
+                    <small>${t('quantity')}: ${item.quantity} × ${item.price} ${document.body.dataset.currencySymbol || '\ufdfc'}</small>
                 </div>
                 <div>
                     <strong class="text-success">${item.total} ${document.body.dataset.currencySymbol || '﷼'}</strong>
@@ -402,7 +402,7 @@ function updateAddedItemsList() {
     
     const total = currentOrder.items.reduce((sum, item) => sum + item.total, 0);
     html += `<div class="mt-3 p-2 bg-primary text-white rounded text-center">
-        <strong>الإجمالي: ${total} EGP</strong>
+        <strong>${t('total')}: ${total} ${document.body.dataset.currencySymbol || 'EGP'}</strong>
     </div>`;
     
     listEl.innerHTML = html;
@@ -418,14 +418,14 @@ function removeItemFromOrder(index) {
 async function finishOrder() {
     if (currentOrder.items.length === 0) {
         actionModals.showInfoModal({
-            title: 'تحذير',
-            message: 'يرجى إضافة قطعة واحدة على الأقل',
+            title: t('warning'),
+            message: t('please_add_one_part'),
             type: 'warning'
         });
         return;
     }
 
-    app.showLoading('جاري حفظ الطلب...');
+    app.showLoading(t('saving_order'));
 
     try {
         // إعداد بيانات الطلب
@@ -482,8 +482,8 @@ async function finishOrder() {
         console.error('Error saving order:', error);
         app.hideLoading();
         actionModals.showInfoModal({
-            title: 'خطأ',
-            message: `فشل حفظ الطلب: ${error.message || 'خطأ غير معروف'}`,
+            title: t('error'),
+            message: `${t('order_save_failed')}: ${error.message || t('unknown_error')}`,
             type: 'error'
         });
     }

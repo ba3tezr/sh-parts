@@ -290,7 +290,7 @@
 
         <div class="col-md-3 d-flex align-items-end">
             <button class="btn btn-danger w-100" onclick="clearFilters()">
-                <i class="bi bi-x-circle me-2"></i>مسح الفلاتر
+                <i class="bi bi-x-circle me-2"></i><span data-translate="clear_filters">مسح الفلاتر</span>
             </button>
         </div>
     </div>
@@ -303,24 +303,24 @@
         <div class="export-buttons">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-bar-chart me-2"></i>التقارير
+                    <i class="bi bi-bar-chart me-2"></i><span data-translate="reports_menu">التقارير</span>
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{% url 'inventory_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i>لوحة التحكم</a></li>
-                    <li><a class="dropdown-item" href="{% url 'profitability_report' %}"><i class="bi bi-graph-up me-2"></i>تقرير الربحية</a></li>
-                    <li><a class="dropdown-item" href="{% url 'stock_movements' %}"><i class="bi bi-arrow-left-right me-2"></i>حركات المخزون</a></li>
+                    <li><a class="dropdown-item" href="{% url 'inventory_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i><span data-translate="inventory_dashboard">لوحة التحكم</span></a></li>
+                    <li><a class="dropdown-item" href="{% url 'profitability_report' %}"><i class="bi bi-graph-up me-2"></i><span data-translate="profitability_report">تقرير الربحية</span></a></li>
+                    <li><a class="dropdown-item" href="{% url 'stock_movements' %}"><i class="bi bi-arrow-left-right me-2"></i><span data-translate="stock_movements">حركات المخزون</span></a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{% url 'slow_moving_report' %}"><i class="bi bi-hourglass-split me-2"></i>القطع بطيئة الحركة</a></li>
-                    <li><a class="dropdown-item" href="{% url 'low_stock_report' %}"><i class="bi bi-exclamation-triangle me-2"></i>القطع منخفضة المخزون</a></li>
+                    <li><a class="dropdown-item" href="{% url 'slow_moving_report' %}"><i class="bi bi-hourglass-split me-2"></i><span data-translate="slow_moving_report">القطع بطيئة الحركة</span></a></li>
+                    <li><a class="dropdown-item" href="{% url 'low_stock_report' %}"><i class="bi bi-exclamation-triangle me-2"></i><span data-translate="low_stock_report">القطع منخفضة المخزون</span></a></li>
                 </ul>
             </div>
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-gear me-2"></i>الإدارة
+                    <i class="bi bi-gear me-2"></i><span data-translate="management_menu">الإدارة</span>
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{% url 'warehouse_management' %}"><i class="bi bi-building me-2"></i>المخازن والمواقع</a></li>
-                    <li><a class="dropdown-item" href="{% url 'category_management' %}"><i class="bi bi-tags me-2"></i>الفئات</a></li>
+                    <li><a class="dropdown-item" href="{% url 'warehouse_management' %}"><i class="bi bi-building me-2"></i><span data-translate="warehouses_locations">المخازن والمواقع</span></a></li>
+                    <li><a class="dropdown-item" href="{% url 'category_management' %}"><i class="bi bi-tags me-2"></i><span data-translate="categories">الفئات</span></a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="{% url 'barcode_system' %}"><i class="bi bi-upc-scan me-2"></i>نظام الباركود</a></li>
                     <li><a class="dropdown-item" href="{% url 'smart_alerts' %}"><i class="bi bi-bell me-2"></i>التنبيهات الذكية</a></li>
