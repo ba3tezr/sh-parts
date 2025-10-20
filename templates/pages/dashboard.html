@@ -212,8 +212,8 @@ async function loadRecentSales() {
             const statusBadge = sale.status === 'COMPLETED' ? 'bg-success' :
                               sale.status === 'DRAFT' ? 'bg-warning' : 'bg-secondary';
             const statusText = sale.status_display || sale.status;
-            const date = new Date(sale.created_at).toLocaleDateString('ar-EG');
-            const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+            const date = formatDate ? formatDate(sale.created_at) : new Date(sale.created_at).toLocaleDateString('en-US');
+            const currencySymbol = 'EGP';
 
             const row = `
                 <tr>
@@ -338,8 +338,8 @@ async function loadSalesChart() {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
-                                return `المبيعات: ${context.parsed.y.toFixed(2)} ${currencySymbol}`;
+                                const currencySymbol = 'EGP';
+                                return `${t('sales', 'Sales')}: ${context.parsed.y.toFixed(2)} ${currencySymbol}`;
                             }
                         }
                     }

@@ -205,6 +205,14 @@
     </div>
 </div>
 
+<!-- أزرار الإجراءات السريعة -->
+<div class="mb-3 d-flex justify-content-start gap-2">
+    <button class="btn btn-success" onclick="showAddManualItemModal()">
+        <i class="bi bi-plus-circle me-2"></i>
+        <span data-translate="add_manual_item">إضافة منتج يدوياً</span>
+    </button>
+</div>
+
 <!-- أدوات البحث والتصفية المتقدمة -->
 <div class="filter-section no-print">
     <div class="row g-3 mb-3">
@@ -488,6 +496,176 @@
     </div>
 </div>
 
+<!-- Modal لإضافة منتج يدوياً -->
+<div class="modal fade" id="addManualItemModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    <span data-translate="add_manual_item">إضافة منتج يدوياً</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="manualItemForm">
+                    <div class="row g-3">
+                        <!-- معلومات القطعة -->
+                        <div class="col-12">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <span data-translate="part_information">معلومات القطعة</span>
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <span data-translate="part_name">اسم القطعة</span> 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="manualPartName" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <span data-translate="category">الفئة</span>
+                            </label>
+                            <select class="form-select" id="manualCategory">
+                                <option value="">- اختر -</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                <span data-translate="quantity">الكمية</span> 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" id="manualQuantity" value="1" min="0" required>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                <span data-translate="condition_label">الحالة</span> 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="manualCondition" required>
+                                <option value="NEW" data-translate="new_condition">جديد</option>
+                                <option value="USED_EXCELLENT" data-translate="used_excellent">مستعمل ممتاز</option>
+                                <option value="USED_GOOD" data-translate="used_good">مستعمل جيد</option>
+                                <option value="USED_FAIR" data-translate="used_fair">مستعمل مقبول</option>
+                                <option value="REFURBISHED" data-translate="refurbished">مجدد</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                <span data-translate="status_label">الحالة</span> (Status)
+                            </label>
+                            <select class="form-select" id="manualStatus">
+                                <option value="AVAILABLE" data-translate="available">متوفر</option>
+                                <option value="RESERVED" data-translate="reserved">محجوز</option>
+                            </select>
+                        </div>
+                        
+                        <!-- الأسعار -->
+                        <div class="col-12 mt-3">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-currency-dollar me-2"></i>
+                                <span data-translate="pricing">الأسعار</span>
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <span data-translate="cost_price">سعر التكلفة</span>
+                            </label>
+                            <input type="number" class="form-control" id="manualCostPrice" step="0.01" min="0">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <span data-translate="selling_price">سعر البيع</span> 
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" id="manualSellingPrice" step="0.01" min="0" required>
+                        </div>
+                        
+                        <!-- الموقع -->
+                        <div class="col-12 mt-3">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-geo-alt me-2"></i>
+                                <span data-translate="location">الموقع</span>
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label">
+                                <span data-translate="location">الموقع</span>
+                            </label>
+                            <select class="form-select" id="manualLocation">
+                                <option value="">- اختر -</option>
+                            </select>
+                        </div>
+                        
+                        <!-- مصدر المنتج -->
+                        <div class="col-12 mt-3">
+                            <h6 class="border-bottom pb-2 mb-3">
+                                <i class="bi bi-box-arrow-in-down me-2"></i>
+                                <span data-translate="source">المصدر</span>
+                            </h6>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <span data-translate="source_type">نوع المصدر</span>
+                            </label>
+                            <select class="form-select" id="manualSourceType" onchange="toggleSourceOptions()">
+                                <option value="dismantled" data-translate="dismantled_vehicle">سيارة مُفككة</option>
+                                <option value="supplier" data-translate="supplier">مورّد</option>
+                                <option value="other" data-translate="other">أخرى</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6" id="dismantledVehicleSection">
+                            <label class="form-label">
+                                <span data-translate="select_vehicle">اختر السيارة</span>
+                            </label>
+                            <select class="form-select" id="manualDismantledVehicle">
+                                <option value="">- جارٍ التحميل... -</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 d-none" id="otherSourceSection">
+                            <label class="form-label">
+                                <span data-translate="source_notes">ملاحظات المصدر</span>
+                            </label>
+                            <input type="text" class="form-control" id="manualSourceNotes">
+                        </div>
+                        
+                        <!-- ملاحظات -->
+                        <div class="col-12 mt-3">
+                            <label class="form-label">
+                                <i class="bi bi-journal-text me-2"></i>
+                                <span data-translate="notes">ملاحظات</span>
+                            </label>
+                            <textarea class="form-control" id="manualNotes" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <span data-translate="cancel">إلغاء</span>
+                </button>
+                <button type="button" class="btn btn-success" onclick="saveManualItem()">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <span data-translate="save_item">حفظ المنتج</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -711,13 +889,13 @@ function renderCardsView() {
 
                 <div class="row g-2 mb-3">
                     <div class="col-6">
-                        <small class="text-muted d-block">الكمية</small>
+                        <small class="text-muted d-block">${t('quantity', 'الكمية')}</small>
                         <span class="badge ${item.quantity <= item.min_quantity ? 'bg-danger' : 'bg-success'} fs-6">
                             ${item.quantity}
                         </span>
                     </div>
                     <div class="col-6 text-end">
-                        <small class="text-muted d-block">الموقع</small>
+                        <small class="text-muted d-block">${t('location', 'الموقع')}</small>
                         <small>${item.location_name || '-'}</small>
                     </div>
                 </div>
@@ -837,11 +1015,11 @@ function updateStats() {
 // الحصول على badge الحالة
 function getStatusBadge(status) {
     const badges = {
-        'AVAILABLE': '<span class="badge bg-success">متوفر</span>',
-        'RESERVED': '<span class="badge bg-warning">محجوز</span>',
-        'SOLD': '<span class="badge bg-secondary">مباع</span>',
-        'DAMAGED': '<span class="badge bg-danger">تالف</span>',
-        'RETURNED': '<span class="badge bg-info">مرتجع</span>'
+        'AVAILABLE': `<span class="badge bg-success">${t('available', 'متوفر')}</span>`,
+        'RESERVED': `<span class="badge bg-warning">${t('reserved', 'محجوز')}</span>`,
+        'SOLD': `<span class="badge bg-secondary">${t('sold', 'مباع')}</span>`,
+        'DAMAGED': `<span class="badge bg-danger">${t('damaged', 'تالف')}</span>`,
+        'RETURNED': `<span class="badge bg-info">${t('returned', 'مرتجع')}</span>`
     };
     return badges[status] || `<span class="badge bg-secondary">${status}</span>`;
 }
@@ -849,11 +1027,11 @@ function getStatusBadge(status) {
 // الحصول على badge الحالة (Condition)
 function getConditionBadge(condition) {
     const badges = {
-        'NEW': '<span class="badge bg-success">جديد</span>',
-        'USED_EXCELLENT': '<span class="badge bg-info">مستعمل ممتاز</span>',
-        'USED_GOOD': '<span class="badge bg-primary">مستعمل جيد</span>',
-        'USED_FAIR': '<span class="badge bg-warning">مستعمل مقبول</span>',
-        'REFURBISHED': '<span class="badge bg-secondary">مجدد</span>'
+        'NEW': `<span class="badge bg-success">${t('new_condition', 'جديد')}</span>`,
+        'USED_EXCELLENT': `<span class="badge bg-info">${t('used_excellent', 'مستعمل ممتاز')}</span>`,
+        'USED_GOOD': `<span class="badge bg-primary">${t('used_good', 'مستعمل جيد')}</span>`,
+        'USED_FAIR': `<span class="badge bg-warning">${t('used_fair', 'مستعمل مقبول')}</span>`,
+        'REFURBISHED': `<span class="badge bg-secondary">${t('refurbished', 'مجدد')}</span>`
     };
     return badges[condition] || `<span class="badge bg-secondary">${condition}</span>`;
 }
@@ -1135,6 +1313,190 @@ function showLoading() {
 
 function hideLoading() {
     document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// إضافة منتج يدوياً
+async function showAddManualItemModal() {
+    const modal = new bootstrap.Modal(document.getElementById('addManualItemModal'));
+    
+    // تحميل الفئات
+    try {
+        const categoriesResponse = await app.apiRequest('/api/cars/categories/');
+        const cats = categoriesResponse.results || categoriesResponse;
+        const categorySelect = document.getElementById('manualCategory');
+        categorySelect.innerHTML = '<option value="">- ' + t('select', 'اختر') + ' -</option>';
+        cats.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.name_ar || cat.name;
+            categorySelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+    
+    // تحميل المواقع
+    try {
+        const locationsResponse = await app.apiRequest('/api/inventory/locations/');
+        const locs = locationsResponse.results || locationsResponse;
+        const locationSelect = document.getElementById('manualLocation');
+        locationSelect.innerHTML = '<option value="">- ' + t('select', 'اختر') + ' -</option>';
+        locs.forEach(loc => {
+            const option = document.createElement('option');
+            option.value = loc.id;
+            option.textContent = `${loc.warehouse}-${loc.aisle}-${loc.shelf}`;
+            locationSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading locations:', error);
+    }
+    
+    // تحميل السيارات المُفككة
+    try {
+        const vehiclesResponse = await app.apiRequest('/api/cars/vehicles/?status=DISMANTLED');
+        const vehicles = vehiclesResponse.results || vehiclesResponse;
+        const vehicleSelect = document.getElementById('manualDismantledVehicle');
+        vehicleSelect.innerHTML = '<option value="">- ' + t('select', 'اختر') + ' -</option>';
+        vehicles.forEach(veh => {
+            const option = document.createElement('option');
+            option.value = veh.id;
+            // تحسين عرض اسم السيارة
+            const make = veh.make || '';
+            const model = veh.model || '';
+            const year = veh.year || '';
+            const identifier = veh.vin || veh.plate_number || veh.id;
+            
+            let displayText = '';
+            if (make && model) {
+                displayText = `${make} ${model}`;
+            } else if (make) {
+                displayText = make;
+            } else if (model) {
+                displayText = model;
+            } else {
+                displayText = t('vehicle', 'Vehicle');
+            }
+            
+            if (year) {
+                displayText += ` (${year})`;
+            }
+            
+            displayText += ` - ${identifier}`;
+            
+            option.textContent = displayText;
+            vehicleSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading vehicles:', error);
+    }
+    
+    modal.show();
+}
+
+function toggleSourceOptions() {
+    const sourceType = document.getElementById('manualSourceType').value;
+    const dismantledSection = document.getElementById('dismantledVehicleSection');
+    const otherSection = document.getElementById('otherSourceSection');
+    
+    if (sourceType === 'dismantled') {
+        dismantledSection.classList.remove('d-none');
+        otherSection.classList.add('d-none');
+    } else if (sourceType === 'other') {
+        dismantledSection.classList.add('d-none');
+        otherSection.classList.remove('d-none');
+    } else {
+        dismantledSection.classList.add('d-none');
+        otherSection.classList.add('d-none');
+    }
+}
+
+async function saveManualItem() {
+    const partName = document.getElementById('manualPartName').value.trim();
+    const quantity = document.getElementById('manualQuantity').value;
+    const condition = document.getElementById('manualCondition').value;
+    const status = document.getElementById('manualStatus').value;
+    const costPrice = document.getElementById('manualCostPrice').value;
+    const sellingPrice = document.getElementById('manualSellingPrice').value;
+    const category = document.getElementById('manualCategory').value;
+    const location = document.getElementById('manualLocation').value;
+    const sourceType = document.getElementById('manualSourceType').value;
+    const notes = document.getElementById('manualNotes').value.trim();
+    
+    if (!partName) {
+        actionModals.showInfoModal({
+            title: t('error', 'خطأ'),
+            message: t('part_name_required', 'يرجى إدخال اسم القطعة'),
+            type: 'error'
+        });
+        return;
+    }
+    
+    if (!sellingPrice || parseFloat(sellingPrice) <= 0) {
+        actionModals.showInfoModal({
+            title: t('error', 'خطأ'),
+            message: t('selling_price_required', 'يرجى إدخال سعر بيع صحيح'),
+            type: 'error'
+        });
+        return;
+    }
+    
+    const itemData = {
+        part_name_ar: partName,
+        part_name: partName,
+        quantity: parseInt(quantity),
+        condition: condition,
+        status: status,
+        cost_price: costPrice ? parseFloat(costPrice) : null,
+        selling_price: parseFloat(sellingPrice),
+        category: category || null,
+        location: location || null,
+        notes: notes,
+        source_type: sourceType
+    };
+    
+    if (sourceType === 'dismantled') {
+        const vehicleId = document.getElementById('manualDismantledVehicle').value;
+        if (vehicleId) {
+            itemData.dismantled_vehicle_id = vehicleId;
+        }
+    } else if (sourceType === 'other') {
+        const sourceNotes = document.getElementById('manualSourceNotes').value.trim();
+        if (sourceNotes) {
+            itemData.source_notes = sourceNotes;
+        }
+    }
+    
+    try {
+        app.showLoading(t('saving', 'جارٍ الحفظ...'));
+        
+        const response = await app.apiRequest('/api/inventory/items/', {
+            method: 'POST',
+            body: JSON.stringify(itemData)
+        });
+        
+        app.hideLoading();
+        
+        actionModals.showInfoModal({
+            title: t('success', 'نجح'),
+            message: t('item_added_successfully', 'تم إضافة المنتج بنجاح'),
+            type: 'success'
+        });
+        
+        // إغلاق modal
+        bootstrap.Modal.getInstance(document.getElementById('addManualItemModal')).hide();
+        
+        // إعادة تحميل البيانات
+        await loadData();
+        
+    } catch (error) {
+        app.hideLoading();
+        console.error('Error saving item:', error);
+        actionModals.showInfoModal({
+            title: t('error', 'خطأ'),
+            message: t('error_saving_item', 'فشل حفظ المنتج') + ': ' + (error.message || 'Unknown error'),
+            type: 'error'
+        });
+    }
 }
 </script>
 {% endblock %}

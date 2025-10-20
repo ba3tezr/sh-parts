@@ -154,8 +154,68 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 });
 
+// دالة لتنسيق الأرقام (دائماً إنجليزية)
+function formatNumber(number) {
+    if (number === null || number === undefined) return '';
+    
+    // تحويل الأرقام العربية إلى إنجليزية
+    const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    
+    let numStr = number.toString();
+    for (let i = 0; i < arabicNumbers.length; i++) {
+        numStr = numStr.replace(new RegExp(arabicNumbers[i], 'g'), englishNumbers[i]);
+    }
+    
+    return numStr;
+}
+
+// دالة لتنسيق التواريخ (دائماً ميلادية وإنجليزية)
+function formatDate(date, format = 'short') {
+    if (!date) return '';
+    
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) return '';
+    
+    // استخدام التنسيق الإنجليزي دائماً
+    const options = {
+        year: 'numeric',
+        month: format === 'short' ? '2-digit' : 'long',
+        day: '2-digit',
+        calendar: 'gregory' // ميلادي دائماً
+    };
+    
+    return dateObj.toLocaleDateString('en-US', options);
+}
+
+// دالة لتنسيق التاريخ والوقت
+function formatDateTime(date) {
+    if (!date) return '';
+    
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) return '';
+    
+    const options = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        calendar: 'gregory',
+        hour12: false
+    };
+    
+    return dateObj.toLocaleDateString('en-US', options) + ' ' + 
+           dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 // تصدير الدوال للاستخدام العام
 window.t = t;
 window.switchLanguage = switchLanguage;
 window.applyTranslations = applyTranslations;
 window.loadTranslations = loadTranslations;
+window.formatNumber = formatNumber;
+window.formatDate = formatDate;
+window.formatDateTime = formatDateTime;
