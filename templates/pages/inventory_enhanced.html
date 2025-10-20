@@ -407,7 +407,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>تعديل سريع</h5>
+                <h5 class="modal-title"><i class="bi bi-pencil me-2"></i><span data-translate="quick_edit">تعديل سريع</span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -416,7 +416,7 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">اسم القطعة</label>
+                            <label class="form-label"><span data-translate="part_name">اسم القطعة</span></label>
                             <input type="text" class="form-control" id="editPartName" readonly>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -427,69 +427,69 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">سعر الكلفة <small class="text-muted">(اختياري)</small></label>
+                            <label class="form-label"><span data-translate="cost_price">سعر الكلفة</span> <small class="text-muted">(<span data-translate="optional">اختياري</span>)</small></label>
                             <input type="number" class="form-control" id="editCostPrice" min="0" step="0.01">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">سعر البيع <span class="text-danger">*</span></label>
+                            <label class="form-label"><span data-translate="selling_price">سعر البيع</span> <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="editSellingPrice" min="0" step="0.01" required>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">الكمية <span class="text-danger">*</span></label>
+                            <label class="form-label"><span data-translate="quantity">الكمية</span> <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="editQuantity" min="0" required>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">الحد الأدنى</label>
+                            <label class="form-label"><span data-translate="min_quantity">الحد الأدنى</span></label>
                             <input type="number" class="form-control" id="editMinQuantity" min="0">
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">الحالة <span class="text-danger">*</span></label>
+                            <label class="form-label"><span data-translate="status">الحالة</span> <span class="text-danger">*</span></label>
                             <select class="form-select" id="editStatus" required>
-                                <option value="AVAILABLE">متوفر</option>
-                                <option value="RESERVED">محجوز</option>
-                                <option value="SOLD">مباع</option>
-                                <option value="DAMAGED">تالف</option>
-                                <option value="RETURNED">مرتجع</option>
+                                <option value="AVAILABLE" data-translate="available">متوفر</option>
+                                <option value="RESERVED" data-translate="reserved">محجوز</option>
+                                <option value="SOLD" data-translate="sold">مباع</option>
+                                <option value="DAMAGED" data-translate="damaged">تالف</option>
+                                <option value="RETURNED" data-translate="returned">مرتجع</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">الحالة (Condition)</label>
+                            <label class="form-label"><span data-translate="condition">الحالة</span> (Condition)</label>
                             <select class="form-select" id="editCondition">
-                                <option value="NEW">جديد</option>
-                                <option value="USED_EXCELLENT">مستعمل ممتاز</option>
-                                <option value="USED_GOOD">مستعمل جيد</option>
-                                <option value="USED_FAIR">مستعمل مقبول</option>
-                                <option value="REFURBISHED">مجدد</option>
+                                <option value="NEW" data-translate="new_condition">جديد</option>
+                                <option value="USED_EXCELLENT" data-translate="used_excellent">مستعمل ممتاز</option>
+                                <option value="USED_GOOD" data-translate="used_good">مستعمل جيد</option>
+                                <option value="USED_FAIR" data-translate="used_fair">مستعمل مقبول</option>
+                                <option value="REFURBISHED" data-translate="refurbished">مجدد</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">الموقع</label>
+                            <label class="form-label"><span data-translate="location">الموقع</span></label>
                             <select class="form-select" id="editLocation">
-                                <!-- سيتم ملؤها ديناميكياً -->
+                                <!-- سيتم ملؤها ديناmiكياً -->
                             </select>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">ملاحظات</label>
+                        <label class="form-label"><span data-translate="notes">ملاحظات</span></label>
                         <textarea class="form-control" id="editNotes" rows="3"></textarea>
                     </div>
 
                     <div class="alert alert-info" id="editProfitInfo" style="display: none;">
-                        <strong>الربح المتوقع:</strong> <span id="editProfitAmount"></span>
+                        <strong><span data-translate="expected_profit">الربح المتوقع:</span></strong> <span id="editProfitAmount"></span>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><span data-translate="cancel">إلغاء</span></button>
                 <button type="button" class="btn btn-primary" onclick="saveQuickEdit()">
-                    <i class="bi bi-save me-2"></i>حفظ التعديلات
+                    <i class="bi bi-save me-2"></i><span data-translate="save_changes">حفظ التعديلات</span>
                 </button>
             </div>
         </div>

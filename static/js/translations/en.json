@@ -351,5 +351,14 @@
   "saving": "Saving...",
   "export_excel": "Export Excel",
   "export_pdf": "Export PDF",
-  "location_transfer": "Transfer Between Locations"
+  "location_transfer": "Transfer Between Locations",
+  "quick_edit": "Quick Edit",
+  "optional": "Optional",
+  "save_changes": "Save Changes",
+  "update": "Update",
+  "submit": "Submit",
+  "previous": "Previous",
+  "first": "First",
+  "last": "Last",
+  "info": "Information"
 }

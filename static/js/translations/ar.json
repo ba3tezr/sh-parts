@@ -351,5 +351,14 @@
   "saving": "جارٍ الحفظ...",
   "export_excel": "تصدير Excel",
   "export_pdf": "تصدير PDF",
-  "location_transfer": "نقل بين المواقع"
+  "location_transfer": "نقل بين المواقع",
+  "quick_edit": "تعديل سريع",
+  "optional": "اختياري",
+  "save_changes": "حفظ التعديلات",
+  "update": "تحديث",
+  "submit": "إرسال",
+  "previous": "السابق",
+  "first": "الأول",
+  "last": "الأخير",
+  "info": "معلومات"
 }

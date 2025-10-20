@@ -28,11 +28,10 @@
         applyTheme(t);
       });
     });
-    // Sync currency symbol from server if provided on body dataset
+    // Use EGP currency symbol always
     try {
-      var sym = document.body && document.body.dataset && document.body.dataset.currencySymbol;
-      if (sym && window.app && app.getSettings && app.setSettings) {
-        var s = app.getSettings(); s.currency_symbol = sym; app.setSettings(s);
+      if (window.app && app.getSettings && app.setSettings) {
+        var s = app.getSettings(); s.currency_symbol = 'EGP'; app.setSettings(s);
       }
     } catch(e){}
     // Wire language switch buttons if present
@@ -56,7 +55,7 @@ window.app = window.app || {};
   };
   app.setSettings = function(s){ try { localStorage.setItem('app_settings', JSON.stringify(s||{})); } catch(e){} };
   app.formatNumber = function(n){ try { return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(n||0); } catch(e){ return String(n||0); } };
-  app.formatCurrency = function(a){ var sym = (app.getSettings()||{}).currency_symbol || (document.body && document.body.dataset && document.body.dataset.currencySymbol) || '﷼';
+  app.formatCurrency = function(a){ var sym = 'EGP';
     try { return sym + ' ' + new Intl.NumberFormat(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(a||0); } catch(e){ return sym + ' ' + String(a||0); } };
   app.getCookie = function(name){
     const value = `; ${document.cookie}`; const parts = value.split(`; ${name}=`);
