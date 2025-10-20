@@ -330,8 +330,8 @@
                     <li><a class="dropdown-item" href="{% url 'warehouse_management' %}"><i class="bi bi-building me-2"></i><span data-translate="warehouses_locations">المخازن والمواقع</span></a></li>
                     <li><a class="dropdown-item" href="{% url 'category_management' %}"><i class="bi bi-tags me-2"></i><span data-translate="categories">الفئات</span></a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{% url 'barcode_system' %}"><i class="bi bi-upc-scan me-2"></i>نظام الباركود</a></li>
-                    <li><a class="dropdown-item" href="{% url 'smart_alerts' %}"><i class="bi bi-bell me-2"></i>التنبيهات الذكية</a></li>
+                    <li><a class="dropdown-item" href="{% url 'barcode_system' %}"><i class="bi bi-upc-scan me-2"></i><span data-translate="barcode_system">نظام الباركود</span></a></li>
+                    <li><a class="dropdown-item" href="{% url 'smart_alerts' %}"><i class="bi bi-bell me-2"></i><span data-translate="smart_alerts">التنبيهات الذكية</span></a></li>
                 </ul>
             </div>
             <a href="{% url 'location_transfer' %}" class="btn btn-warning">
@@ -852,7 +852,7 @@ function renderItems() {
 // عرض البطاقات
 function renderCardsView() {
     const container = document.getElementById('cardsView');
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
 
     if (filteredItems.length === 0) {
         container.innerHTML = `
@@ -922,7 +922,7 @@ function renderCardsView() {
 // عرض الجدول
 function renderTableView() {
     const tbody = document.getElementById('inventoryTableBody');
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
 
     if (filteredItems.length === 0) {
         tbody.innerHTML = `
@@ -981,7 +981,7 @@ function renderTableView() {
 
 // تحديث الإحصائيات
 function updateStats() {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
 
     // إجمالي القطع
     document.getElementById('totalItems').textContent = filteredItems.length;
@@ -1190,7 +1190,7 @@ function updateEditProfit() {
     if (cost > 0 && selling > 0) {
         const profit = (selling - cost) * qty;
         const profitPercent = ((selling - cost) / cost * 100).toFixed(1);
-        const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+        const currencySymbol = 'EGP';
 
         document.getElementById('editProfitInfo').style.display = 'block';
         document.getElementById('editProfitAmount').textContent =
@@ -1268,7 +1268,7 @@ async function saveQuickEdit() {
 
 // تصدير إلى Excel
 function exportToExcel() {
-    const currencySymbol = document.body.dataset.currencySymbol || 'EGP';
+    const currencySymbol = 'EGP';
 
     const data = filteredItems.map(item => {
         const cost = parseFloat(item.cost_price) || 0;
