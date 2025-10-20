@@ -408,7 +408,7 @@ function executeBulkPrint() {
     const selectedOptions = Array.from(select.selectedOptions);
     
     if (selectedOptions.length === 0) {
-        alert('الرجاء اختيار قطعة واحدة على الأقل');
+        alert(t('select_at_least_one_item'));
         return;
     }
     
@@ -468,7 +468,7 @@ function executeBulkPrint() {
 // Quick actions
 function quickAction(action) {
     if (!lastScannedItem) {
-        alert('الرجاء مسح باركود أولاً');
+        alert(t('scan_barcode_first'));
         return;
     }
     
@@ -478,11 +478,11 @@ function quickAction(action) {
             break;
         case 'edit':
             // Open edit modal (would need to implement)
-            alert('ميزة التعديل السريع قيد التطوير');
+            alert(t('quick_edit_in_development'));
             break;
         case 'sell':
             // Add to sale (would need to implement)
-            alert('ميزة البيع السريع قيد التطوير');
+            alert(t('quick_sale_in_development'));
             break;
         case 'transfer':
             window.location.href = `/inventory/transfer/`;

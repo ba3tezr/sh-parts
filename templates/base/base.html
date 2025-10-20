@@ -61,7 +61,7 @@
         <div class="logo">
             <h2>
                 <i class="bi bi-tools"></i>
-                <span data-translate="app_name">SH Parts</span>
+                <span data-translate="app_name">{% trans "SH Parts" %}</span>
             </h2>
         </div>
 
@@ -147,10 +147,10 @@
         <div class="sidebar-footer">
             <div class="text-center px-3 py-3">
                 <p class="mb-1" style="font-size: 11px; font-weight: 600; color: #4a5568; text-shadow: 0 0 8px rgba(239, 68, 68, 0.5), 0 0 15px rgba(239, 68, 68, 0.3);">
-                    <i class="bi bi-c-circle"></i> جميع الحقوق محفوظة 2025
+                    <i class="bi bi-c-circle"></i> {% trans "جميع الحقوق محفوظة" %} 2025
                 </p>
                 <p class="mb-0" style="font-size: 11px; font-weight: 600; color: #374151; text-shadow: 0 0 8px rgba(239, 68, 68, 0.6), 0 0 15px rgba(239, 68, 68, 0.4), 0 0 25px rgba(239, 68, 68, 0.2);">
-                    <i class="bi bi-code-slash"></i> تطوير: <strong style="color: #1f2937;">Zakee Tahawi</strong>
+                    <i class="bi bi-code-slash"></i> {% trans "تطوير" %}: <strong style="color: #1f2937;">{% trans "Zakee Tahawi" %}</strong>
                 </p>
             </div>
         </div>
@@ -175,19 +175,19 @@
                 <div class="theme-switcher">
                     <button class="theme-btn day-blue active"
                             data-theme="day-blue"
-                            title="الثيم الأزرق النهاري / Day Blue Theme"></button>
+                            title="{% trans 'الثيم الأزرق النهاري / Day Blue Theme' %}"></button>
                     <button class="theme-btn dark-blue"
                             data-theme="dark-blue"
-                            title="الثيم الأزرق الداكن / Dark Blue Theme"></button>
+                            title="{% trans 'الثيم الأزرق الداكن / Dark Blue Theme' %}"></button>
                     <button class="theme-btn light"
                             data-theme="light"
-                            title="الثيم الفاتح / Light Theme"></button>
+                            title="{% trans 'الثيم الفاتح / Light Theme' %}"></button>
                     <button class="theme-btn camel-dune"
                             data-theme="camel-dune"
-                            title="ثيم الرمال الذهبية / Camel Dune Theme"></button>
+                            title="{% trans 'ثيم الرمال الذهبية / Camel Dune Theme' %}"></button>
                     <button class="theme-btn olive-sage"
                             data-theme="olive-sage"
-                            title="الثيم الزيتي / Olive Sage Theme"></button>
+                            title="{% trans 'الثيم الزيتي / Olive Sage Theme' %}"></button>
                 </div>
 
                 <!-- Language Switcher -->
@@ -250,12 +250,12 @@
                     <div class="row align-items-center">
                         <div class="col-md-6 text-center text-md-start">
                             <p class="mb-0 text-muted">
-                                <i class="bi bi-c-circle"></i> جميع الحقوق محفوظة 2025 - SH Parts
+                                <i class="bi bi-c-circle"></i> {% trans "جميع الحقوق محفوظة" %} 2025 - {% trans "SH Parts" %}
                             </p>
                         </div>
                         <div class="col-md-6 text-center text-md-end">
                             <p class="mb-0 text-muted">
-                                <i class="bi bi-code-slash"></i> تطوير: <strong>Zakee Tahawi</strong>
+                                <i class="bi bi-code-slash"></i> {% trans "تطوير" %}: <strong>{% trans "Zakee Tahawi" %}</strong>
                             </p>
                         </div>
                     </div>
@@ -321,7 +321,7 @@
                             newWorker.addEventListener('statechange', function() {
                                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                                     // New service worker available
-                                    if (confirm('تحديث جديد متاح! هل تريد تحديث التطبيق؟')) {
+                                    if (confirm('{% trans "تحديث جديد متاح! هل تريد تحديث التطبيق؟" %}')) {
                                         newWorker.postMessage({ action: 'skipWaiting' });
                                         window.location.reload();
                                     }

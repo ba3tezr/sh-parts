@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}إدارة الفئات - SH Parts{% endblock %}
+{% block title %}{% trans "إدارة الفئات" %} - SH Parts{% endblock %}
 
 {% block extra_head %}
 <!-- SheetJS for Excel Export -->
@@ -15,19 +15,19 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="mb-1">
-                <i class="bi bi-tags me-2"></i>إدارة الفئات
+                <i class="bi bi-tags me-2"></i>{% trans "إدارة الفئات" %}
             </h2>
-            <p class="text-muted mb-0">إدارة فئات القطع والسيارات</p>
+            <p class="text-muted mb-0">{% trans "إدارة فئات القطع والسيارات" %}</p>
         </div>
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-primary" onclick="openNewCategoryModal()">
-                <i class="bi bi-plus-circle me-2"></i>فئة جديدة
+                <i class="bi bi-plus-circle me-2"></i>{% trans "فئة جديدة" %}
             </button>
             <button type="button" class="btn btn-success" onclick="exportToExcel()">
-                <i class="bi bi-file-earmark-excel me-2"></i>تصدير Excel
+                <i class="bi bi-file-earmark-excel me-2"></i>{% trans "تصدير Excel" %}
             </button>
             <a href="{% url 'inventory' %}" class="btn btn-secondary">
-                <i class="bi bi-arrow-right me-2"></i>رجوع
+                <i class="bi bi-arrow-right me-2"></i>{% trans "رجوع" %}
             </a>
         </div>
     </div>
@@ -39,7 +39,7 @@
                 <div class="card-body text-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 opacity-75">إجمالي الفئات</h6>
+                            <h6 class="mb-1 opacity-75">{% trans "إجمالي الفئات" %}</h6>
                             <h3 class="mb-0" id="totalCategories">0</h3>
                         </div>
                         <i class="bi bi-tags fs-1 opacity-50"></i>
@@ -52,7 +52,7 @@
                 <div class="card-body text-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 opacity-75">الفئات النشطة</h6>
+                            <h6 class="mb-1 opacity-75">{% trans "الفئات النشطة" %}</h6>
                             <h3 class="mb-0" id="activeCategories">0</h3>
                         </div>
                         <i class="bi bi-check-circle fs-1 opacity-50"></i>
@@ -65,7 +65,7 @@
                 <div class="card-body text-white">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="mb-1 opacity-75">إجمالي القطع</h6>
+                            <h6 class="mb-1 opacity-75">{% trans "إجمالي القطع" %}</h6>
                             <h3 class="mb-0" id="totalParts">0</h3>
                         </div>
                         <i class="bi bi-box-seam fs-1 opacity-50"></i>
@@ -80,19 +80,19 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label">الحالة</label>
+                    <label class="form-label">{% trans "الحالة" %}</label>
                     <select class="form-select" id="statusFilter" onchange="loadCategories()">
-                        <option value="">الكل</option>
-                        <option value="true">نشط</option>
-                        <option value="false">غير نشط</option>
+                        <option value="">{% trans "الكل" %}</option>
+                        <option value="true">{% trans "نشط" %}</option>
+                        <option value="false">{% trans "غير نشط" %}</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">بحث</label>
-                    <input type="text" class="form-control" id="searchInput" placeholder="بحث..." onkeyup="loadCategories()">
+                    <label class="form-label">{% trans "بحث" %}</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="{% trans 'بحث...' %}" onkeyup="loadCategories()">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">عرض</label>
+                    <label class="form-label">{% trans "عرض" %}</label>
                     <div class="btn-group w-100" role="group">
                         <button type="button" class="btn btn-outline-primary active" onclick="switchView('table')">
                             <i class="bi bi-table"></i>
@@ -114,19 +114,19 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>الاسم بالعربية</th>
-                            <th>الاسم بالإنجليزية</th>
-                            <th>الوصف</th>
-                            <th>عدد القطع</th>
-                            <th>الحالة</th>
-                            <th>الإجراءات</th>
+                            <th>{% trans "الاسم بالعربية" %}</th>
+                            <th>{% trans "الاسم بالإنجليزية" %}</th>
+                            <th>{% trans "الوصف" %}</th>
+                            <th>{% trans "عدد القطع" %}</th>
+                            <th>{% trans "الحالة" %}</th>
+                            <th>{% trans "الإجراءات" %}</th>
                         </tr>
                     </thead>
                     <tbody id="categoriesTableBody">
                         <tr>
                             <td colspan="7" class="text-center py-5">
                                 <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">جاري التحميل...</span>
+                                    <span class="visually-hidden">{% trans "جاري التحميل..." %}</span>
                                 </div>
                             </td>
                         </tr>
@@ -150,36 +150,36 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="bi bi-plus-circle me-2"></i>فئة جديدة
+                    <i class="bi bi-plus-circle me-2"></i>{% trans "فئة جديدة" %}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="categoryForm">
                     <div class="mb-3">
-                        <label class="form-label">الاسم بالعربية *</label>
-                        <input type="text" class="form-control" id="nameAr" required placeholder="مثال: محرك">
+                        <label class="form-label">{% trans "الاسم بالعربية" %} *</label>
+                        <input type="text" class="form-control" id="nameAr" required placeholder="{% trans 'مثال: محرك' %}">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">الاسم بالإنجليزية *</label>
-                        <input type="text" class="form-control" id="nameEn" required placeholder="Example: Engine">
+                        <label class="form-label">{% trans "الاسم بالإنجليزية" %} *</label>
+                        <input type="text" class="form-control" id="nameEn" required placeholder="{% trans 'Example: Engine' %}">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">الوصف</label>
-                        <textarea class="form-control" id="description" rows="3" placeholder="وصف الفئة..."></textarea>
+                        <label class="form-label">{% trans "الوصف" %}</label>
+                        <textarea class="form-control" id="description" rows="3" placeholder="{% trans 'وصف الفئة...' %}"></textarea>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="isActive" checked>
                         <label class="form-check-label" for="isActive">
-                            نشط
+                            {% trans "نشط" %}
                         </label>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "إلغاء" %}</button>
                 <button type="button" class="btn btn-primary" onclick="saveCategory()">
-                    <i class="bi bi-check-circle me-2"></i>حفظ
+                    <i class="bi bi-check-circle me-2"></i>{% trans "حفظ" %}
                 </button>
             </div>
         </div>
@@ -192,7 +192,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
-                    <i class="bi bi-pencil me-2"></i>تعديل الفئة
+                    <i class="bi bi-pencil me-2"></i>{% trans "تعديل الفئة" %}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -428,14 +428,14 @@ async function saveCategory() {
         if (response.ok) {
             bootstrap.Modal.getInstance(document.getElementById('newCategoryModal')).hide();
             await loadCategories();
-            alert('تم إضافة الفئة بنجاح');
+            alert(t('category_added_successfully'));
         } else {
             const error = await response.json();
             alert(error.detail || 'فشل إضافة الفئة');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('حدث خطأ أثناء إضافة الفئة');
+        alert(t('error_adding_category'));
     }
 }
 
@@ -477,14 +477,14 @@ async function updateCategory() {
         if (response.ok) {
             bootstrap.Modal.getInstance(document.getElementById('editCategoryModal')).hide();
             await loadCategories();
-            alert('تم تحديث الفئة بنجاح');
+            alert(t('category_updated_successfully'));
         } else {
             const error = await response.json();
             alert(error.detail || 'فشل تحديث الفئة');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('حدث خطأ أثناء تحديث الفئة');
+        alert(t('error_updating_category'));
     }
 }
 
@@ -502,14 +502,14 @@ async function deleteCategory(categoryId) {
         
         if (response.ok) {
             await loadCategories();
-            alert('تم حذف الفئة بنجاح');
+            alert(t('category_deleted_successfully'));
         } else {
             const error = await response.json();
             alert(error.detail || 'فشل حذف الفئة');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('حدث خطأ أثناء حذف الفئة');
+        alert(t('error_deleting_category'));
     }
 }
 

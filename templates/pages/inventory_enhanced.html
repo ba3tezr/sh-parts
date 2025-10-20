@@ -177,31 +177,31 @@
     <div class="stats-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
         <div class="icon"><i class="bi bi-box-seam"></i></div>
         <div class="value" id="totalItems">0</div>
-        <div class="label">إجمالي القطع</div>
+        <div class="label" data-translate="total_parts">إجمالي القطع</div>
     </div>
     
     <div class="stats-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
         <div class="icon"><i class="bi bi-check-circle"></i></div>
         <div class="value" id="availableItems">0</div>
-        <div class="label">متوفر</div>
+        <div class="label" data-translate="available_items">متوفر</div>
     </div>
     
     <div class="stats-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
         <div class="icon"><i class="bi bi-exclamation-triangle"></i></div>
         <div class="value" id="lowStockItems">0</div>
-        <div class="label">منخفض المخزون</div>
+        <div class="label" data-translate="low_stock_items">منخفض المخزون</div>
     </div>
     
     <div class="stats-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
         <div class="icon"><i class="bi bi-currency-dollar"></i></div>
         <div class="value" id="inventoryValue">0</div>
-        <div class="label">قيمة المخزون</div>
+        <div class="label" data-translate="inventory_value">قيمة المخزون</div>
     </div>
     
     <div class="stats-card" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);">
         <div class="icon"><i class="bi bi-graph-up"></i></div>
         <div class="value" id="expectedProfit">0</div>
-        <div class="label">الربح المتوقع</div>
+        <div class="label" data-translate="expected_profit">الربح المتوقع</div>
     </div>
 </div>
 
@@ -209,82 +209,82 @@
 <div class="filter-section no-print">
     <div class="row g-3 mb-3">
         <div class="col-md-6">
-            <label class="form-label"><i class="bi bi-search me-2"></i>بحث سريع</label>
+            <label class="form-label"><i class="bi bi-search me-2"></i><span data-translate="quick_search">بحث سريع</span></label>
             <input type="text" class="form-control" id="quickSearch" 
-                   placeholder="ابحث برمز SKU، اسم القطعة، أو رقم الباركود...">
+                   data-translate-placeholder="search_placeholder" placeholder="ابحث برمز SKU، اسم القطعة، أو رقم الباركود...">
         </div>
         
         <div class="col-md-3">
-            <label class="form-label"><i class="bi bi-funnel me-2"></i>الحالة (Status)</label>
+            <label class="form-label"><i class="bi bi-funnel me-2"></i><span data-translate="status_label">الحالة</span> (Status)</label>
             <select class="form-select" id="filterStatus" multiple>
-                <option value="AVAILABLE">متوفر</option>
-                <option value="RESERVED">محجوز</option>
-                <option value="SOLD">مباع</option>
-                <option value="DAMAGED">تالف</option>
-                <option value="RETURNED">مرتجع</option>
+                <option value="AVAILABLE" data-translate="available">متوفر</option>
+                <option value="RESERVED" data-translate="reserved">محجوز</option>
+                <option value="SOLD" data-translate="sold">مباع</option>
+                <option value="DAMAGED" data-translate="damaged">تالف</option>
+                <option value="RETURNED" data-translate="returned">مرتجع</option>
             </select>
         </div>
         
         <div class="col-md-3">
-            <label class="form-label"><i class="bi bi-star me-2"></i>الحالة (Condition)</label>
+            <label class="form-label"><i class="bi bi-star me-2"></i><span data-translate="condition_label">الحالة</span> (Condition)</label>
             <select class="form-select" id="filterCondition" multiple>
-                <option value="NEW">جديد</option>
-                <option value="USED_EXCELLENT">مستعمل ممتاز</option>
-                <option value="USED_GOOD">مستعمل جيد</option>
-                <option value="USED_FAIR">مستعمل مقبول</option>
-                <option value="REFURBISHED">مجدد</option>
+                <option value="NEW" data-translate="new_condition">جديد</option>
+                <option value="USED_EXCELLENT" data-translate="used_excellent">مستعمل ممتاز</option>
+                <option value="USED_GOOD" data-translate="used_good">مستعمل جيد</option>
+                <option value="USED_FAIR" data-translate="used_fair">مستعمل مقبول</option>
+                <option value="REFURBISHED" data-translate="refurbished">مجدد</option>
             </select>
         </div>
     </div>
     
     <div class="row g-3 mb-3">
         <div class="col-md-3">
-            <label class="form-label"><i class="bi bi-tag me-2"></i>الفئة</label>
+            <label class="form-label"><i class="bi bi-tag me-2"></i><span data-translate="category_label">الفئة</span></label>
             <select class="form-select" id="filterCategory">
-                <option value="">كل الفئات</option>
+                <option value="" data-translate="all_categories">كل الفئات</option>
             </select>
         </div>
         
         <div class="col-md-3">
-            <label class="form-label"><i class="bi bi-geo-alt me-2"></i>الموقع</label>
+            <label class="form-label"><i class="bi bi-geo-alt me-2"></i><span data-translate="location_label">الموقع</span></label>
             <select class="form-select" id="filterLocation">
-                <option value="">كل المواقع</option>
+                <option value="" data-translate="all_locations">كل المواقع</option>
             </select>
         </div>
         
         <div class="col-md-3">
-            <label class="form-label"><i class="bi bi-cash me-2"></i>نطاق السعر (من)</label>
+            <label class="form-label"><i class="bi bi-cash me-2"></i><span data-translate="price_range_from">نطاق السعر (من)</span></label>
             <input type="number" class="form-control" id="priceMin" placeholder="0" min="0" step="10">
         </div>
         
         <div class="col-md-3">
-            <label class="form-label"><i class="bi bi-cash me-2"></i>نطاق السعر (إلى)</label>
+            <label class="form-label"><i class="bi bi-cash me-2"></i><span data-translate="price_range_to">نطاق السعر (إلى)</span></label>
             <input type="number" class="form-control" id="priceMax" placeholder="10000" min="0" step="10">
         </div>
     </div>
     
     <div class="row g-3 mb-3">
         <div class="col-md-3">
-            <label class="form-label"><i class="bi bi-calendar me-2"></i>من تاريخ</label>
+            <label class="form-label"><i class="bi bi-calendar me-2"></i><span data-translate="from_date">من تاريخ</span></label>
             <input type="date" class="form-control" id="dateFrom">
         </div>
         
         <div class="col-md-3">
-            <label class="form-label"><i class="bi bi-calendar me-2"></i>إلى تاريخ</label>
+            <label class="form-label"><i class="bi bi-calendar me-2"></i><span data-translate="to_date">إلى تاريخ</span></label>
             <input type="date" class="form-control" id="dateTo">
         </div>
         
         <div class="col-md-3">
-            <label class="form-label"><i class="bi bi-sort-down me-2"></i>ترتيب حسب</label>
+            <label class="form-label"><i class="bi bi-sort-down me-2"></i><span data-translate="sort_by">ترتيب حسب</span></label>
             <select class="form-select" id="sortBy">
-                <option value="-added_at">الأحدث أولاً</option>
-                <option value="added_at">الأقدم أولاً</option>
-                <option value="selling_price">السعر (من الأقل)</option>
-                <option value="-selling_price">السعر (من الأعلى)</option>
-                <option value="part__name_ar">الاسم (أ-ي)</option>
-                <option value="-part__name_ar">الاسم (ي-أ)</option>
-                <option value="quantity">الكمية (من الأقل)</option>
-                <option value="-quantity">الكمية (من الأكثر)</option>
+                <option value="-added_at" data-translate="newest_first">الأحدث أولاً</option>
+                <option value="added_at" data-translate="oldest_first">الأقدم أولاً</option>
+                <option value="selling_price" data-translate="price_low_high">السعر (من الأقل)</option>
+                <option value="-selling_price" data-translate="price_high_low">السعر (من الأعلى)</option>
+                <option value="part__name_ar" data-translate="name_a_z">الاسم (أ-ي)</option>
+                <option value="-part__name_ar" data-translate="name_z_a">الاسم (ي-أ)</option>
+                <option value="quantity" data-translate="quantity_low_high">الكمية (من الأقل)</option>
+                <option value="-quantity" data-translate="quantity_high_low">الكمية (من الأكثر)</option>
             </select>
         </div>
 

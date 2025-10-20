@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-14 10:08+0000\n"
+"POT-Creation-Date: 2025-10-20 10:35+0000\n"
 "PO-Revision-Date: 2025-10-14 10:30+0000\n"
 "Last-Translator: SH Parts Team <info@shparts.com>\n"
 "Language-Team: English <en@shparts.com>\n"
@@ -19,1137 +19,2283 @@ msgstr ""
 
 #: authentication/admin.py:11
 msgid "Personal info"
-msgstr ""
+msgstr "Personal info"
 
 #: authentication/admin.py:12
 msgid "Permissions"
-msgstr ""
+msgstr "Permissions"
 
 #: authentication/admin.py:15
 msgid "Security"
-msgstr ""
+msgstr "Security"
 
 #: authentication/admin.py:16
 msgid "Important dates"
-msgstr ""
+msgstr "Important dates"
 
 #: authentication/migrations/0002_add_username.py:17
 #: authentication/migrations/0004_username_not_null.py:15
 #: authentication/models.py:40
 msgid "username"
-msgstr ""
+msgstr "username"
 
 #: authentication/migrations/0002_add_username.py:23
 #: authentication/models.py:41
 msgid "email address"
-msgstr ""
+msgstr "email address"
 
 #: authentication/migrations/0002_add_username.py:28
 #: authentication/models.py:42 customers/models.py:16
 msgid "first name"
-msgstr ""
+msgstr "first name"
 
 #: authentication/migrations/0002_add_username.py:33
 #: authentication/models.py:43 customers/models.py:17
 msgid "last name"
-msgstr ""
+msgstr "last name"
 
 #: authentication/models.py:10
 msgid "The Username field must be set"
-msgstr ""
+msgstr "The Username field must be set"
 
 #: authentication/models.py:25
 msgid "Superuser must have is_staff=True."
-msgstr ""
+msgstr "المستخدم الرئيسي يجب أن يكون is_staff=True."
 
 #: authentication/models.py:27
 msgid "Superuser must have is_superuser=True."
-msgstr ""
+msgstr "المستخدم الرئيسي يجب أن يكون is_superuser=True."
 
 #: authentication/models.py:34
 msgid "Administrator"
-msgstr ""
+msgstr "Administrator"
 
 #: authentication/models.py:35
 msgid "Manager"
-msgstr ""
+msgstr "Manager"
 
-#: authentication/models.py:36
+#: authentication/models.py:36 templates/base/base.html:97
 msgid "Sales"
-msgstr ""
+msgstr "Sales"
 
 #: authentication/models.py:37
 msgid "Warehouse"
-msgstr ""
+msgstr "Warehouse"
 
 #: authentication/models.py:44
 msgid "phone number"
-msgstr ""
+msgstr "phone number"
 
 #: authentication/models.py:45
 msgid "role"
-msgstr ""
+msgstr "role"
 
 #: authentication/models.py:47
 msgid "staff status"
-msgstr ""
+msgstr "staff status"
 
 #: authentication/models.py:48 cars/models.py:10 cars/models.py:30
 #: cars/models.py:52 cars/models.py:79 customers/models.py:36
 #: inventory/models.py:16 sales/models.py:186
 msgid "active"
-msgstr ""
+msgstr "active"
 
 #: authentication/models.py:49
 msgid "date joined"
-msgstr ""
+msgstr "date joined"
 
 #: authentication/models.py:50
 msgid "last login"
-msgstr ""
+msgstr "last login"
 
 #: authentication/models.py:52
 msgid "2FA enabled"
-msgstr ""
+msgstr "المصادقة الثنائية مفعلة"
 
 #: authentication/models.py:53
 msgid "2FA secret"
-msgstr ""
+msgstr "رمز المصادقة الثنائية"
 
 #: authentication/models.py:61 sales/models.py:180
 msgid "user"
-msgstr ""
+msgstr "user"
 
 #: authentication/models.py:62
 msgid "users"
-msgstr ""
+msgstr "users"
 
 #: cars/admin.py:54
 msgid "Vehicle Information"
-msgstr ""
+msgstr "Vehicle Information"
 
 #: cars/admin.py:57
 msgid "Intake Details"
-msgstr ""
+msgstr "Intake Details"
 
 #: cars/admin.py:60
 msgid "Dismantling Status"
-msgstr ""
+msgstr "Dismantling Status"
 
 #: cars/admin.py:63 customers/admin.py:44 inventory/admin.py:44
-#: sales/admin.py:40
+#: inventory/admin.py:85 sales/admin.py:40
 msgid "Timestamps"
-msgstr ""
+msgstr "Timestamps"
 
 #: cars/models.py:7
 msgid "make name"
-msgstr ""
+msgstr "make name"
 
 #: cars/models.py:8
 msgid "make name (Arabic)"
-msgstr ""
+msgstr "اسم الماركة (بالعربية)"
 
 #: cars/models.py:9
 msgid "logo"
-msgstr ""
+msgstr "logo"
 
 #: cars/models.py:11 cars/models.py:31 cars/models.py:80 cars/models.py:120
-#: customers/models.py:40 customers/models.py:121 reports/models.py:33
-#: sales/models.py:41 sales/models.py:184
+#: customers/models.py:40 customers/models.py:121 inventory/models.py:207
+#: reports/models.py:33 sales/models.py:41 sales/models.py:184
 msgid "created at"
-msgstr ""
+msgstr "created at"
 
 #: cars/models.py:12 cars/models.py:32 cars/models.py:81 cars/models.py:121
 #: customers/models.py:41 inventory/models.py:79 reports/models.py:34
 #: sales/models.py:42 sales/models.py:185
 msgid "updated at"
-msgstr ""
+msgstr "updated at"
 
 #: cars/models.py:15
 msgid "car make"
-msgstr ""
+msgstr "car make"
 
 #: cars/models.py:16
 msgid "car makes"
-msgstr ""
+msgstr "car makes"
 
 #: cars/models.py:24 cars/models.py:102
 msgid "make"
-msgstr ""
+msgstr "make"
 
 #: cars/models.py:25
 msgid "model name"
-msgstr ""
+msgstr "model name"
 
 #: cars/models.py:26
 msgid "model name (Arabic)"
-msgstr ""
+msgstr "اسم الموديل (بالعربية)"
 
 #: cars/models.py:27
 msgid "production start year"
-msgstr ""
+msgstr "production start year"
 
 #: cars/models.py:28
 msgid "production end year"
-msgstr ""
+msgstr "production end year"
 
 #: cars/models.py:29
 msgid "body type"
-msgstr ""
+msgstr "body type"
 
 #: cars/models.py:35
 msgid "car model"
-msgstr ""
+msgstr "car model"
 
 #: cars/models.py:36
 msgid "car models"
-msgstr ""
+msgstr "car models"
 
 #: cars/models.py:45
 msgid "category name"
-msgstr ""
+msgstr "category name"
 
 #: cars/models.py:46
 msgid "category name (Arabic)"
-msgstr ""
+msgstr "اسم الفئة (بالعربية)"
 
 #: cars/models.py:48
 msgid "parent category"
-msgstr ""
+msgstr "parent category"
 
 #: cars/models.py:49 cars/models.py:71 inventory/models.py:15
 #: reports/models.py:22
 msgid "description"
-msgstr ""
+msgstr "description"
 
 #: cars/models.py:50
 msgid "icon class"
-msgstr ""
+msgstr "icon class"
 
 #: cars/models.py:51
 msgid "sort order"
-msgstr ""
+msgstr "sort order"
 
 #: cars/models.py:55
 msgid "part category"
-msgstr ""
+msgstr "part category"
 
 #: cars/models.py:56
 msgid "part categories"
-msgstr ""
+msgstr "part categories"
 
 #: cars/models.py:66
 msgid "part name"
-msgstr ""
+msgstr "part name"
 
 #: cars/models.py:67
 msgid "part name (Arabic)"
-msgstr ""
+msgstr "اسم القطعة (بالعربية)"
 
 #: cars/models.py:69
 msgid "category"
-msgstr ""
+msgstr "category"
 
 #: cars/models.py:70
 msgid "part number"
-msgstr ""
+msgstr "part number"
 
 #: cars/models.py:72
 msgid "description (Arabic)"
-msgstr ""
+msgstr "الوصف (بالعربية)"
 
 #: cars/models.py:75
 msgid "compatible models"
-msgstr ""
+msgstr "compatible models"
 
 #: cars/models.py:77
 msgid "default image"
-msgstr ""
+msgstr "default image"
 
 #: cars/models.py:78
 msgid "universal part"
-msgstr ""
+msgstr "universal part"
 
 #: cars/models.py:84 inventory/models.py:54
 msgid "part"
-msgstr ""
+msgstr "part"
 
 #: cars/models.py:85
 msgid "parts"
-msgstr ""
+msgstr "parts"
 
 #: cars/models.py:94
 msgid "Excellent"
-msgstr ""
+msgstr "Excellent"
 
 #: cars/models.py:95
 msgid "Good"
-msgstr ""
+msgstr "Good"
 
 #: cars/models.py:96
 msgid "Fair"
-msgstr ""
+msgstr "Fair"
 
 #: cars/models.py:97
 msgid "Poor"
-msgstr ""
+msgstr "Poor"
 
 #: cars/models.py:98
 msgid "Salvage"
-msgstr ""
+msgstr "Salvage"
 
 #: cars/models.py:101
 msgid "VIN"
-msgstr ""
+msgstr "VIN"
 
 #: cars/models.py:103
 msgid "model"
-msgstr ""
+msgstr "model"
 
 #: cars/models.py:104
 msgid "year"
-msgstr ""
+msgstr "year"
 
 #: cars/models.py:105
 msgid "color"
-msgstr ""
+msgstr "color"
 
 #: cars/models.py:106
 msgid "mileage"
-msgstr ""
+msgstr "mileage"
 
 #: cars/models.py:107 inventory/models.py:58
 msgid "condition"
-msgstr ""
+msgstr "condition"
 
 #: cars/models.py:109
 msgid "intake date"
-msgstr ""
+msgstr "intake date"
 
 #: cars/models.py:110
 msgid "intake notes"
-msgstr ""
+msgstr "intake notes"
 
 #: cars/models.py:111
 msgid "purchase price"
-msgstr ""
+msgstr "purchase price"
 
 #: cars/models.py:115 sales/models.py:150
 msgid "received by"
-msgstr ""
+msgstr "received by"
 
 #: cars/models.py:117
 msgid "dismantled"
-msgstr ""
+msgstr "dismantled"
 
 #: cars/models.py:118
 msgid "dismantled date"
-msgstr ""
+msgstr "dismantled date"
 
 #: cars/models.py:124 cars/models.py:134
 msgid "vehicle"
-msgstr ""
+msgstr "vehicle"
 
 #: cars/models.py:125
 msgid "vehicles"
-msgstr ""
+msgstr "vehicles"
 
 #: cars/models.py:135 inventory/models.py:138
 msgid "image"
-msgstr ""
+msgstr "image"
 
 #: cars/models.py:136 inventory/models.py:139
 msgid "caption"
-msgstr ""
+msgstr "caption"
 
 #: cars/models.py:137
 msgid "primary photo"
-msgstr ""
+msgstr "primary photo"
 
 #: cars/models.py:138 inventory/models.py:141
 msgid "uploaded at"
-msgstr ""
+msgstr "uploaded at"
 
 #: cars/models.py:141
 msgid "vehicle photo"
-msgstr ""
+msgstr "vehicle photo"
 
 #: cars/models.py:142
 msgid "vehicle photos"
-msgstr ""
+msgstr "vehicle photos"
 
 #: customers/admin.py:29
 msgid "Basic Information"
-msgstr ""
+msgstr "Basic Information"
 
 #: customers/admin.py:32
 msgid "Contact Information"
-msgstr ""
+msgstr "Contact Information"
 
 #: customers/admin.py:35
 msgid "Address"
-msgstr ""
+msgstr "Address"
 
 #: customers/admin.py:38
 msgid "Financial"
-msgstr ""
+msgstr "Financial"
 
 #: customers/admin.py:41 inventory/admin.py:41 sales/admin.py:37
 msgid "Additional"
-msgstr ""
+msgstr "Additional"
 
 #: customers/admin.py:68
 msgid "Note"
-msgstr ""
+msgstr "Note"
 
 #: customers/models.py:8
 msgid "Individual"
-msgstr ""
+msgstr "Individual"
 
 #: customers/models.py:9
 msgid "Business"
-msgstr ""
+msgstr "Business"
 
 #: customers/models.py:12
 msgid "customer code"
-msgstr ""
+msgstr "customer code"
 
 #: customers/models.py:13
 msgid "customer type"
-msgstr ""
+msgstr "customer type"
 
 #: customers/models.py:18
 msgid "business name"
-msgstr ""
+msgstr "business name"
 
 #: customers/models.py:20
 msgid "email"
-msgstr ""
+msgstr "email"
 
 #: customers/models.py:21
 msgid "phone"
-msgstr ""
+msgstr "phone"
 
 #: customers/models.py:22
 msgid "secondary phone"
-msgstr ""
+msgstr "secondary phone"
 
 #: customers/models.py:24
 msgid "address line 1"
-msgstr ""
+msgstr "سطر العنوان 1"
 
 #: customers/models.py:25
 msgid "address line 2"
-msgstr ""
+msgstr "سطر العنوان 2"
 
 #: customers/models.py:26
 msgid "city"
-msgstr ""
+msgstr "city"
 
 #: customers/models.py:27
 msgid "state/province"
-msgstr ""
+msgstr "المحافظة/الولاية"
 
 #: customers/models.py:28
 msgid "postal code"
-msgstr ""
+msgstr "postal code"
 
 #: customers/models.py:29
 msgid "country"
-msgstr ""
+msgstr "country"
 
 #: customers/models.py:31
 msgid "tax ID"
-msgstr ""
+msgstr "tax ID"
 
 #: customers/models.py:32
 msgid "credit limit"
-msgstr ""
+msgstr "credit limit"
 
 #: customers/models.py:35 inventory/models.py:74 sales/models.py:37
 #: sales/models.py:108 sales/models.py:147
 msgid "notes"
-msgstr ""
+msgstr "notes"
 
 #: customers/models.py:39 customers/models.py:120 reports/models.py:32
 msgid "created by"
-msgstr ""
+msgstr "created by"
 
 #: customers/models.py:44 customers/models.py:92 customers/models.py:115
 #: sales/models.py:25 sales/models.py:182
 msgid "customer"
-msgstr ""
+msgstr "customer"
 
 #: customers/models.py:45
 msgid "customers"
-msgstr ""
+msgstr "customers"
 
 #: customers/models.py:93
 msgid "credit amount"
-msgstr ""
+msgstr "credit amount"
 
-#: customers/models.py:94 inventory/models.py:172
+#: customers/models.py:94 inventory/models.py:172 inventory/models.py:201
 msgid "reason"
-msgstr ""
+msgstr "reason"
 
 #: customers/models.py:95 inventory/models.py:173
 msgid "reference"
-msgstr ""
+msgstr "reference"
 
 #: customers/models.py:98
 msgid "issued by"
-msgstr ""
+msgstr "issued by"
 
 #: customers/models.py:99
 msgid "issued at"
-msgstr ""
+msgstr "issued at"
 
 #: customers/models.py:101
 msgid "used"
-msgstr ""
+msgstr "used"
 
 #: customers/models.py:102
 msgid "used at"
-msgstr ""
+msgstr "used at"
 
 #: customers/models.py:105
 msgid "customer credit"
-msgstr ""
+msgstr "customer credit"
 
 #: customers/models.py:106
 msgid "customer credits"
-msgstr ""
+msgstr "customer credits"
 
 #: customers/models.py:116
 msgid "note"
-msgstr ""
+msgstr "note"
 
 #: customers/models.py:117
 msgid "important"
-msgstr ""
+msgstr "important"
 
 #: customers/models.py:124
 msgid "customer note"
-msgstr ""
+msgstr "customer note"
 
 #: customers/models.py:125
 msgid "customer notes"
-msgstr ""
+msgstr "customer notes"
 
 #: inventory/admin.py:29
 msgid "Item Information"
-msgstr ""
+msgstr "Item Information"
 
 #: inventory/admin.py:32
 msgid "Quantity"
-msgstr ""
+msgstr "Quantity"
 
 #: inventory/admin.py:35
 msgid "Location & Tracking"
-msgstr ""
+msgstr "الموقع والتتبع"
 
 #: inventory/admin.py:38 sales/admin.py:34
 msgid "Pricing"
-msgstr ""
+msgstr "Pricing"
 
 #: inventory/admin.py:53
 msgid "Low Stock"
-msgstr ""
+msgstr "Low Stock"
+
+#: inventory/admin.py:76
+msgid "Transfer Information"
+msgstr "Transfer Information"
+
+#: inventory/admin.py:79
+msgid "Status"
+msgstr "Status"
+
+#: inventory/admin.py:82
+msgid "Tracking"
+msgstr "Tracking"
 
 #: inventory/models.py:11
 msgid "warehouse"
-msgstr ""
+msgstr "warehouse"
 
 #: inventory/models.py:12
 msgid "aisle"
-msgstr ""
+msgstr "aisle"
 
 #: inventory/models.py:13
 msgid "shelf"
-msgstr ""
+msgstr "shelf"
 
 #: inventory/models.py:14
 msgid "bin"
-msgstr ""
+msgstr "bin"
 
 #: inventory/models.py:19
 msgid "warehouse location"
-msgstr ""
+msgstr "warehouse location"
 
 #: inventory/models.py:20
 msgid "warehouse locations"
-msgstr ""
+msgstr "warehouse locations"
 
 #: inventory/models.py:37
 msgid "New"
-msgstr ""
+msgstr "New"
 
 #: inventory/models.py:38
 msgid "Used - Excellent"
-msgstr ""
+msgstr "مستعمل - ممتاز"
 
 #: inventory/models.py:39
 msgid "Used - Good"
-msgstr ""
+msgstr "مستعمل - جيد"
 
 #: inventory/models.py:40
 msgid "Used - Fair"
-msgstr ""
+msgstr "مستعمل - مقبول"
 
 #: inventory/models.py:41
 msgid "Refurbished"
-msgstr ""
+msgstr "Refurbished"
 
 #: inventory/models.py:45
 msgid "Available"
-msgstr ""
+msgstr "Available"
 
 #: inventory/models.py:46
 msgid "Reserved"
-msgstr ""
+msgstr "Reserved"
 
 #: inventory/models.py:47
 msgid "Sold"
-msgstr ""
+msgstr "Sold"
 
 #: inventory/models.py:48
 msgid "Damaged"
-msgstr ""
+msgstr "Damaged"
 
 #: inventory/models.py:49
 msgid "Returned"
-msgstr ""
+msgstr "Returned"
 
 #: inventory/models.py:52
 msgid "SKU"
-msgstr ""
+msgstr "SKU"
 
 #: inventory/models.py:56
 msgid "source vehicle"
-msgstr ""
+msgstr "source vehicle"
 
-#: inventory/models.py:59 reports/models.py:56 sales/models.py:27
+#: inventory/models.py:59 inventory/models.py:200 reports/models.py:56
+#: sales/models.py:27
 msgid "status"
-msgstr ""
+msgstr "status"
 
-#: inventory/models.py:61 inventory/models.py:164 sales/models.py:102
-#: sales/models.py:211
+#: inventory/models.py:61 inventory/models.py:164 inventory/models.py:199
+#: sales/models.py:102 sales/models.py:211
 msgid "quantity"
-msgstr ""
+msgstr "quantity"
 
 #: inventory/models.py:62
 msgid "minimum quantity"
-msgstr ""
+msgstr "minimum quantity"
 
 #: inventory/models.py:65
 msgid "location"
-msgstr ""
+msgstr "location"
 
 #: inventory/models.py:67
 msgid "cost price"
-msgstr ""
+msgstr "cost price"
 
 #: inventory/models.py:69
 msgid "selling price"
-msgstr ""
+msgstr "selling price"
 
 #: inventory/models.py:71
 msgid "barcode"
-msgstr ""
+msgstr "barcode"
 
 #: inventory/models.py:72
 msgid "QR code"
-msgstr ""
+msgstr "QR code"
 
 #: inventory/models.py:77
 msgid "added by"
-msgstr ""
+msgstr "added by"
 
 #: inventory/models.py:78 sales/models.py:214
 msgid "added at"
-msgstr ""
+msgstr "added at"
 
 #: inventory/models.py:82 sales/models.py:100 sales/models.py:209
 msgid "inventory item"
-msgstr ""
+msgstr "inventory item"
 
 #: inventory/models.py:83
 msgid "inventory items"
-msgstr ""
+msgstr "inventory items"
 
 #: inventory/models.py:137 inventory/models.py:162
 msgid "item"
-msgstr ""
+msgstr "item"
 
 #: inventory/models.py:140
 msgid "primary image"
-msgstr ""
+msgstr "primary image"
 
 #: inventory/models.py:144
 msgid "inventory item image"
-msgstr ""
+msgstr "inventory item image"
 
 #: inventory/models.py:145
 msgid "inventory item images"
-msgstr ""
+msgstr "inventory item images"
 
 #: inventory/models.py:154
 msgid "Stock In"
-msgstr ""
+msgstr "Stock In"
 
 #: inventory/models.py:155
 msgid "Stock Out"
-msgstr ""
+msgstr "Stock Out"
 
 #: inventory/models.py:156
 msgid "Adjustment"
-msgstr ""
+msgstr "Adjustment"
 
 #: inventory/models.py:157
 msgid "Transfer"
-msgstr ""
+msgstr "Transfer"
 
 #: inventory/models.py:158
 msgid "Return"
-msgstr ""
+msgstr "Return"
 
 #: inventory/models.py:163
 msgid "movement type"
-msgstr ""
+msgstr "movement type"
 
 #: inventory/models.py:167
 msgid "from location"
-msgstr ""
+msgstr "from location"
 
 #: inventory/models.py:170
 msgid "to location"
-msgstr ""
+msgstr "to location"
 
 #: inventory/models.py:176
 msgid "performed by"
-msgstr ""
+msgstr "performed by"
 
 #: inventory/models.py:177
 msgid "performed at"
-msgstr ""
+msgstr "performed at"
 
 #: inventory/models.py:180
 msgid "stock movement"
-msgstr ""
+msgstr "stock movement"
 
 #: inventory/models.py:181
 msgid "stock movements"
-msgstr ""
+msgstr "stock movements"
+
+#: inventory/models.py:190
+msgid "Pending"
+msgstr "Pending"
+
+#: inventory/models.py:191
+msgid "Approved"
+msgstr "Approved"
+
+#: inventory/models.py:192 sales/models.py:13
+msgid "Completed"
+msgstr "Completed"
+
+#: inventory/models.py:193 sales/models.py:14
+msgid "Cancelled"
+msgstr "Cancelled"
+
+#: inventory/models.py:208
+msgid "approved at"
+msgstr "approved at"
+
+#: inventory/models.py:209 reports/models.py:62 sales/models.py:43
+msgid "completed at"
+msgstr "completed at"
+
+#: inventory/models.py:214
+msgid "location transfer"
+msgstr "location transfer"
+
+#: inventory/models.py:215
+msgid "location transfers"
+msgstr "location transfers"
 
 #: reports/admin.py:14
 msgid "Report Information"
-msgstr ""
+msgstr "Report Information"
 
 #: reports/admin.py:17
 msgid "Configuration"
-msgstr ""
+msgstr "Configuration"
 
-#: reports/admin.py:20
+#: reports/admin.py:20 templates/base/base.html:134
 msgid "Settings"
-msgstr ""
+msgstr "Settings"
 
 #: reports/admin.py:23 reports/admin.py:45
 msgid "Metadata"
-msgstr ""
+msgstr "Metadata"
 
 #: reports/admin.py:39
 msgid "Execution Details"
-msgstr ""
+msgstr "Execution Details"
 
 #: reports/admin.py:42
 msgid "Output"
-msgstr ""
+msgstr "Output"
 
 #: reports/models.py:8
 msgid "Inventory Valuation"
-msgstr ""
+msgstr "Inventory Valuation"
 
 #: reports/models.py:9
 msgid "Sales Summary"
-msgstr ""
+msgstr "Sales Summary"
 
 #: reports/models.py:10
 msgid "Sales by Part"
-msgstr ""
+msgstr "Sales by Part"
 
 #: reports/models.py:11
 msgid "Sales by Customer"
-msgstr ""
+msgstr "Sales by Customer"
 
 #: reports/models.py:12
 msgid "Customer Debt"
-msgstr ""
+msgstr "Customer Debt"
 
 #: reports/models.py:13
 msgid "Stock Movement"
-msgstr ""
+msgstr "Stock Movement"
 
 #: reports/models.py:14
 msgid "Low Stock Alert"
-msgstr ""
+msgstr "Low Stock Alert"
 
 #: reports/models.py:15
 msgid "Profit Margin Analysis"
-msgstr ""
+msgstr "Profit Margin Analysis"
 
 #: reports/models.py:16
 msgid "Vehicle Intake Report"
-msgstr ""
+msgstr "Vehicle Intake Report"
 
 #: reports/models.py:17
 msgid "Custom Report"
-msgstr ""
+msgstr "Custom Report"
 
 #: reports/models.py:20
 msgid "report name"
-msgstr ""
+msgstr "report name"
 
 #: reports/models.py:21 reports/models.py:50
 msgid "report type"
-msgstr ""
+msgstr "report type"
 
 #: reports/models.py:24
 msgid "filters"
-msgstr ""
+msgstr "filters"
 
 #: reports/models.py:25
 msgid "columns"
-msgstr ""
+msgstr "columns"
 
 #: reports/models.py:27
 msgid "public"
-msgstr ""
+msgstr "public"
 
 #: reports/models.py:28
 msgid "scheduled"
-msgstr ""
+msgstr "scheduled"
 
 #: reports/models.py:29
 msgid "schedule frequency"
-msgstr ""
+msgstr "schedule frequency"
 
 #: reports/models.py:35
 msgid "last run"
-msgstr ""
+msgstr "last run"
 
 #: reports/models.py:38 reports/models.py:48
 msgid "saved report"
-msgstr ""
+msgstr "saved report"
 
 #: reports/models.py:39
 msgid "saved reports"
-msgstr ""
+msgstr "saved reports"
 
 #: reports/models.py:51
 msgid "parameters"
-msgstr ""
+msgstr "parameters"
 
 #: reports/models.py:53
 msgid "file path"
-msgstr ""
+msgstr "file path"
 
 #: reports/models.py:54
 msgid "file format"
-msgstr ""
+msgstr "file format"
 
 #: reports/models.py:57
 msgid "error message"
-msgstr ""
+msgstr "error message"
 
 #: reports/models.py:60
 msgid "executed by"
-msgstr ""
+msgstr "executed by"
 
 #: reports/models.py:61
 msgid "started at"
-msgstr ""
-
-#: reports/models.py:62 sales/models.py:43
-msgid "completed at"
-msgstr ""
+msgstr "started at"
 
 #: reports/models.py:65
 msgid "report execution"
-msgstr ""
+msgstr "report execution"
 
 #: reports/models.py:66
 msgid "report executions"
-msgstr ""
+msgstr "report executions"
 
 #: sales/admin.py:31
 msgid "Sale Information"
-msgstr ""
+msgstr "Sale Information"
 
 #: sales/models.py:11
 msgid "Draft"
-msgstr ""
+msgstr "Draft"
 
 #: sales/models.py:12
 msgid "Confirmed"
-msgstr ""
-
-#: sales/models.py:13
-msgid "Completed"
-msgstr ""
-
-#: sales/models.py:14
-msgid "Cancelled"
-msgstr ""
+msgstr "Confirmed"
 
 #: sales/models.py:18
 msgid "Unpaid"
-msgstr ""
+msgstr "Unpaid"
 
 #: sales/models.py:19
 msgid "Partially Paid"
-msgstr ""
+msgstr "Partially Paid"
 
 #: sales/models.py:20
 msgid "Fully Paid"
-msgstr ""
+msgstr "Fully Paid"
 
 #: sales/models.py:23
 msgid "invoice number"
-msgstr ""
+msgstr "invoice number"
 
 #: sales/models.py:28
 msgid "payment status"
-msgstr ""
+msgstr "payment status"
 
 #: sales/models.py:31
 msgid "subtotal"
-msgstr ""
+msgstr "subtotal"
 
 #: sales/models.py:32 sales/models.py:105
 msgid "discount amount"
-msgstr ""
+msgstr "discount amount"
 
 #: sales/models.py:33
 msgid "tax amount"
-msgstr ""
+msgstr "tax amount"
 
 #: sales/models.py:34
 msgid "total amount"
-msgstr ""
+msgstr "total amount"
 
 #: sales/models.py:35
 msgid "paid amount"
-msgstr ""
+msgstr "paid amount"
 
 #: sales/models.py:40
 msgid "sales person"
-msgstr ""
+msgstr "sales person"
 
 #: sales/models.py:46 sales/models.py:98 sales/models.py:141
 msgid "sale"
-msgstr ""
+msgstr "sale"
 
 #: sales/models.py:47
 msgid "sales"
-msgstr ""
+msgstr "sales"
 
 #: sales/models.py:103
 msgid "unit price"
-msgstr ""
+msgstr "unit price"
 
 #: sales/models.py:104
 msgid "discount %"
-msgstr ""
+msgstr "نسبة الخصم %"
 
 #: sales/models.py:106
 msgid "total price"
-msgstr ""
+msgstr "total price"
 
 #: sales/models.py:111
 msgid "sale item"
-msgstr ""
+msgstr "sale item"
 
 #: sales/models.py:112
 msgid "sale items"
-msgstr ""
+msgstr "sale items"
 
 #: sales/models.py:132
 msgid "Cash"
-msgstr ""
+msgstr "Cash"
 
 #: sales/models.py:133
 msgid "Credit/Debit Card"
-msgstr ""
+msgstr "بطاقة ائتمان/خصم"
 
 #: sales/models.py:134
 msgid "Bank Transfer"
-msgstr ""
+msgstr "Bank Transfer"
 
 #: sales/models.py:135
 msgid "Cheque"
-msgstr ""
+msgstr "Cheque"
 
 #: sales/models.py:136
 msgid "Store Credit"
-msgstr ""
+msgstr "Store Credit"
 
 #: sales/models.py:139
 msgid "payment number"
-msgstr ""
+msgstr "payment number"
 
 #: sales/models.py:143
 msgid "amount"
-msgstr ""
+msgstr "amount"
 
 #: sales/models.py:144
 msgid "payment method"
-msgstr ""
+msgstr "payment method"
 
 #: sales/models.py:146
 msgid "reference number"
-msgstr ""
+msgstr "reference number"
 
 #: sales/models.py:151
 msgid "payment date"
-msgstr ""
+msgstr "payment date"
 
 #: sales/models.py:154
 msgid "payment"
-msgstr ""
+msgstr "payment"
 
 #: sales/models.py:155
 msgid "payments"
-msgstr ""
+msgstr "payments"
 
 #: sales/models.py:189 sales/models.py:207
 msgid "cart"
-msgstr ""
+msgstr "cart"
 
 #: sales/models.py:190
 msgid "carts"
-msgstr ""
+msgstr "carts"
 
 #: sales/models.py:212
 msgid "price at addition"
-msgstr ""
+msgstr "price at addition"
 
 #: sales/models.py:217
 msgid "cart item"
-msgstr ""
+msgstr "cart item"
 
 #: sales/models.py:218
 msgid "cart items"
-msgstr ""
+msgstr "cart items"
 
-#: templates/base/base.html:31
+#: templates/base/base.html:34 templates/pages/login.html:189
 msgid "نظام قطع غيار السيارات"
 msgstr "Car Parts System"
 
-#: templates/base/base.html:69 templates/base/base.html:154
-#: templates/pages/dashboard.html:5 templates/pages/dashboard.html:6
+#: templates/base/base.html:64 templates/base/base.html:253
+msgid "SH Parts"
+msgstr "SH Parts"
+
+#: templates/base/base.html:73
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: templates/base/base.html:81
+msgid "Vehicles"
+msgstr "Vehicles"
+
+#: templates/base/base.html:89
+msgid "Inventory"
+msgstr "Inventory"
+
+#: templates/base/base.html:105
+msgid "Customers"
+msgstr "Customers"
+
+#: templates/base/base.html:113
+msgid "Reports"
+msgstr "Reports"
+
+#: templates/base/base.html:120
+msgid "System Management"
+msgstr "System Management"
+
+#: templates/base/base.html:126
+msgid "Price Management"
+msgstr "Price Management"
+
+#: templates/base/base.html:141
+msgid "Logout"
+msgstr "Logout"
+
+#: templates/base/base.html:150 templates/base/base.html:253
+#: templates/pages/login.html:253
+msgid "جميع الحقوق محفوظة"
+msgstr "All Rights Reserved"
+
+#: templates/base/base.html:153 templates/base/base.html:258
+#: templates/pages/login.html:256
+msgid "تطوير"
+msgstr "Developed by"
+
+#: templates/base/base.html:153 templates/base/base.html:258
+#: templates/pages/login.html:256
+msgid "Zakee Tahawi"
+msgstr "Zakee Tahawi"
+
+#: templates/base/base.html:170 templates/pages/customers_dashboard.html:95
+#: templates/pages/customers_enhanced.html:103 templates/pages/dashboard.html:5
+#: templates/pages/dashboard.html:6
 msgid "لوحة التحكم"
 msgstr "Dashboard"
 
-#: templates/base/base.html:77 templates/pages/vehicles.html:4
-#: templates/pages/vehicles.html:30
-msgid "السيارات"
-msgstr "Vehicles"
+#: templates/base/base.html:178
+msgid "الثيم الأزرق النهاري / Day Blue Theme"
+msgstr "Day Blue Theme / الثيم الأزرق النهاري"
 
-#: templates/base/base.html:85 templates/pages/inventory.html:4
-#: templates/pages/inventory.html:5
-msgid "المخزون"
-msgstr "Inventory"
+#: templates/base/base.html:181
+msgid "الثيم الأزرق الداكن / Dark Blue Theme"
+msgstr "Dark Blue Theme / الثيم الأزرق الداكن"
 
-#: templates/base/base.html:93 templates/pages/reports.html:344
-msgid "المبيعات"
-msgstr "Sales"
+#: templates/base/base.html:184
+msgid "الثيم الفاتح / Light Theme"
+msgstr "Light Theme / الثيم الفاتح"
 
-#: templates/base/base.html:101 templates/pages/customers.html:4
-#: templates/pages/customers.html:5
+#: templates/base/base.html:187
+msgid "ثيم الرمال الذهبية / Camel Dune Theme"
+msgstr "Camel Dune Theme / ثيم الرمال الذهبية"
+
+#: templates/base/base.html:190
+msgid "الثيم الزيتي / Olive Sage Theme"
+msgstr "Olive Sage Theme / الثيم الزيتي"
+
+#: templates/base/base.html:220
+msgid "لوحة الإدارة"
+msgstr "Admin Panel"
+
+#: templates/base/base.html:227
+msgid "الملف الشخصي"
+msgstr "Profile"
+
+#: templates/base/base.html:231
+msgid "الإعدادات"
+msgstr "Settings"
+
+#: templates/base/base.html:236
+msgid "تسجيل الخروج"
+msgstr "Logout"
+
+#: templates/base/base.html:324
+msgid "تحديث جديد متاح! هل تريد تحديث التطبيق؟"
+msgstr "New update available! Do you want to update the app?"
+
+#: templates/pages/category_management.html:5
+#: templates/pages/category_management.html:18
+msgid "إدارة الفئات"
+msgstr "Category Management"
+
+#: templates/pages/category_management.html:20
+msgid "إدارة فئات القطع والسيارات"
+msgstr "Manage Parts and Vehicle Categories"
+
+#: templates/pages/category_management.html:24
+#: templates/pages/category_management.html:153
+msgid "فئة جديدة"
+msgstr "New Category"
+
+#: templates/pages/category_management.html:27
+#: templates/pages/customers_enhanced.html:109
+#: templates/pages/customers_reports.html:153
+#: templates/pages/low_stock_report.html:82 templates/pages/reports.html:107
+#: templates/pages/slow_moving_report.html:73
+#: templates/pages/stock_movements.html:157
+msgid "تصدير Excel"
+msgstr "Export Excel"
+
+#: templates/pages/category_management.html:30
+#: templates/pages/inventory_item_details.html:212
+#: templates/pages/low_stock_report.html:88
+#: templates/pages/slow_moving_report.html:79
+#: templates/pages/stock_movements.html:163
+msgid "رجوع"
+msgstr "Back"
+
+#: templates/pages/category_management.html:42
+msgid "إجمالي الفئات"
+msgstr "Total Categories"
+
+#: templates/pages/category_management.html:55
+msgid "الفئات النشطة"
+msgstr "Active Categories"
+
+#: templates/pages/category_management.html:68
+#: templates/pages/low_stock_report.html:113
+msgid "إجمالي القطع"
+msgstr "Total Parts"
+
+#: templates/pages/category_management.html:83
+#: templates/pages/category_management.html:121
+#: templates/pages/customer_details.html:270
+#: templates/pages/customer_details.html:326
+#: templates/pages/customer_details.html:990
+#: templates/pages/customers_enhanced.html:321 templates/pages/sales.html:44
+#: templates/pages/vehicles.html:49 templates/pages/vehicles.html:164
+msgid "الحالة"
+msgstr "Status"
+
+#: templates/pages/category_management.html:85
+#: templates/pages/stock_movements.html:207
+msgid "الكل"
+msgstr "All"
+
+#: templates/pages/category_management.html:86
+#: templates/pages/category_management.html:174
+#: templates/pages/customers_dashboard.html:486
+#: templates/pages/customers_enhanced.html:266
+#: templates/pages/customers_enhanced.html:559
+#: templates/pages/customers_enhanced.html:605
+msgid "نشط"
+msgstr "Active"
+
+#: templates/pages/category_management.html:87
+#: templates/pages/customers_dashboard.html:486
+#: templates/pages/customers_enhanced.html:267
+#: templates/pages/customers_enhanced.html:559
+#: templates/pages/customers_enhanced.html:605
+msgid "غير نشط"
+msgstr "Inactive"
+
+#: templates/pages/category_management.html:91
+#: templates/pages/stock_movements.html:224
+msgid "بحث"
+msgstr "Search"
+
+#: templates/pages/category_management.html:92
+#: templates/pages/price_management.html:141
+msgid "بحث..."
+msgstr "Search..."
+
+#: templates/pages/category_management.html:95
+#: templates/pages/customers_enhanced.html:578
+msgid "عرض"
+msgstr "View"
+
+#: templates/pages/category_management.html:117
+#: templates/pages/category_management.html:160
+msgid "الاسم بالعربية"
+msgstr "Arabic Name"
+
+#: templates/pages/category_management.html:118
+#: templates/pages/category_management.html:164
+msgid "الاسم بالإنجليزية"
+msgstr "English Name"
+
+#: templates/pages/category_management.html:119
+#: templates/pages/category_management.html:168
+msgid "الوصف"
+msgstr "Description"
+
+#: templates/pages/category_management.html:120
+msgid "عدد القطع"
+msgstr "Parts Count"
+
+#: templates/pages/category_management.html:122
+#: templates/pages/customers_enhanced.html:322 templates/pages/sales.html:46
+#: templates/pages/vehicles.html:51
+msgid "الإجراءات"
+msgstr "Actions"
+
+#: templates/pages/category_management.html:129
+#: templates/pages/customer_details.html:130
+#: templates/pages/customer_details.html:927
+#: templates/pages/customers_dashboard.html:112
+#: templates/pages/customers_enhanced.html:336
+#: templates/pages/customers_reports.html:163
+#: templates/pages/inventory_item_details.html:273
+#: templates/pages/low_stock_report.html:158
+#: templates/pages/slow_moving_report.html:132
+#: templates/pages/stock_movements.html:244 templates/pages/vehicles.html:299
+msgid "جاري التحميل..."
+msgstr "Loading..."
+
+#: templates/pages/category_management.html:161
+msgid "مثال: محرك"
+msgstr "Example: Engine"
+
+#: templates/pages/category_management.html:165
+msgid "Example: Engine"
+msgstr "Example: Engine"
+
+#: templates/pages/category_management.html:169
+msgid "وصف الفئة..."
+msgstr "Category description..."
+
+#: templates/pages/category_management.html:180
+#: templates/pages/customer_details.html:418
+#: templates/pages/customer_details.html:450
+#: templates/pages/customers_enhanced.html:409 templates/pages/reports.html:158
+msgid "إلغاء"
+msgstr "Cancel"
+
+#: templates/pages/category_management.html:182
+#: templates/pages/customer_details.html:419
+#: templates/pages/customer_details.html:451
+#: templates/pages/customers_enhanced.html:410
+msgid "حفظ"
+msgstr "Save"
+
+#: templates/pages/category_management.html:195
+msgid "تعديل الفئة"
+msgstr "Edit Category"
+
+#: templates/pages/customer_details.html:5
+#: templates/pages/customer_details.html:107
+msgid "تفاصيل العميل"
+msgstr "Vehicle Details"
+
+#: templates/pages/customer_details.html:111
+#: templates/pages/customers_dashboard.html:93
+#: templates/pages/customers_reports.html:70
+#: templates/pages/inventory_item_details.html:195
+#: templates/pages/low_stock_report.html:74
+#: templates/pages/slow_moving_report.html:65
+#: templates/pages/stock_movements.html:149
+msgid "الرئيسية"
+msgstr "Home"
+
+#: templates/pages/customer_details.html:112 templates/pages/customers.html:4
+#: templates/pages/customers.html:5 templates/pages/customers_dashboard.html:94
+#: templates/pages/customers_dashboard.html:519
+#: templates/pages/customers_reports.html:71
 msgid "العملاء"
 msgstr "Customers"
 
-#: templates/base/base.html:109 templates/pages/reports.html:4
+#: templates/pages/customer_details.html:113
+msgid "التفاصيل"
+msgstr "View Details"
+
+#: templates/pages/customer_details.html:119
+#: templates/pages/inventory_item_details.html:203
+#: templates/pages/stock_movements.html:210
+msgid "تعديل"
+msgstr "Edit"
+
+#: templates/pages/customer_details.html:122
+msgid "بيع جديد"
+msgstr "New Price"
+
+#: templates/pages/customer_details.html:142
+#: templates/pages/inventory_item_details.html:221
+msgid "المعلومات الأساسية"
+msgstr "Vehicle Information"
+
+#: templates/pages/customer_details.html:153
+msgid "تاريخ التسجيل"
+msgstr "Intake Date"
+
+#: templates/pages/customer_details.html:157
+#: templates/pages/customer_details.html:327
+msgid "أضيف بواسطة"
+msgstr "Added by"
+
+#: templates/pages/customer_details.html:167
+msgid "معلومات الاتصال"
+msgstr "Vehicle Information"
+
+#: templates/pages/customer_details.html:171
+#: templates/pages/customer_details.html:984
+#: templates/pages/customers_enhanced.html:318
+#: templates/pages/customers_enhanced.html:378
+#: templates/pages/customers_reports.html:323
+msgid "الهاتف"
+msgstr "Phone"
+
+#: templates/pages/customer_details.html:175
+#: templates/pages/customers_enhanced.html:382
+msgid "هاتف ثانوي"
+msgstr "Secondary Phone"
+
+#: templates/pages/customer_details.html:179
+#: templates/pages/customers_enhanced.html:386
+msgid "البريد الإلكتروني"
+msgstr "Email"
+
+#: templates/pages/customer_details.html:183
+#: templates/pages/customer_details.html:985
+#: templates/pages/customers_enhanced.html:394
+msgid "العنوان"
+msgstr "Address"
+
+#: templates/pages/customer_details.html:189
+msgid "عرض على الخريطة"
+msgstr "Logout"
+
+#: templates/pages/customer_details.html:198
+msgid "الملخص المالي"
+msgstr "Total"
+
+#: templates/pages/customer_details.html:203
+#: templates/pages/customers_dashboard.html:305
+msgid "إجمالي المشتريات"
+msgstr "Total Sales"
+
+#: templates/pages/customer_details.html:207
+#: templates/pages/customers_reports.html:320
+msgid "الرصيد المستحق"
+msgstr "Received Vehicles"
+
+#: templates/pages/customer_details.html:211
+#: templates/pages/customers_enhanced.html:398
+msgid "حد الائتمان"
+msgstr "Intake Date"
+
+#: templates/pages/customer_details.html:215
+msgid "الائتمان المتاح"
+msgstr "Received Vehicles"
+
+#: templates/pages/customer_details.html:227
+#: templates/pages/customer_details.html:258
+msgid "سجل المشتريات"
+msgstr "Total Sales"
+
+#: templates/pages/customer_details.html:232
+msgid "المدفوعات"
+msgstr "Paid"
+
+#: templates/pages/customer_details.html:237
+msgid "الأرصدة"
+msgstr "Balances"
+
+#: templates/pages/customer_details.html:242
+#: templates/pages/customer_details.html:341
+#: templates/pages/inventory_item_details.html:299
+msgid "الملاحظات"
+msgstr "Notes"
+
+#: templates/pages/customer_details.html:247
+msgid "التحليلات"
+msgstr "Loading failed"
+
+#: templates/pages/customer_details.html:266
+msgid "رقم الفاتورة"
+msgstr "Invoice Number"
+
+#: templates/pages/customer_details.html:267
+#: templates/pages/customer_details.html:297
+#: templates/pages/customer_details.html:325
+#: templates/pages/customer_details.html:989 templates/pages/sales.html:42
+msgid "التاريخ"
+msgstr "Date"
+
+#: templates/pages/customer_details.html:268
+#: templates/pages/customer_details.html:298
+#: templates/pages/customer_details.html:323
+#: templates/pages/customer_details.html:436
+msgid "المبلغ"
+msgstr "Sales"
+
+#: templates/pages/customer_details.html:269
+#: templates/pages/customer_details.html:1032
+msgid "المدفوع"
+msgstr "Paid"
+
+#: templates/pages/customer_details.html:271
+#: templates/pages/customers_dashboard.html:306
+#: templates/pages/customers_reports.html:324
+#: templates/pages/low_stock_report.html:130
+#: templates/pages/low_stock_report.html:151
+#: templates/pages/price_management.html:157
+#: templates/pages/slow_moving_report.html:125
+msgid "إجراءات"
+msgstr "Actions"
+
+#: templates/pages/customer_details.html:288
+msgid "سجل المدفوعات"
+msgstr "Total Sales"
+
+#: templates/pages/customer_details.html:295
+msgid "رقم الدفعة"
+msgstr "Order Number"
+
+#: templates/pages/customer_details.html:296
+msgid "الفاتورة"
+msgstr "Invoice"
+
+#: templates/pages/customer_details.html:299
+msgid "الطريقة"
+msgstr "Method"
+
+#: templates/pages/customer_details.html:313
+msgid "الأرصدة والمكافآت"
+msgstr "Calculate profits and expenses"
+
+#: templates/pages/customer_details.html:315
+#: templates/pages/customer_details.html:430
+msgid "إضافة رصيد"
+msgstr "Add New Vehicle"
+
+#: templates/pages/customer_details.html:324
+#: templates/pages/customer_details.html:440
+msgid "السبب"
+msgstr "Reason"
+
+#: templates/pages/customer_details.html:343
+#: templates/pages/customer_details.html:400
+msgid "إضافة ملاحظة"
+msgstr "Notes"
+
+#: templates/pages/customer_details.html:356
+msgid "معدل الشراء"
+msgstr "Purchase Price"
+
+#: templates/pages/customer_details.html:368
+msgid "القطع المفضلة"
+msgstr "Received Vehicles"
+
+#: templates/pages/customer_details.html:380
+msgid "أوقات الشراء المفضلة"
+msgstr "Customer information and debts"
+
+#: templates/pages/customer_details.html:406
+msgid "الملاحظة"
+msgstr "Notes"
+
+#: templates/pages/customer_details.html:412
+msgid "ملاحظة مهمة"
+msgstr "Notes"
+
+#: templates/pages/customer_details.html:444
+msgid "المرجع"
+msgstr "Reference"
+
+#: templates/pages/customer_details.html:472
+msgid "معرف العميل غير موجود"
+msgstr "Customer information and debts"
+
+#: templates/pages/customer_details.html:501
+msgid "خطأ في تحميل بيانات العميل"
+msgstr "Monthly Sales Chart"
+
+#: templates/pages/customer_details.html:623
+msgid "لا توجد مشتريات"
+msgstr "No sales yet"
+
+#: templates/pages/customer_details.html:647
+msgid "لا توجد مدفوعات"
+msgstr "No sales yet"
+
+#: templates/pages/customer_details.html:666
+msgid "لا توجد أرصدة"
+msgstr "No vehicles registered"
+
+#: templates/pages/customer_details.html:685
+msgid "لا توجد ملاحظات"
+msgstr "No sales yet"
+
+#: templates/pages/customer_details.html:717
+msgid "المبيعات الشهرية"
+msgstr "Monthly Sales Chart"
+
+#: templates/pages/customer_details.html:857
+msgid "تم حفظ الملاحظة بنجاح"
+msgstr "Vehicle deleted successfully"
+
+#: templates/pages/customer_details.html:860
+msgid "خطأ في حفظ الملاحظة"
+msgstr "Save Vehicle"
+
+#: templates/pages/customer_details.html:894
+msgid "تم إضافة الرصيد بنجاح"
+msgstr "Vehicle added successfully"
+
+#: templates/pages/customer_details.html:897
+msgid "خطأ في إضافة الرصيد"
+msgstr "Failed to add vehicle"
+
+#: templates/pages/customer_details.html:929
+msgid "جاري تحميل تفاصيل الفاتورة..."
+msgstr "Failed to load vehicle details"
+
+#: templates/pages/customer_details.html:956
+msgid "غير معروف"
+msgstr "Unpaid"
+
+#: templates/pages/customer_details.html:975
+msgid "تفاصيل الفاتورة"
+msgstr "Vehicle Details"
+
+#: templates/pages/customer_details.html:982
+msgid "معلومات العميل"
+msgstr "Vehicle Information"
+
+#: templates/pages/customer_details.html:983
+#: templates/pages/customers_dashboard.html:303
+#: templates/pages/customers_enhanced.html:316
+#: templates/pages/customers_reports.html:241
+#: templates/pages/customers_reports.html:319
+msgid "الاسم"
+msgstr "Name"
+
+#: templates/pages/customer_details.html:988
+msgid "معلومات الفاتورة"
+msgstr "Vehicle Information"
+
+#: templates/pages/customer_details.html:991 templates/pages/sales.html:45
+msgid "حالة الدفع"
+msgstr "Payment Status"
+
+#: templates/pages/customer_details.html:992
+msgid "البائع"
+msgstr "Seller"
+
+#: templates/pages/customer_details.html:996
+msgid "القطع المباعة"
+msgstr "Select Make"
+
+#: templates/pages/customer_details.html:1001
+#: templates/pages/low_stock_report.html:126
+#: templates/pages/low_stock_report.html:146
+#: templates/pages/slow_moving_report.html:120
+msgid "القطعة"
+msgstr "Part Code"
+
+#: templates/pages/customer_details.html:1002
+#: templates/pages/price_management.html:154
+#: templates/pages/slow_moving_report.html:121
+msgid "الكمية"
+msgstr "Quantity"
+
+#: templates/pages/customer_details.html:1003
+msgid "السعر"
+msgstr "Price"
+
+#: templates/pages/customer_details.html:1004 templates/pages/reports.html:308
+#: templates/pages/sales.html:43
+msgid "الإجمالي"
+msgstr "Total"
+
+#: templates/pages/customer_details.html:1012
+msgid "المجموع الفرعي"
+msgstr "All Parts"
+
+#: templates/pages/customer_details.html:1017
+msgid "الخصم"
+msgstr "Discount"
+
+#: templates/pages/customer_details.html:1023
+msgid "الضريبة"
+msgstr "Tax"
+
+#: templates/pages/customer_details.html:1028
+msgid "الإجمالي الكلي"
+msgstr "Total"
+
+#: templates/pages/customer_details.html:1036
+msgid "المتبقي"
+msgstr "Remaining"
+
+#: templates/pages/customer_details.html:1045
+#: templates/pages/customers_enhanced.html:402
+#: templates/pages/vehicles.html:184
+msgid "ملاحظات"
+msgstr "Notes"
+
+#: templates/pages/customer_details.html:1051
+msgid "إغلاق"
+msgstr "Close"
+
+#: templates/pages/customer_details.html:1052
+msgid "عرض في قسم المبيعات"
+msgstr "Sales Report"
+
+#: templates/pages/customer_details.html:1079
+msgid "خطأ في تحميل تفاصيل الفاتورة"
+msgstr "Failed to load vehicle details"
+
+#: templates/pages/customers_dashboard.html:5
+#: templates/pages/customers_dashboard.html:89
+msgid "لوحة تحكم العملاء"
+msgstr "Total Customers"
+
+#: templates/pages/customers_dashboard.html:101
+#: templates/pages/price_management.html:240
+#: templates/pages/price_management.html:265
+msgid "تحديث"
+msgstr "Update"
+
+#: templates/pages/customers_dashboard.html:104
+msgid "تصدير"
+msgstr "Export"
+
+#: templates/pages/customers_dashboard.html:124
+#: templates/pages/customers_enhanced.html:124
+#: templates/pages/customers_reports.html:173 templates/pages/reports.html:195
+msgid "إجمالي العملاء"
+msgstr "Total Customers"
+
+#: templates/pages/customers_dashboard.html:131
+#: templates/pages/customers_enhanced.html:140
+msgid "عملاء نشطون"
+msgstr "Active Customers"
+
+#: templates/pages/customers_dashboard.html:138
+msgid "جدد هذا الشهر"
+msgstr "New This Month"
+
+#: templates/pages/customers_dashboard.html:145
+#: templates/pages/customers_enhanced.html:188
+msgid "متوسط قيمة العميل"
+msgstr "Customers Report"
+
+#: templates/pages/customers_dashboard.html:152
+#: templates/pages/customers_reports.html:271
+msgid "عملاء بديون"
+msgstr "Customer information and debts"
+
+#: templates/pages/customers_dashboard.html:159
+#: templates/pages/customers_enhanced.html:172
+#: templates/pages/customers_reports.html:263
+msgid "إجمالي الديون"
+msgstr "Total Customers"
+
+#: templates/pages/customers_dashboard.html:171
+msgid "عملاء أفراد"
+msgstr "Individual Customers"
+
+#: templates/pages/customers_dashboard.html:180
+msgid "عملاء شركات"
+msgstr "Company Customers"
+
+#: templates/pages/customers_dashboard.html:189
+msgid "جدد هذا الأسبوع"
+msgstr "Week"
+
+#: templates/pages/customers_dashboard.html:203
+msgid "اتجاه المبيعات الشهرية"
+msgstr "Monthly Sales Chart"
+
+#: templates/pages/customers_dashboard.html:220
+msgid "اتجاه اكتساب العملاء"
+msgstr "Total Customers"
+
+#: templates/pages/customers_dashboard.html:240
+msgid "توزيع أنواع العملاء"
+msgstr "Customers Report"
+
+#: templates/pages/customers_dashboard.html:257
+msgid "توزيع حالة العملاء"
+msgstr "Customers Report"
+
+#: templates/pages/customers_dashboard.html:274
+#: templates/pages/customers_reports.html:220
+msgid "تحليل RFM"
+msgstr "RFM Analysis"
+
+#: templates/pages/customers_dashboard.html:293
+msgid "أفضل 10 عملاء"
+msgstr "Customers"
+
+#: templates/pages/customers_dashboard.html:302
+#: templates/pages/customers_reports.html:240
+#: templates/pages/customers_reports.html:318
+msgid "رمز العميل"
+msgstr "Customer"
+
+#: templates/pages/customers_dashboard.html:304
+#: templates/pages/customers_enhanced.html:317
+msgid "النوع"
+msgstr "Type"
+
+#: templates/pages/customers_dashboard.html:340
+msgid "خطأ في تحميل لوحة التحكم"
+msgstr "Dashboard"
+
+#: templates/pages/customers_dashboard.html:373
+#: templates/pages/customers_enhanced.html:343
+msgid "لا توجد بيانات"
+msgstr "No data available"
+
+#: templates/pages/customers_dashboard.html:403
+#: templates/pages/reports.html:344
+msgid "المبيعات"
+msgstr "Sales"
+
+#: templates/pages/customers_dashboard.html:434
+msgid "عملاء جدد"
+msgstr "Customers"
+
+#: templates/pages/customers_dashboard.html:461
+msgid "أفراد"
+msgstr "Individuals"
+
+#: templates/pages/customers_dashboard.html:461
+msgid "شركات"
+msgstr "Companies"
+
+#: templates/pages/customers_dashboard.html:541
+msgid "الحداثة (أيام)"
+msgstr "Recency (Days)"
+
+#: templates/pages/customers_dashboard.html:544
+#: templates/pages/customers_reports.html:244
+msgid "القيمة المالية"
+msgstr "Percentage (%%)"
+
+#: templates/pages/customers_dashboard.html:573
+msgid "سيتم تصدير التقرير قريباً"
+msgstr "Exporting report in format"
+
+#: templates/pages/customers_enhanced.html:5
+#: templates/pages/customers_enhanced.html:98
+msgid "إدارة العملاء"
+msgstr "Price Management"
+
+#: templates/pages/customers_enhanced.html:99
+msgid "إدارة شاملة لجميع العملاء والمبيعات"
+msgstr "Customer information and debts"
+
+#: templates/pages/customers_enhanced.html:106
+#: templates/pages/customers_reports.html:72 templates/pages/reports.html:4
 #: templates/pages/reports.html:5
 msgid "التقارير"
 msgstr "Reports"
 
-#: templates/base/base.html:116
-msgid "إدارة النظام"
-msgstr "Administration"
+#: templates/pages/customers_enhanced.html:112
+msgid "إضافة عميل"
+msgstr "Add Customer"
 
-#: templates/base/base.html:122 templates/pages/price_management.html:4
-#: templates/pages/price_management.html:5
-#, fuzzy
-#| msgid "إدارة النظام"
-msgid "إدارة الأسعار"
-msgstr "Price Management"
+#: templates/pages/customers_enhanced.html:156
+msgid "عملاء جدد (شهر)"
+msgstr "New Customers (Month)"
 
-#: templates/base/base.html:130 templates/base/base.html:212
-msgid "الإعدادات"
-msgstr "Settings"
+#: templates/pages/customers_enhanced.html:190
+#: templates/pages/customers_reports.html:247
+msgid "CLV"
+msgstr "CLV"
 
-#: templates/base/base.html:137 templates/base/base.html:217
-msgid "تسجيل الخروج"
-msgstr "Logout"
+#: templates/pages/customers_enhanced.html:204 templates/pages/reports.html:181
+msgid "إجمالي المبيعات"
+msgstr "Total Sales"
 
-#: templates/base/base.html:201
-msgid "لوحة الإدارة"
-msgstr "Admin Panel"
+#: templates/pages/customers_enhanced.html:220
+msgid "عملاء معرضون للخطر"
+msgstr "At-Risk Customers"
 
-#: templates/base/base.html:208
-msgid "الملف الشخصي"
-msgstr "Profile"
+#: templates/pages/customers_enhanced.html:222
+msgid "لا شراء 90+ يوم"
+msgstr "No Purchase 90+ Days"
+
+#: templates/pages/customers_enhanced.html:236
+msgid "أفضل 5 عملاء"
+msgstr "Customers"
+
+#: templates/pages/customers_enhanced.html:238
+msgid "مبيعات"
+msgstr "Sales"
+
+#: templates/pages/customers_enhanced.html:254
+msgid "بحث (كود، اسم، هاتف، بريد)"
+msgstr "Search (Code, Name, Phone, Email)"
+
+#: templates/pages/customers_enhanced.html:258
+msgid "جميع الأنواع"
+msgstr "All Parts"
+
+#: templates/pages/customers_enhanced.html:259
+#: templates/pages/customers_enhanced.html:361
+msgid "فرد"
+msgstr "Individual"
+
+#: templates/pages/customers_enhanced.html:260
+#: templates/pages/customers_enhanced.html:362
+msgid "شركة"
+msgstr "Company"
+
+#: templates/pages/customers_enhanced.html:265
+msgid "جميع الحالات"
+msgstr "All Parts"
+
+#: templates/pages/customers_enhanced.html:272
+msgid "جميع المدن"
+msgstr "All Parts"
+
+#: templates/pages/customers_enhanced.html:277
+msgid "الأحدث"
+msgstr "Newest"
+
+#: templates/pages/customers_enhanced.html:278
+msgid "الأقدم"
+msgstr "Oldest"
+
+#: templates/pages/customers_enhanced.html:279
+msgid "الاسم (أ-ي)"
+msgstr "Name (A-Z)"
+
+#: templates/pages/customers_enhanced.html:280
+msgid "الاسم (ي-أ)"
+msgstr "Name (Z-A)"
+
+#: templates/pages/customers_enhanced.html:281
+msgid "الكود (تصاعدي)"
+msgstr "Code (Ascending)"
+
+#: templates/pages/customers_enhanced.html:282
+msgid "الكود (تنازلي)"
+msgstr "Code (Descending)"
+
+#: templates/pages/customers_enhanced.html:290
+msgid "بطاقات"
+msgstr "Cards"
+
+#: templates/pages/customers_enhanced.html:293
+msgid "جدول"
+msgstr "Table"
+
+#: templates/pages/customers_enhanced.html:297
+#: templates/pages/customers_reports.html:148
+msgid "إعادة تعيين"
+msgstr "Reset"
+
+#: templates/pages/customers_enhanced.html:315
+msgid "الكود"
+msgstr "Code"
+
+#: templates/pages/customers_enhanced.html:319
+msgid "البريد"
+msgstr "Email"
+
+#: templates/pages/customers_enhanced.html:320
+#: templates/pages/customers_enhanced.html:390
+msgid "المدينة"
+msgstr "City"
+
+#: templates/pages/customers_enhanced.html:352
+msgid "إضافة عميل جديد"
+msgstr "Add New Vehicle"
+
+#: templates/pages/customers_enhanced.html:359
+msgid "نوع العميل"
+msgstr "Customer"
+
+#: templates/pages/customers_enhanced.html:366
+msgid "الاسم الأول"
+msgstr "Order Number"
+
+#: templates/pages/customers_enhanced.html:370
+msgid "الاسم الأخير"
+msgstr "Part Name"
+
+#: templates/pages/customers_enhanced.html:374
+msgid "اسم الشركة"
+msgstr "Part Name"
+
+#: templates/pages/customers_enhanced.html:462
+msgid "من الإجمالي"
+msgstr "Total"
+
+#: templates/pages/customers_enhanced.html:464
+msgid "هذا الأسبوع"
+msgstr "This Week"
+
+#: templates/pages/customers_enhanced.html:465
+msgid "عملية"
+msgstr "Operation"
+
+#: templates/pages/customers_enhanced.html:836
+msgid "تم إضافة العميل بنجاح"
+msgstr "Vehicle added successfully"
+
+#: templates/pages/customers_enhanced.html:839
+msgid "حدث خطأ أثناء حفظ العميل"
+msgstr "Error occurred while saving customer"
+
+#: templates/pages/customers_reports.html:5
+#: templates/pages/customers_reports.html:66
+msgid "تقارير العملاء"
+msgstr "Customers Report"
+
+#: templates/pages/customers_reports.html:78
+msgid "العودة"
+msgstr "Return"
+
+#: templates/pages/customers_reports.html:91
+msgid "تحليل العملاء"
+msgstr "Total Customers"
+
+#: templates/pages/customers_reports.html:102
+msgid "تقرير الديون"
+msgstr "Inventory Report"
+
+#: templates/pages/customers_reports.html:113 templates/pages/reports.html:28
+#: templates/pages/reports.html:253
+msgid "تقرير المبيعات"
+msgstr "Sales Report"
+
+#: templates/pages/customers_reports.html:124
+msgid "تقرير الولاء"
+msgstr "Customers Report"
+
+#: templates/pages/customers_reports.html:136 templates/pages/reports.html:139
+#: templates/pages/stock_movements.html:216
+msgid "من تاريخ"
+msgstr "From Date"
+
+#: templates/pages/customers_reports.html:140 templates/pages/reports.html:143
+#: templates/pages/stock_movements.html:220
+msgid "إلى تاريخ"
+msgstr "To Date"
+
+#: templates/pages/customers_reports.html:145
+#: templates/pages/price_management.html:325 templates/pages/reports.html:159
+#: templates/pages/stock_movements.html:230
+msgid "تطبيق"
+msgstr "Apply"
+
+#: templates/pages/customers_reports.html:181
+msgid "معدل الاحتفاظ"
+msgstr "Vehicle Model"
+
+#: templates/pages/customers_reports.html:189
+msgid "Champions"
+msgstr "Champions"
+
+#: templates/pages/customers_reports.html:197
+msgid "At Risk"
+msgstr "At Risk"
+
+#: templates/pages/customers_reports.html:208
+msgid "توزيع الشرائح"
+msgstr "Purchase Price"
+
+#: templates/pages/customers_reports.html:233
+msgid "تفاصيل التحليل"
+msgstr "Loading failed"
+
+#: templates/pages/customers_reports.html:242
+msgid "الحداثة"
+msgstr "Recency"
+
+#: templates/pages/customers_reports.html:243
+msgid "التكرار"
+msgstr "Frequency"
+
+#: templates/pages/customers_reports.html:245
+msgid "RFM Score"
+msgstr "RFM Score"
+
+#: templates/pages/customers_reports.html:246
+msgid "الشريحة"
+msgstr "Purchase Price"
+
+#: templates/pages/customers_reports.html:279
+msgid "عملاء عالي المخاطر"
+msgstr "Total Sales"
+
+#: templates/pages/customers_reports.html:287
+msgid "ديون 90+ يوم"
+msgstr "Debts 90+ Days"
+
+#: templates/pages/customers_reports.html:298
+msgid "تحليل الأعمار"
+msgstr "Decrease Prices"
+
+#: templates/pages/customers_reports.html:311
+msgid "تفاصيل الديون"
+msgstr "Vehicle Details"
+
+#: templates/pages/customers_reports.html:321
+msgid "أيام التأخير"
+msgstr "Confirm Update"
+
+#: templates/pages/customers_reports.html:322
+msgid "الفئة العمرية"
+msgstr "Percentage (%%)"
+
+#: templates/pages/customers_reports.html:407
+msgid "خطأ في تحميل التقرير"
+msgstr "Loading parts..."
+
+#: templates/pages/customers_reports.html:433
+msgid "يوم"
+msgstr "Day"
+
+#: templates/pages/customers_reports.html:585
+#: templates/pages/customers_reports.html:618
+msgid "لا توجد بيانات للتصدير"
+msgstr "No sales yet"
 
 #: templates/pages/dashboard.html:81
 msgid "عرض الكل"
 msgstr "View All"
 
 #: templates/pages/dashboard.html:132
-#, fuzzy
-#| msgid "المبيعات"
 msgid "مخطط المبيعات"
 msgstr "Sales Chart"
 
-#: templates/pages/dashboard.html:180
-#, fuzzy
-#| msgid "المبيعات"
+#: templates/pages/dashboard.html:206
 msgid "لا توجد مبيعات بعد"
 msgstr "No sales yet"
 
-#: templates/pages/dashboard.html:186
+#: templates/pages/dashboard.html:244
 msgid "لا توجد قطع منخفضة المخزون"
 msgstr "No low-stock items"
 
-#: templates/pages/inventory.html:348
-#, fuzzy
-#| msgid "تسجيل الخروج"
+#: templates/pages/inventory_count.html:4
+#: templates/pages/inventory_count.html:109
+msgid "نظام الجرد"
+msgstr "Part Name"
+
+#: templates/pages/inventory_dashboard.html:4
+#: templates/pages/inventory_dashboard.html:136
+msgid "لوحة تحكم المخزون"
+msgstr "Inventory Parts"
+
+#: templates/pages/inventory_enhanced.html:4
+#: templates/pages/inventory_enhanced.html:5
+#: templates/pages/inventory_item_details.html:196
+#: templates/pages/low_stock_report.html:75
+#: templates/pages/slow_moving_report.html:66
+#: templates/pages/stock_movements.html:150
+msgid "المخزون"
+msgstr "Inventory"
+
+#: templates/pages/inventory_item_details.html:4
+#: templates/pages/inventory_item_details.html:192
 msgid "تفاصيل القطعة"
 msgstr "Item Details"
 
-#: templates/pages/inventory.html:348
-msgid "عرض تفاصيل القطعة رقم:"
-msgstr "Show details for item #:"
+#: templates/pages/inventory_item_details.html:206
+msgid "طباعة QR"
+msgstr "Print"
 
-#: templates/pages/inventory.html:353
-#, fuzzy
-#| msgid "تسجيل الخروج"
-msgid "تعديل القطعة"
-msgstr "Edit Item"
+#: templates/pages/inventory_item_details.html:209
+#: templates/pages/low_stock_report.html:85 templates/pages/reports.html:115
+#: templates/pages/slow_moving_report.html:76
+#: templates/pages/stock_movements.html:160
+msgid "طباعة"
+msgstr "Print"
 
-#: templates/pages/inventory.html:353
-#, fuzzy
-#| msgid "تسجيل الخروج"
-msgid "تعديل القطعة رقم:"
-msgstr "Edit item #:"
+#: templates/pages/inventory_item_details.html:231
+msgid "معلومات السعر والربح"
+msgstr "Vehicle Information"
 
-#: templates/pages/inventory.html:358
-msgid "عرض QR Code للقطعة رقم:"
-msgstr "Show QR Code for item #:"
+#: templates/pages/inventory_item_details.html:241
+msgid "معلومات المخزون"
+msgstr "Vehicle Information"
+
+#: templates/pages/inventory_item_details.html:251
+msgid "السيارة المصدر"
+msgstr "Received Vehicles"
+
+#: templates/pages/inventory_item_details.html:257
+msgid "صور القطعة"
+msgstr "Part Code"
+
+#: templates/pages/inventory_item_details.html:261
+msgid "لا توجد صور"
+msgstr "No extracted parts"
+
+#: templates/pages/inventory_item_details.html:268
+msgid "تاريخ الحركات"
+msgstr "Intake Date"
+
+#: templates/pages/inventory_item_details.html:282
+msgid "المبيعات السابقة"
+msgstr "Received Vehicles"
+
+#: templates/pages/inventory_item_details.html:291
+msgid "رمز QR"
+msgstr "QR code"
+
+#: templates/pages/inventory_item_details.html:301
+msgid "أضف ملاحظات..."
+msgstr "Notes"
+
+#: templates/pages/inventory_item_details.html:303
+msgid "حفظ الملاحظات"
+msgstr "Notes"
+
+#: templates/pages/inventory_item_details.html:310
+msgid "سجل التعديلات"
+msgstr "Bulk update failed"
+
+#: templates/pages/inventory_item_details.html:312
+msgid "لا توجد تعديلات مسجلة"
+msgstr "No vehicles registered"
+
+#: templates/pages/login.html:8 templates/pages/login.html:242
+msgid "تسجيل الدخول"
+msgstr "Login"
+
+#: templates/pages/login.html:180
+msgid "العربية"
+msgstr "Arabic"
+
+#: templates/pages/login.html:182
+msgid "English"
+msgstr "English"
+
+#: templates/pages/login.html:190
+msgid "نظام إدارة SH Parts"
+msgstr "SH Parts Management System"
+
+#: templates/pages/login.html:208
+msgid "اسم المستخدم"
+msgstr "Username"
+
+#: templates/pages/login.html:222
+msgid "كلمة المرور"
+msgstr "Password"
+
+#: templates/pages/login.html:236
+msgid "تذكرني"
+msgstr "Remember Me"
+
+#: templates/pages/login.html:246
+msgid "البيانات الافتراضية: admin / admin123"
+msgstr "Default credentials: admin / admin123"
+
+#: templates/pages/low_stock_report.html:4
+#: templates/pages/low_stock_report.html:71
+msgid "تقرير القطع منخفضة المخزون"
+msgstr "No low-stock items"
+
+#: templates/pages/low_stock_report.html:76
+#: templates/pages/low_stock_report.html:140
+msgid "القطع منخفضة المخزون"
+msgstr "No low-stock items"
+
+#: templates/pages/low_stock_report.html:99
+msgid "نفذت الكمية"
+msgstr "Quantity"
+
+#: templates/pages/low_stock_report.html:106
+msgid "منخفضة المخزون"
+msgstr "Inventory Parts"
+
+#: templates/pages/low_stock_report.html:120
+msgid "القطع التي نفذت"
+msgstr "Inventory Parts"
+
+#: templates/pages/low_stock_report.html:127
+#: templates/pages/price_management.html:54
+#: templates/pages/price_management.html:152
+msgid "الفئة"
+msgstr "Category"
+
+#: templates/pages/low_stock_report.html:128
+#: templates/pages/low_stock_report.html:150
+msgid "الموقع"
+msgstr "Model"
+
+#: templates/pages/low_stock_report.html:129
+msgid "آخر تحديث"
+msgstr "Updated"
+
+#: templates/pages/low_stock_report.html:147
+msgid "الكمية الحالية"
+msgstr "Current Price"
+
+#: templates/pages/low_stock_report.html:148
+msgid "الحد الأدنى"
+msgstr "Minimum"
+
+#: templates/pages/low_stock_report.html:149
+msgid "الأولوية"
+msgstr "Priority"
+
+#: templates/pages/price_management.html:4
+#: templates/pages/price_management.html:5
+msgid "إدارة الأسعار"
+msgstr "Price Management"
 
 #: templates/pages/price_management.html:12
-#, fuzzy
-#| msgid "ملاحظات"
 msgid "ملاحظة:"
 msgstr "Notes"
 
@@ -1202,11 +2348,6 @@ msgstr "Specific Category"
 msgid "موديل سيارة معين"
 msgstr "Specific Vehicle Model"
 
-#: templates/pages/price_management.html:54
-#: templates/pages/price_management.html:152
-msgid "الفئة"
-msgstr "Category"
-
 #: templates/pages/price_management.html:56
 msgid "اختر الفئة..."
 msgstr "Select Category..."
@@ -1229,6 +2370,7 @@ msgstr "Price Calculator"
 
 #: templates/pages/price_management.html:86
 #: templates/pages/price_management.html:155
+#: templates/pages/slow_moving_report.html:123
 msgid "السعر الحالي"
 msgstr "Current Price"
 
@@ -1280,10 +2422,6 @@ msgstr "Decrease 10%%"
 msgid "جميع القطع في المخزون"
 msgstr "All Parts in Inventory"
 
-#: templates/pages/price_management.html:141
-msgid "بحث..."
-msgstr "Search..."
-
 #: templates/pages/price_management.html:150
 msgid "كود القطعة"
 msgstr "Part Code"
@@ -1296,17 +2434,9 @@ msgstr "Part Name"
 msgid "مصدر السيارة"
 msgstr "Vehicle Source"
 
-#: templates/pages/price_management.html:154
-msgid "الكمية"
-msgstr "Quantity"
-
 #: templates/pages/price_management.html:156
 msgid "سعر جديد"
 msgstr "New Price"
-
-#: templates/pages/price_management.html:157
-msgid "إجراءات"
-msgstr "Actions"
 
 #: templates/pages/price_management.html:165
 msgid "تحميل القطع"
@@ -1318,7 +2448,7 @@ msgstr "Loading parts..."
 
 #: templates/pages/price_management.html:204
 #: templates/pages/price_management.html:293
-#: templates/pages/price_management.html:373 templates/pages/vehicles.html:348
+#: templates/pages/price_management.html:373 templates/pages/vehicles.html:410
 msgid "خطأ"
 msgstr "Error"
 
@@ -1326,11 +2456,6 @@ msgstr "Error"
 #: templates/pages/price_management.html:336
 msgid "فشل تحميل القطع"
 msgstr "Failed to load parts"
-
-#: templates/pages/price_management.html:240
-#: templates/pages/price_management.html:265
-msgid "تحديث"
-msgstr "Update"
 
 #: templates/pages/price_management.html:255
 #: templates/pages/price_management.html:310
@@ -1392,10 +2517,6 @@ msgstr ""
 "The update will be applied to all selected parts. This action cannot be "
 "undone."
 
-#: templates/pages/price_management.html:325 templates/pages/reports.html:159
-msgid "تطبيق"
-msgstr "Apply"
-
 #: templates/pages/price_management.html:329
 msgid "جاري تطبيق التحديث الجماعي..."
 msgstr "Applying bulk update..."
@@ -1416,6 +2537,11 @@ msgstr "parts successfully"
 msgid "فشل التحديث الجماعي"
 msgstr "Bulk update failed"
 
+#: templates/pages/profitability_report.html:4
+#: templates/pages/profitability_report.html:97
+msgid "تقرير الربحية"
+msgstr "Profit Report"
+
 #: templates/pages/reports.html:14 templates/pages/reports.html:252
 msgid "تقرير المخزون"
 msgstr "Inventory Report"
@@ -1429,10 +2555,6 @@ msgstr "View all inventory parts and their value"
 #: templates/pages/reports.html:74
 msgid "إنشاء التقرير"
 msgstr "Generate Report"
-
-#: templates/pages/reports.html:28 templates/pages/reports.html:253
-msgid "تقرير المبيعات"
-msgstr "Sales Report"
 
 #: templates/pages/reports.html:29
 msgid "تحليل المبيعات خلال فترة محددة"
@@ -1474,29 +2596,13 @@ msgstr "Create a report as needed"
 msgid "التقرير"
 msgstr "Report"
 
-#: templates/pages/reports.html:107
-msgid "تصدير Excel"
-msgstr "Export Excel"
-
 #: templates/pages/reports.html:111
 msgid "تصدير PDF"
 msgstr "Export PDF"
 
-#: templates/pages/reports.html:115
-msgid "طباعة"
-msgstr "Print"
-
 #: templates/pages/reports.html:133
 msgid "إعدادات التقرير"
 msgstr "Report Settings"
-
-#: templates/pages/reports.html:139
-msgid "من تاريخ"
-msgstr "From Date"
-
-#: templates/pages/reports.html:143
-msgid "إلى تاريخ"
-msgstr "To Date"
 
 #: templates/pages/reports.html:147
 msgid "تجميع حسب"
@@ -1504,7 +2610,7 @@ msgstr "Group By"
 
 #: templates/pages/reports.html:149
 msgid "اليوم"
-msgstr "Day"
+msgstr "Today"
 
 #: templates/pages/reports.html:150
 msgid "الأسبوع"
@@ -1519,25 +2625,13 @@ msgstr "Month"
 msgid "السنة"
 msgstr "Year"
 
-#: templates/pages/reports.html:158
-msgid "إلغاء"
-msgstr "Cancel"
-
 #: templates/pages/reports.html:172
 msgid "إحصائيات سريعة"
 msgstr "Quick Statistics"
 
-#: templates/pages/reports.html:181
-msgid "إجمالي المبيعات"
-msgstr "Total Sales"
-
 #: templates/pages/reports.html:188
 msgid "قطع المخزون"
 msgstr "Inventory Parts"
-
-#: templates/pages/reports.html:195
-msgid "إجمالي العملاء"
-msgstr "Total Customers"
 
 #: templates/pages/reports.html:202
 msgid "السيارات المستقبلة"
@@ -1586,10 +2680,6 @@ msgstr "Percentage"
 #: templates/pages/reports.html:296 templates/pages/reports.html:301
 msgid "مثال"
 msgstr "Example"
-
-#: templates/pages/reports.html:308 templates/pages/sales.html:43
-msgid "الإجمالي"
-msgstr "Total"
 
 #: templates/pages/reports.html:326
 msgid "جاري تصدير التقرير بصيغة"
@@ -1653,33 +2743,12 @@ msgid "رقم الطلب"
 msgstr "Order Number"
 
 #: templates/pages/sales.html:40
-#, fuzzy
-#| msgid "العملاء"
 msgid "العميل"
 msgstr "Customer"
 
 #: templates/pages/sales.html:41
-#, fuzzy
-#| msgid "السيارات"
 msgid "نوع السيارة"
 msgstr "Vehicle Type"
-
-#: templates/pages/sales.html:42
-msgid "التاريخ"
-msgstr "Date"
-
-#: templates/pages/sales.html:44 templates/pages/vehicles.html:49
-#: templates/pages/vehicles.html:164
-msgid "الحالة"
-msgstr "Status"
-
-#: templates/pages/sales.html:45
-msgid "حالة الدفع"
-msgstr "Payment Status"
-
-#: templates/pages/sales.html:46 templates/pages/vehicles.html:51
-msgid "الإجراءات"
-msgstr "Actions"
 
 #: templates/pages/sales.html:66 templates/pages/vehicles.html:66
 msgid "قيد الانتظار"
@@ -1705,11 +2774,110 @@ msgstr "Partial"
 msgid "غير مدفوع"
 msgstr "Unpaid"
 
+#: templates/pages/slow_moving_report.html:4
+#: templates/pages/slow_moving_report.html:62
+msgid "تقرير القطع بطيئة الحركة"
+msgstr "Sales Report"
+
+#: templates/pages/slow_moving_report.html:67
+#: templates/pages/slow_moving_report.html:114
+msgid "القطع بطيئة الحركة"
+msgstr "Car Parts System"
+
+#: templates/pages/slow_moving_report.html:89
+msgid "30-60 يوم"
+msgstr "30-60 Days"
+
+#: templates/pages/slow_moving_report.html:95
+msgid "60-90 يوم"
+msgstr "60-90 Days"
+
+#: templates/pages/slow_moving_report.html:101
+msgid "90-180 يوم"
+msgstr "90-180 Days"
+
+#: templates/pages/slow_moving_report.html:107
+msgid "+180 يوم"
+msgstr "+180 Days"
+
+#: templates/pages/slow_moving_report.html:122
+msgid "عمر القطعة"
+msgstr "Part Name"
+
+#: templates/pages/slow_moving_report.html:124
+msgid "السعر المقترح"
+msgstr "New Price:"
+
+#: templates/pages/stock_movements.html:4
+#: templates/pages/stock_movements.html:146
+msgid "تقرير حركات المخزون"
+msgstr "Inventory Report"
+
+#: templates/pages/stock_movements.html:151
+msgid "حركات المخزون"
+msgstr "Inventory Report"
+
+#: templates/pages/stock_movements.html:174
+msgid "إجمالي الوارد"
+msgstr "Total Customers"
+
+#: templates/pages/stock_movements.html:181
+msgid "إجمالي الصادر"
+msgstr "Total Customers"
+
+#: templates/pages/stock_movements.html:188
+msgid "التحويلات"
+msgstr "Loading failed"
+
+#: templates/pages/stock_movements.html:195
+msgid "إجمالي الحركات"
+msgstr "Total Sales"
+
+#: templates/pages/stock_movements.html:202
+msgid "الفلاتر"
+msgstr "Filters"
+
+#: templates/pages/stock_movements.html:205
+msgid "نوع الحركة"
+msgstr "Update Type"
+
+#: templates/pages/stock_movements.html:208
+msgid "وارد"
+msgstr "Incoming"
+
+#: templates/pages/stock_movements.html:209
+msgid "صادر"
+msgstr "Outgoing"
+
+#: templates/pages/stock_movements.html:211
+msgid "إرجاع"
+msgstr "Return"
+
+#: templates/pages/stock_movements.html:212
+msgid "تحويل"
+msgstr "Transfer"
+
+#: templates/pages/stock_movements.html:225
+msgid "SKU, قطعة, مستخدم..."
+msgstr "SKU, Part, User..."
+
+#: templates/pages/stock_movements.html:233
+msgid "مسح"
+msgstr "Success!"
+
+#: templates/pages/stock_movements.html:240
+msgid "سجل الحركات"
+msgstr "Logout"
+
 #: templates/pages/vehicle_dismantle.html:4
 msgid "تفكيك سيارة"
 msgstr "Dismantle Vehicle"
 
-#: templates/pages/vehicles.html:34 templates/pages/vehicles.html:197
+#: templates/pages/vehicles.html:4 templates/pages/vehicles.html:30
+msgid "السيارات"
+msgstr "Vehicles"
+
+#: templates/pages/vehicles.html:34 templates/pages/vehicles.html:254
 msgid "إضافة سيارة جديدة"
 msgstr "Add New Vehicle"
 
@@ -1813,10 +2981,6 @@ msgstr "Mileage (km)"
 msgid "سعر الشراء"
 msgstr "Purchase Price"
 
-#: templates/pages/vehicles.html:184
-msgid "ملاحظات"
-msgstr "Notes"
-
 #: templates/pages/vehicles.html:185
 msgid "أي ملاحظات إضافية..."
 msgstr "Any additional notes..."
@@ -1825,79 +2989,84 @@ msgstr "Any additional notes..."
 msgid "حفظ السيارة"
 msgstr "Save Vehicle"
 
-#: templates/pages/vehicles.html:215
+#: templates/pages/vehicles.html:205
+msgid "الرجاء ملء جميع الحقول المطلوبة"
+msgstr "Please fill all required fields"
+
+#: templates/pages/vehicles.html:237 templates/pages/vehicles.html:239
 msgid "تم إضافة السيارة بنجاح"
 msgstr "Vehicle added successfully"
 
-#: templates/pages/vehicles.html:218
+#: templates/pages/vehicles.html:246 templates/pages/vehicles.html:248
 msgid "فشل إضافة السيارة"
 msgstr "Failed to add vehicle"
 
-#: templates/pages/vehicles.html:234
+#: templates/pages/vehicles.html:293
 msgid "اختر الماركة أولاً"
 msgstr "Select make first"
 
-#: templates/pages/vehicles.html:240
-msgid "جاري التحميل..."
-msgstr "Loading..."
-
-#: templates/pages/vehicles.html:245
+#: templates/pages/vehicles.html:304
 msgid "لا توجد موديلات متاحة"
 msgstr "No models available"
 
-#: templates/pages/vehicles.html:249
+#: templates/pages/vehicles.html:308
 msgid "اختر الموديل"
 msgstr "Select Model"
 
-#: templates/pages/vehicles.html:254
+#: templates/pages/vehicles.html:313
 msgid "فشل التحميل"
 msgstr "Loading failed"
 
-#: templates/pages/vehicles.html:255
+#: templates/pages/vehicles.html:314
 msgid "فشل تحميل الموديلات"
 msgstr "Failed to load models"
 
-#: templates/pages/vehicles.html:264
+#: templates/pages/vehicles.html:323
 msgid "الرجاء إدخال VIN صحيح (17 حرف)"
 msgstr "Please enter a valid VIN (17 characters)"
 
-#: templates/pages/vehicles.html:269
+#: templates/pages/vehicles.html:328
 msgid "جاري فك تشفير VIN..."
 msgstr "Decoding VIN..."
 
-#: templates/pages/vehicles.html:291
+#: templates/pages/vehicles.html:350
 msgid "تم فك VIN بنجاح"
 msgstr "VIN decoded successfully"
 
-#: templates/pages/vehicles.html:295
+#: templates/pages/vehicles.html:354
 msgid "فشل فك VIN"
 msgstr "Failed to decode VIN"
 
-#: templates/pages/vehicles.html:312
+#: templates/pages/vehicles.html:374
 msgid "لا توجد قطع مستخرجة"
 msgstr "No extracted parts"
 
-#: templates/pages/vehicles.html:343
+#: templates/pages/vehicles.html:405
 msgid "تفاصيل السيارة"
 msgstr "Vehicle Details"
 
-#: templates/pages/vehicles.html:348
+#: templates/pages/vehicles.html:410
 msgid "تعذر تحميل تفاصيل السيارة"
 msgstr "Failed to load vehicle details"
 
-#: templates/pages/vehicles.html:354
+#: templates/pages/vehicles.html:416
 msgid "تأكيد الحذف"
 msgstr "Confirm Delete"
 
-#: templates/pages/vehicles.html:355
+#: templates/pages/vehicles.html:417
 msgid "هل أنت متأكد من حذف هذه السيارة؟ لا يمكن التراجع عن هذا الإجراء."
 msgstr ""
-"Are you sure you want to delete this vehicle? This action cannot be undone."
+"Are you sure you want to delete this vehicle? This action cannot be "
+"undone.Are you sure you want to delete this vehicle? This action cannot be "
+"undone.Are you sure you want to delete this vehicle? This action cannot be "
+"undone.Are you sure you want to delete this vehicle? This action cannot be "
+"undone.Are you sure you want to delete this vehicle? This action cannot be "
+"undone."
 
-#: templates/pages/vehicles.html:362
+#: templates/pages/vehicles.html:424
 msgid "تم حذف السيارة بنجاح"
 msgstr "Vehicle deleted successfully"
 
-#: templates/pages/vehicles.html:365
+#: templates/pages/vehicles.html:427
 msgid "فشل حذف السيارة"
 msgstr "Failed to delete vehicle"

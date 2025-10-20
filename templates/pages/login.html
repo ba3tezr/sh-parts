@@ -1,11 +1,11 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE|default:'ar' }}" dir="{% if LANGUAGE_CODE|default:'ar'|slice:":2" == 'ar' %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%9B%A0%EF%B8%8F%3C/text%3E%3C/svg%3E">
-    <title>تسجيل الدخول - SH Parts</title>
+    <title>{% trans "تسجيل الدخول" %} - SH Parts</title>
 
     <!-- Apply saved theme ASAP to avoid FOUC on login page -->
     <script>
@@ -20,8 +20,12 @@
     <!-- No-flicker CSS first -->
     <link rel="stylesheet" href="{% static 'css/no-flicker.css' %}">
 
-    <!-- Bootstrap 5 RTL -->
+    <!-- Bootstrap 5 RTL/LTR conditional -->
+    {% if LANGUAGE_CODE|default:'ar'|slice:":2" == 'ar' %}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    {% else %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% endif %}
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <!-- Cairo Font -->
@@ -127,15 +131,63 @@
         .login-card { animation: fadeUp .4s ease-out; }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(8px);} to { opacity:1; transform:none;} }
         .btn.btn-primary:active { box-shadow: 0 0 0 .35rem rgba(56,189,248,.25); }
+
+        /* Language Switcher for Login Page */
+        .lang-switcher-login {
+            position: absolute;
+            top: 20px;
+            {% if LANGUAGE_CODE|default:'ar'|slice:":2" == 'ar' %}
+            left: 20px;
+            {% else %}
+            right: 20px;
+            {% endif %}
+            z-index: 10;
+            display: flex;
+            gap: 8px;
+            background: var(--card-bg);
+            padding: 8px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .lang-switcher-login .lang-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        .lang-switcher-login .lang-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        .lang-switcher-login .lang-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
     </style>
 </head>
 <body>
+    <!-- Language Switcher -->
+    <div class="lang-switcher-login">
+        <button class="lang-btn {% if LANGUAGE_CODE|default:'ar'|slice:":2" == 'ar' %}active{% endif %}"
+                data-lang="ar" type="button">{% trans "العربية" %}</button>
+        <button class="lang-btn {% if LANGUAGE_CODE|default:'ar'|slice:":2" == 'en' %}active{% endif %}"
+                data-lang="en" type="button">{% trans "English" %}</button>
+    </div>
+
     <div class="login-container">
         <div class="login-card">
             <div class="login-logo">
                 <i class="bi bi-tools"></i>
-                <h2>نظام قطع غيار السيارات</h2>
-                <p class="text-muted">SH Parts Management System</p>
+                <h2>{% trans "نظام قطع غيار السيارات" %}</h2>
+                <p class="text-muted">{% trans "نظام إدارة SH Parts" %}</p>
             </div>
             
             <form method="post" action="{% url 'login' %}" id="loginForm">
@@ -153,7 +205,7 @@
                 <div class="mb-3">
                     <label for="username" class="form-label">
                         <i class="bi bi-person me-2"></i>
-                        اسم المستخدم
+                        {% trans "اسم المستخدم" %}
                     </label>
                     <input type="text"
                            class="form-control"
@@ -167,7 +219,7 @@
                 <div class="mb-3">
                     <label for="password" class="form-label">
                         <i class="bi bi-lock me-2"></i>
-                        كلمة المرور
+                        {% trans "كلمة المرور" %}
                     </label>
                     <input type="password"
                            class="form-control"
@@ -181,27 +233,27 @@
                 <div class="mb-3 form-check">
                     <input type="checkbox" class="form-check-input" id="remember" name="remember">
                     <label class="form-check-label" for="remember">
-                        تذكرني
+                        {% trans "تذكرني" %}
                     </label>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 mb-3">
                     <i class="bi bi-box-arrow-in-right me-2"></i>
-                    تسجيل الدخول
+                    {% trans "تسجيل الدخول" %}
                 </button>
 
                 <div class="text-center text-muted">
-                    <small>البيانات الافتراضية: admin / admin123</small>
+                    <small>{% trans "البيانات الافتراضية: admin / admin123" %}</small>
                 </div>
             </form>
 
             <!-- Footer with copyright -->
             <div class="text-center mt-4" style="position: relative; z-index: 2;">
                 <p class="mb-1" style="font-size: 14px; font-weight: 600; color: var(--text);">
-                    <i class="bi bi-c-circle"></i> جميع الحقوق محفوظة 2025
+                    <i class="bi bi-c-circle"></i> {% trans "جميع الحقوق محفوظة" %} 2025
                 </p>
                 <p class="mb-0" style="font-size: 14px; font-weight: 600; color: var(--text-secondary);">
-                    <i class="bi bi-code-slash"></i> تطوير: <strong style="color: var(--primary);">Zakee Tahawi</strong>
+                    <i class="bi bi-code-slash"></i> {% trans "تطوير" %}: <strong style="color: var(--primary);">{% trans "Zakee Tahawi" %}</strong>
                 </p>
             </div>
         </div>
@@ -209,6 +261,35 @@
 
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Language Switcher Script -->
+    <script>
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        document.querySelectorAll('.lang-btn').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var lang = btn.getAttribute('data-lang');
+                fetch('/i18n/setlang/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: new URLSearchParams({
+                        language: lang,
+                        next: window.location.pathname
+                    })
+                }).then(function(){
+                    window.location.reload();
+                });
+            });
+        });
+    </script>
+
     <!-- Reveal body after DOM ready to prevent FOUC -->
     <script>document.addEventListener('DOMContentLoaded', function(){ document.body.style.visibility = 'visible'; });</script>
 </body>
